@@ -35,7 +35,7 @@ The landing page from the approved terminal mockup is built in `website/` with r
 - Work file.
 - The landing page, all nine sections, in `website/src/components/landing/` and `src/pages/index.astro`. `pnpm check` and `pnpm build` pass.
 - Checked with headless Chrome screenshots at 1440px (dark and light) and 500px (dark). The table and code blocks scroll sideways inside their own boxes at narrow widths; the page itself does not.
-- Lighthouse 12.6.1 on the built site, desktop: performance 97, accessibility 100 in dark and 95 in light, best practices 100, SEO 100. The light-mode points were contrast on code comments. The `--faint` token was raised after that run, and every text token now computes at 4.5:1 or better on both backgrounds. Lighthouse has not been re-run since that change.
+- Lighthouse 12.6.1 on the built site, default mobile emulation: performance 97, accessibility 100 in dark and 95 in light, best practices 100, SEO 100. The light-mode points were contrast on code comments. The `--faint` token was raised after that run, and every text token now computes at 4.5:1 or better on both backgrounds. Lighthouse has not been re-run since that change.
 
 ## Next step
 
