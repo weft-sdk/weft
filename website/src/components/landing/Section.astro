@@ -1,0 +1,43 @@
+---
+/** A section of the terminal page: a prompt line with its command, then the output. */
+interface Props {
+  id: string;
+  command: string;
+  /** Optional comment after the command, shown faint, like a shell comment. */
+  note?: string;
+  label: string;
+}
+
+const { id, command, note, label } = Astro.props;
+---
+
+<section class="wrap cmd" id={id} aria-label={label}>
+  <p class="prompt"><b aria-hidden="true">$</b><span class="c">{command}</span>{note && <span class="n"># {note}</span>}</p>
+  <slot />
+</section>
+
+<style>
+  .cmd {
+    border-bottom: 1px solid var(--line);
+    padding-block: var(--section-pad);
+  }
+
+  .prompt {
+    margin: 0 0 clamp(20px, 2.4vw, 32px);
+    font-size: var(--text-sm);
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    align-items: baseline;
+  }
+
+  .prompt b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .n {
+    color: var(--faint);
+  }
+</style>

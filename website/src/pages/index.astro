@@ -1,43 +1,65 @@
 ---
 import Base from "../layouts/Base.astro";
+import Hero from "../components/landing/Hero.astro";
+import Transports from "../components/landing/Transports.astro";
+import Compare from "../components/landing/Compare.astro";
+import Section from "../components/landing/Section.astro";
+import Split from "../components/landing/Split.astro";
+import Term from "../components/landing/Term.astro";
+import Languages from "../components/landing/Languages.astro";
+import Status from "../components/landing/Status.astro";
+import { init, contract, check, dashboard } from "../data/code";
 ---
 
 <Base
   title="Weft: one interface for every way your services talk"
   description="Weft is in development: one API over HTTP, GraphQL, gRPC, Kafka, RabbitMQ, WebSockets and more, with types from one contract in every language."
 >
-  <section class="wrap hero">
-    <p class="prompt"><b>$</b>weft</p>
-    <h1>One interface for every way your services talk.</h1>
-  </section>
+  <Hero />
+  <Transports />
+  <Compare />
+
+  <Section id="setup" command="weft init" note="planned CLI, output from the design docs" label="Setup">
+    <Split lead="Set up once. Pick a library per transport.">
+      <Fragment slot="body">
+        <code>weft init</code> asks which transports you use and which library runs each one, installs the adapters and
+        writes <code>weft.yaml</code>. Then you write a contract and run <code>weft gen</code>.
+      </Fragment>
+      <Term code={init} />
+    </Split>
+  </Section>
+
+  <Section id="contract" command="cat contracts/orders.weft" label="Contracts">
+    <Split lead="Write the type once. Every service gets it.">
+      <Fragment slot="body">
+        A contract names each event, route and call with its type. <code>weft gen</code> turns it into typed code for
+        every service, in its own language.
+      </Fragment>
+      <Term code={contract} />
+    </Split>
+  </Section>
+
+  <Languages />
+
+  <Section id="check" command="weft check" label="Breaking changes">
+    <Split lead="Breaking changes stop before they ship.">
+      <Fragment slot="body">
+        <code>weft check</code> compares a contract with its last version and names every service that would break, in
+        CI, before the merge.
+      </Fragment>
+      <Term code={check} />
+    </Split>
+  </Section>
+
+  <Section id="dashboard" command="weft dashboard" note="planned" label="Dashboard">
+    <Split lead="See which services talk, and over what.">
+      <Fragment slot="body">
+        The planned dashboard draws a map of your services from your contracts, so it works before any traffic flows. It will run
+        on your laptop, inside your cluster, or in Weft Cloud.
+      </Fragment>
+      <Term code={dashboard} />
+    </Split>
+  </Section>
+
+  <Status />
 </Base>
-
-<style>
-  .hero {
-    padding-block: clamp(48px, 7vw, 104px);
-  }
-
-  .prompt {
-    margin: 0 0 24px;
-    font-size: var(--text-sm);
-    color: var(--muted);
-    display: flex;
-    gap: 10px;
-  }
-
-  .prompt b {
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  h1 {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: var(--text-hero);
-    line-height: 0.94;
-    letter-spacing: -0.045em;
-    max-width: 15ch;
-    text-wrap: balance;
-  }
-</style>

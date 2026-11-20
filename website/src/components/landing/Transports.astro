@@ -1,0 +1,77 @@
+---
+import Section from "./Section.astro";
+import Icon from "../Icon.astro";
+import { transports } from "../../data/transports";
+---
+
+<Section id="transports" command="weft transports" label="Transports">
+  <div class="scroll">
+    <table>
+      <caption class="visually-hidden">Transport namespaces, the TypeScript libraries they run on, and an example call</caption>
+      <thead>
+        <tr><th scope="col">Namespace</th><th scope="col">Runs on</th><th scope="col">Example</th></tr>
+      </thead>
+      <tbody>
+        {
+          transports.map((t) => (
+            <tr>
+              <td class="ns">weft.<b>{t.ns}</b></td>
+              <td class="lib"><span><Icon name={t.icon} />{t.runsOn}</span></td>
+              <td class="ex">{t.example}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Section>
+
+<style>
+  .scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 9px 24px 9px 0;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  th {
+    color: var(--faint);
+    font-weight: 400;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .ns b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .lib span {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ex {
+    color: var(--muted);
+  }
+
+  tbody tr:hover td {
+    background: var(--raised);
+  }
+</style>

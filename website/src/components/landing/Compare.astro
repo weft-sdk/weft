@@ -1,0 +1,38 @@
+---
+import Section from "./Section.astro";
+import Term from "./Term.astro";
+import { before, after } from "../../data/code";
+---
+
+<Section id="compare" command="weft diff --before" label="Before and after">
+  <h2 class="lead">Three libraries and an untyped body, or one API with types.</h2>
+  <div class="two">
+    <Term label="Express, KafkaJS, Socket.io" file="server.ts" code={before} />
+    <Term label="Weft" file="server.ts" code={after} />
+  </div>
+</Section>
+
+<style>
+  .lead {
+    margin: 0 0 28px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-lead);
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+
+  .two {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  @media (max-width: 900px) {
+    .two {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,54 @@
+---
+/** A statement and a short paragraph on the left, the output on the right. */
+interface Props {
+  lead: string;
+}
+
+const { lead } = Astro.props;
+---
+
+<div class="split">
+  <div>
+    <h2 class="lead">{lead}</h2>
+    <p class="body"><slot name="body" /></p>
+  </div>
+  <div class="out"><slot /></div>
+</div>
+
+<style>
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--split-gap);
+    align-items: start;
+  }
+
+  .lead {
+    margin: 0 0 16px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-lead);
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+
+  .body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--muted);
+    font-size: var(--text-md);
+    max-width: 44ch;
+  }
+
+  .out {
+    min-width: 0;
+  }
+
+  @media (max-width: 900px) {
+    .split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+/**
+ * A block of terminal output or code. `code` is trusted HTML from src/data/code.ts,
+ * passed as a string so HTML compression cannot collapse its whitespace.
+ */
+interface Props {
+  code: string;
+  label?: string;
+  file?: string;
+}
+
+const { code, label, file } = Astro.props;
+---
+
+<figure class="term">
+  {(label || file) && (
+    <figcaption>
+      <span>{label}</span>
+      <span>{file}</span>
+    </figcaption>
+  )}
+  <pre set:html={code} />
+</figure>
+
+<style>
+  .term {
+    margin: 0;
+    min-width: 0;
+  }
+
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  pre {
+    margin: 0;
+    padding: 20px 22px;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: var(--text-sm);
+    line-height: 1.8;
+  }
+</style>
