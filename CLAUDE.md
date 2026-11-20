@@ -43,14 +43,21 @@ Work is handed off through the repository, never through a conversation. Full pr
 - Never commit secrets, `.env` files, keys or credentials.
 - New dependencies need a reason in the commit message or a decision record.
 - Writing docs: plain words, short sentences, active voice. Name things the way a user would. Tables for comparisons. No marketing filler in design docs.
-- Website (once it exists): Astro + TypeScript (strict), pnpm only, design tokens for every colour and size, light and dark themes, works at phone width, keyboard accessible, respects reduced motion.
+- Website: Astro + TypeScript (strict), pnpm only, design tokens for every colour and size (`website/src/styles/tokens.css`, from [website.md › Visual direction](docs/website.md#visual-direction-the-terminal)), light and dark themes, works at phone width, keyboard accessible, respects reduced motion. Logos come from the `simple-icons` package through `src/components/Icon.astro`.
 - Rust, language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [tech-stack.md](docs/tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
 
 ## Commands
 
-None yet: there is no code. Add each command here in the same pull request that makes it work (for example `pnpm --dir website dev` once task W2 lands).
+Add each command here in the same pull request that makes it work.
+
+| Command | What it does |
+| --- | --- |
+| `pnpm --dir website install` | Install the website's dependencies (Node 22.23.4 or later, pnpm 11) |
+| `pnpm --dir website dev` | Run the website locally at `http://localhost:4321` |
+| `pnpm --dir website check` | Type-check the website (`astro check`, TypeScript strict) |
+| `pnpm --dir website build` | Build the static site into `website/dist/` |
 
 ## Repository
 
 - GitHub: `github.com/weft-sdk/weft` (private). Default branch `main`.
-- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/`. Planned layout: [architecture › Repo layout](docs/architecture.md#repo-layout).
+- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/`, `website/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/architecture.md#repo-layout).
