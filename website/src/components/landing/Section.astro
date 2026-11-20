@@ -1,18 +1,28 @@
 ---
-/** A section of the terminal page: a prompt line with its command, then the output. */
+/** A section of the terminal page: a prompt line with its command, then the output. Without a command, no prompt line. */
 interface Props {
   id: string;
-  command: string;
+  command?: string;
   /** Optional comment after the command, shown faint, like a shell comment. */
   note?: string;
   label: string;
+  /** Small top padding, for the first section under the header. */
+  tight?: boolean;
 }
 
-const { id, command, note, label } = Astro.props;
+const { id, command, note, label, tight = false } = Astro.props;
 ---
 
-<section class="wrap cmd" id={id} aria-label={label}>
-  <p class="prompt"><b aria-hidden="true">$</b><span class="c">{command}</span>{note && <span class="n"># {note}</span>}</p>
+<section class:list={["wrap", "cmd", { tight }]} id={id} aria-label={label}>
+  {
+    command && (
+      <p class="prompt">
+        <b aria-hidden="true">$</b>
+        <span class="c">{command}</span>
+        {note && <span class="n"># {note}</span>}
+      </p>
+    )
+  }
   <slot />
 </section>
 
@@ -20,6 +30,10 @@ const { id, command, note, label } = Astro.props;
   .cmd {
     border-bottom: 1px solid var(--line);
     padding-block: var(--section-pad);
+  }
+
+  .tight {
+    padding-top: clamp(20px, 2.5vw, 32px);
   }
 
   .prompt {
