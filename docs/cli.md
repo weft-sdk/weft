@@ -88,13 +88,15 @@ service: orders
 language: typescript
 
 contracts:
-  - ./contracts
-  - git: github.com/larder/contracts
-    ref: v3
+  - ./contracts                          # this service's own packages
+  - git: github.com/larder/contracts     # packages from other services
+    packages:
+      orders: ^2.3
+      payments: ^1.0
 
 codegen:
   out: src/weft.gen.ts
-  int64: bigint            # or number
+  int64: number            # or bigint, for the full 64-bit range
 
 transports:
   http:
@@ -110,6 +112,9 @@ transports:
   ws:
     library: socket.io
     path: /ws
+
+topics:                    # optional: map event names to real topic / queue names
+  order.placed: prod.orders.placed.v1
 
 services:                  # where other services live, for http/gql/grpc calls
   payments: ${PAYMENTS_URL}

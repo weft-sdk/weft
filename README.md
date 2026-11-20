@@ -50,7 +50,7 @@ $ npx @weft-sdk/cli init
 ```weft
 type Order {
   id: uuid
-  items: list<OrderItem>
+  items: OrderItem[]
   total: Money
 }
 
