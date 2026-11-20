@@ -22,13 +22,14 @@ Why Weft is the way it is. One file per decision, numbered in the order they wer
 | [0007](0007-escape-hatch.md) | Always provide an escape hatch | Accepted |
 | [0008](0008-conformance-gates-releases.md) | Conformance suite gates every release | Accepted |
 | [0009](0009-dashboard-three-modes.md) | Dashboard in three modes, one codebase | Accepted |
-| [0010](0010-website-on-astro.md) | Website on Astro with a custom design | Accepted |
+| [0010](0010-website-on-astro.md) | Website on Astro with a custom design | Accepted, amended by 0017 |
 | [0011](0011-shared-runtime-standards.md) | Shared runtime standards | Accepted |
 | [0012](0012-where-contracts-live.md) | Where shared contracts live | Accepted |
 | [0013](0013-open-core.md) | Open core | Accepted |
 | [0014](0014-name-weft.md) | Product name is Weft, published under `weft-sdk` | Accepted |
 | [0015](0015-rpc-uses-connect.md) | `weft.rpc` uses the Connect protocol | Accepted |
 | [0016](0016-website-first.md) | Build the website first | Accepted |
+| [0017](0017-website-terminal-direction.md) | Website visual direction: the terminal | Accepted |
 
 ## Template
 

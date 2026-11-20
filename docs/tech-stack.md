@@ -85,7 +85,7 @@ Rust for everything shared. Native code for each language package. One conforman
 | Interactive pieces | React islands |
 | Animation | GSAP or Motion |
 | 3D (if used) | Three.js / React Three Fiber |
-| Styling | Tailwind or hand-written CSS |
+| Styling | Hand-written CSS with design tokens ([ADR 0017](decisions/0017-website-terminal-direction.md)) |
 | Docs | Custom design on Astro (Starlight heavily restyled, or a custom layout) |
 | Playground | The compiler built to WebAssembly |
 

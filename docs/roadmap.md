@@ -8,23 +8,23 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | P0 (design documents) is done. Phase W (website) is next |
+| Phase | W (website). W1 done |
 | Built | **Nothing.** The repository holds design documents only. No website, compiler, CLI, language package or dashboard exists |
-| Next task | **W1, website visual direction.** Needs the maintainer ([Q1](open-questions.md)) |
-| Last done | 2026-11-21: design docs, contract language 0.1, decisions 0001–0016, the name Weft, the session workflow and this roadmap |
-| Waiting on the maintainer | Q1 (website look and feel). Not blocking: npm org `weft-sdk` (confirm it was created), trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
+| Next task | **W2, site skeleton** |
+| Last done | 2026-11-21: W1, website visual direction: the terminal ([ADR 0017](decisions/0017-website-terminal-direction.md)) |
+| Waiting on the maintainer | Not blocking: npm org `weft-sdk` (confirm it was created), trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
 
 The product, contract language, API, language package design, supported languages, CLI, conformance suite, dashboard, architecture, tech stack and website plan are written in [docs/](README.md). Decisions 0001–0016 are accepted.
 
-## W: Website — next
+## W: Website — in progress
 
 The landing page and docs site, built before any product code ([ADR 0016](decisions/0016-website-first.md)). Plan: [website.md](website.md). The product does not exist yet, so the site must never claim a feature ships: it presents Weft as in development.
 
 | Task | What | Needs | Done when |
 | --- | --- | --- | --- |
-| **W1** | Visual direction: references the maintainer likes, palette, type, motion, layout principles. Written into `website.md` and a decision record | Maintainer (Q1) | The maintainer has approved the direction in writing in `website.md` |
+| **W1** ✓ | Visual direction: references the maintainer likes, palette, type, motion, layout principles. Written into `website.md` and a decision record | Maintainer | Done 2026-11-21. Approved direction in [website.md](website.md#visual-direction-the-terminal) |
 | **W2** | Site skeleton: Astro + TypeScript + pnpm in `website/`, design tokens from W1, base layout, light and dark themes, CI build | W1 | `pnpm --dir website build` passes in CI; an empty styled page renders |
 | **W3** | Landing page: hero, the problem, how it works (init → contract → call), transports, languages, dashboard preview, call to action (GitHub, follow updates) | W2 | All sections render with real copy, work at phone width, and pass a Lighthouse check (performance and accessibility ≥ 90) |
 | **W4** | Interactive pieces: transport switcher in the hero, persistent language picker, before/after comparison | W3 | Each works with keyboard and respects reduced motion |

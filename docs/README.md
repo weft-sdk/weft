@@ -29,7 +29,7 @@ Status: **design stage. Nothing is built.**
 | [dashboard.md](dashboard.md) | The service map and live traffic UI: local, self-hosted and cloud |
 | [architecture.md](architecture.md) | How the pieces fit, and the repo layout |
 | [tech-stack.md](tech-stack.md) | Every tool and library used to build Weft |
-| [website.md](website.md) | The landing page and docs site (built first; visual design not decided) |
+| [website.md](website.md) | The landing page and docs site (built first) and its visual direction |
 
 If you only read three product docs: **concepts**, **contract-language**, **api**.
 

@@ -40,7 +40,14 @@ First proposed as a later, optional paid product. The maintainer wanted it to wo
 
 ## 5. Website
 
-The maintainer has high hopes for the website and does not want it to look like a standard open-source documentation site. Astro was chosen for full design freedom, with Starlight either restyled or replaced ([ADR 0010](decisions/0010-website-on-astro.md)). The maintainer then chose to **build the website first**, before any product code ([ADR 0016](decisions/0016-website-first.md)). The visual design is not decided ([open question Q1](open-questions.md)).
+The maintainer has high hopes for the website and does not want it to look like a standard open-source documentation site. Astro was chosen for full design freedom, with Starlight either restyled or replaced ([ADR 0010](decisions/0010-website-on-astro.md)). The maintainer then chose to **build the website first**, before any product code ([ADR 0016](decisions/0016-website-first.md)). The visual design was settled in task W1 over six rounds of mockups on 2026-11-21:
+
+1. Two directions: A, precise and technical (dark, hairline grid), and B, the product as the visual (each transport a coloured thread). The maintainer preferred B.
+2. B in black and white, with a weave of languages and transports as the hero. Rejected: the visual read like a tracing diagram, and the page needed an accent.
+3. One accent (blue chosen over orange and green) and a single large `weft.*` call as the hero. Rejected: the page structure felt like everything was dumped in a stack.
+4. A rebuilt structure with split section headers, a bento grid and product windows. Rejected as the same plain type of layout.
+5. Three different structures: a type specimen, a split-screen scroll story, and a terminal session. The maintainer chose the **terminal**, with the specimen as a close second.
+6. The terminal without its command sidebar. Approved ([ADR 0017](decisions/0017-website-terminal-direction.md)).
 
 ## 6. The name
 
