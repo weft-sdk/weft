@@ -40,6 +40,16 @@ The maintainer has approved a visual direction for the website in writing. The d
 - Round 2 feedback (2026-11-21): looked very bad. Wants a little colour (an accent) and a clean, minimal hero visual; the weave visual is rejected outright. Do not go back to busy or diagrammatic hero visuals.
 - Round 3 answers: off-black and off-white stay; one accent colour (blue `#2447f5` light / `#7d92ff` dark; orange and green offered through a mockup-only switcher in the header). The hero visual is one `weft.*` call set large, with the transport name in the accent; a row of transport logos above it and a small language picker below change the call and the library underneath. The rest of the page is unchanged from round 2. The file keeps its name `b-weave.html` so the preview link stays the same.
 
+- Round 3 feedback (2026-11-21): accent chosen, **the first one, blue** (`#2447f5` light, `#7d92ff` dark). The page structure felt like everything was dumped in a stack; wants a better, new layout with good references.
+- Round 4 answers: rebuilt the page structure.
+  - Every section uses one split header: eyebrow and title on the left, the explanation on the right.
+  - Each section then holds one composed object, not loose stacked panels.
+  - Hero: headline, then one product window. Transport tabs and a language picker sit in the window. The code highlights the call line, and a side panel names the library underneath with its `weft.yaml` lines. A single row of framework logos follows.
+  - "Why Weft" is a bento grid of the README's "What you get" points.
+  - Before and after is a split: a sticky caption with a Without/With toggle, and one code window.
+  - The rest: three steps, a tile grid of language logos, the dashboard window, and status as three phases with "Now" in the accent. The footer has columns.
+  - Accent switcher removed. Escape hatch now uses `raw`, as in `api.md`.
+
 ## Done
 
 - Work file (b2b599e).
@@ -51,11 +61,11 @@ The maintainer has approved a visual direction for the website in writing. The d
 
 ## Next step
 
-Get the maintainer's reaction to round 3 of B, including which accent (blue, orange, green). Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
+Get the maintainer's reaction to round 4 (the new structure). Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
 
 ## Waiting on
 
-- The maintainer's verdict on round 3 of B and the accent choice.
+- The maintainer's verdict on round 4.
 
 ## How to check
 
