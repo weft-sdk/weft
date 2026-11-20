@@ -1,0 +1,43 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  title="Weft: one interface for every way your services talk"
+  description="Weft is in development: one API over HTTP, GraphQL, gRPC, Kafka, RabbitMQ, WebSockets and more, with types from one contract in every language."
+>
+  <section class="wrap hero">
+    <p class="prompt"><b>$</b>weft</p>
+    <h1>One interface for every way your services talk.</h1>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(48px, 7vw, 104px);
+  }
+
+  .prompt {
+    margin: 0 0 24px;
+    font-size: var(--text-sm);
+    color: var(--muted);
+    display: flex;
+    gap: 10px;
+  }
+
+  .prompt b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-hero);
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+    max-width: 15ch;
+    text-wrap: balance;
+  }
+</style>

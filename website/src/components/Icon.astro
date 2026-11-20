@@ -1,0 +1,56 @@
+---
+/**
+ * One icon, drawn in the current text colour.
+ * Brand logos come from Simple Icons. Transports without a logo use a line glyph.
+ */
+import * as simpleIcons from "simple-icons";
+
+const glyphs = {
+  http: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+  grpc: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+  ws: '<path d="M3 9h15l-3-3M21 15H6l3 3"/>',
+  sse: '<path d="M3 7h12M3 12h15M3 17h18l-3-3m3 3-3 3"/>',
+  cloud: '<path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 10.1 4 4 0 0 0 7 18Z"/>',
+} as const;
+
+export type Glyph = keyof typeof glyphs;
+
+interface Props {
+  /** A Simple Icons slug such as "apachekafka", or a glyph name such as "http". */
+  name: string;
+  size?: number;
+}
+
+const { name, size = 16 } = Astro.props;
+const key = `si${name.charAt(0).toUpperCase()}${name.slice(1)}` as keyof typeof simpleIcons;
+const brand = simpleIcons[key] as { path: string } | undefined;
+const glyph = name in glyphs ? glyphs[name as Glyph] : undefined;
+if (!brand && !glyph) throw new Error(`Unknown icon: ${name}`);
+---
+
+{
+  brand ? (
+    <svg class="icon" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d={brand.path} />
+    </svg>
+  ) : (
+    <svg
+      class="icon"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      aria-hidden="true"
+      set:html={glyph}
+    />
+  )
+}
+
+<style>
+  .icon {
+    display: block;
+    flex: none;
+  }
+</style>

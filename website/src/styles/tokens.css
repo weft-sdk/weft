@@ -1,0 +1,59 @@
+/* Design tokens. Source of truth: docs/website.md, "Visual direction: the terminal".
+   Dark is the default theme. Light applies when the reader's system prefers it,
+   unless they chose dark on the page, or when they chose light on the page. */
+:root {
+  --bg: #111111;
+  --raised: #181818;
+  --line: #262626;
+  --fg: #ececea;
+  --muted: #a2a2a0;
+  --faint: #5f5f5d;
+  --accent: #7d92ff;
+  --on-accent: #0d0d14;
+
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Bricolage Grotesque Variable", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --gutter-l: max(clamp(16px, 2vw, 32px), env(safe-area-inset-left, 0px));
+  --gutter-r: max(clamp(16px, 2vw, 32px), env(safe-area-inset-right, 0px));
+  --section-pad: clamp(36px, 5vw, 72px);
+  --split-gap: clamp(24px, 4vw, 72px);
+  --radius: 3px;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.125rem;
+  --text-lead: clamp(1.75rem, 3.2vw, 3rem);
+  --text-hero: clamp(2.75rem, 7vw, 7rem);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f4f3;
+    --raised: #ececea;
+    --line: #dcdcd9;
+    --fg: #141414;
+    --muted: #5e5e5c;
+    --faint: #9a9a97;
+    --accent: #2447f5;
+    --on-accent: #ffffff;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f4f3;
+  --raised: #ececea;
+  --line: #dcdcd9;
+  --fg: #141414;
+  --muted: #5e5e5c;
+  --faint: #9a9a97;
+  --accent: #2447f5;
+  --on-accent: #ffffff;
+  color-scheme: light;
+}
