@@ -4,30 +4,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Direction B, the product as the visual.
-   Layout: full-width open grid. Services are the warp (vertical lines), transports are the weft
-   (horizontal threads), each in one flat colour. The weave is the hero and the legend for the page.
-   Light-first. Colour belongs to transports only; everything else is neutral. */
+/* Direction B, round 2. Monochrome: off-black on off-white, no accent colour.
+   Layout: full-width bands with small gutters. The hero is a real weave: languages are the warp,
+   transports are the weft, every crossing is a language running a transport. Gaps are real gaps. */
 :root {
-  --bg: #f7f8fa;
-  --surface: #ffffff;
-  --line: #e2e5ea;
-  --warp: #c3c8d0;
-  --fg: #121418;
-  --muted: #5b616b;
-  --faint: #8d939c;
-  --ink: #121418;
-  --on-ink: #f7f8fa;
-  --t-http: #2459d8;
-  --t-gql: #c2255c;
-  --t-grpc: #0b7f92;
-  --t-kafka: #d9480f;
-  --t-mq: #6741d9;
-  --t-ws: #2b8a3e;
-  --code-bg: #ffffff;
-  --code-k: #8d939c;
-  --code-s: #2b8a3e;
-  --code-f: #2459d8;
+  --bg: #f4f4f3;
+  --surface: #fafaf9;
+  --line: #e1e1df;
+  --line-strong: #cbcbc8;
+  --fg: #141414;
+  --muted: #5e5e5c;
+  --faint: #8f8f8c;
+  --thread: #232323;
+  --warp: #b9b9b6;
+  --ink: #141414;
+  --on-ink: #f4f4f3;
+  --code-k: #8f8f8c;
+  --code-s: #141414;
+  --code-f: #141414;
   --font-display: "Bricolage Grotesque", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -36,23 +30,21 @@
   --step--1: 0.8125rem;
   --step-0: 1rem;
   --step-1: 1.1875rem;
-  --step-3: clamp(1.75rem, 3vw, 2.5rem);
-  --step-5: clamp(2.5rem, 6vw, 5.5rem);
+  --step-3: clamp(1.75rem, 3vw, 2.625rem);
+  --step-5: clamp(2.5rem, 6.2vw, 6rem);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1114; --surface: #15181c; --line: #252930; --warp: #3a3f48;
-    --fg: #eceef1; --muted: #9aa0a9; --faint: #6b717a; --ink: #eceef1; --on-ink: #0f1114;
-    --t-http: #6f9cff; --t-gql: #f06595; --t-grpc: #3bc9db; --t-kafka: #ff8a4c; --t-mq: #9f86ff; --t-ws: #5fd27a;
-    --code-bg: #15181c; --code-k: #6b717a; --code-s: #8fd19e; --code-f: #8fb1ff;
+    --bg: #111111; --surface: #171717; --line: #262626; --line-strong: #363636;
+    --fg: #ececea; --muted: #a2a2a0; --faint: #6f6f6d; --thread: #dcdcda; --warp: #4a4a49;
+    --ink: #ececea; --on-ink: #111111; --code-k: #6f6f6d; --code-s: #ececea; --code-f: #ececea;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1114; --surface: #15181c; --line: #252930; --warp: #3a3f48;
-  --fg: #eceef1; --muted: #9aa0a9; --faint: #6b717a; --ink: #eceef1; --on-ink: #0f1114;
-  --t-http: #6f9cff; --t-gql: #f06595; --t-grpc: #3bc9db; --t-kafka: #ff8a4c; --t-mq: #9f86ff; --t-ws: #5fd27a;
-  --code-bg: #15181c; --code-k: #6b717a; --code-s: #8fd19e; --code-f: #8fb1ff;
+  --bg: #111111; --surface: #171717; --line: #262626; --line-strong: #363636;
+  --fg: #ececea; --muted: #a2a2a0; --faint: #6f6f6d; --thread: #dcdcda; --warp: #4a4a49;
+  --ink: #ececea; --on-ink: #111111; --code-k: #6f6f6d; --code-s: #ececea; --code-f: #ececea;
   color-scheme: dark;
 }
 
@@ -63,29 +55,32 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 code, pre { font-family: var(--font-mono); }
+code { font-size: 0.9em; }
 .wrap { padding-left: var(--pad-l); padding-right: var(--pad-r); }
-.eyebrow { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); letter-spacing: 0.02em; }
+.eyebrow { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
+.ico { display: block; flex: none; }
 
 /* Header */
 header { border-bottom: 1px solid var(--line); }
-.header-row { display: flex; align-items: center; gap: 32px; min-height: 60px; }
+.header-row { display: flex; align-items: center; gap: 36px; min-height: 60px; }
 .wordmark { font-family: var(--font-display); font-weight: 600; font-size: 1.375rem; letter-spacing: -0.02em; text-decoration: none; display: flex; align-items: center; gap: 10px; }
 nav.primary { display: flex; gap: 28px; font-size: var(--step--1); }
 nav.primary a { text-decoration: none; color: var(--muted); }
 nav.primary a:hover { color: var(--fg); }
 .header-end { margin-left: auto; display: flex; align-items: center; gap: 24px; font-size: var(--step--1); color: var(--muted); }
-.header-end .state { font-family: var(--font-mono); }
-.theme-btn { appearance: none; background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; cursor: pointer; border-bottom: 1px solid var(--warp); }
+.header-end .state { font-family: var(--font-mono); display: flex; align-items: center; gap: 8px; }
+.header-end .state i { width: 6px; height: 6px; background: var(--fg); display: block; }
+.theme-btn { appearance: none; background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; cursor: pointer; border-bottom: 1px solid var(--line-strong); }
 .theme-btn:hover { color: var(--fg); }
 
 /* Hero */
-.hero { padding-block: clamp(36px, 6vw, 88px) clamp(24px, 3vw, 40px); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 28px; align-items: end; }
+.hero { padding-block: clamp(40px, 6vw, 96px) clamp(28px, 3.5vw, 48px); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 28px; align-items: end; }
 .hero h1 {
   grid-column: 1 / span 8; margin: 0;
   font-family: var(--font-display); font-weight: 600; font-size: var(--step-5);
-  line-height: 0.98; letter-spacing: -0.035em; text-wrap: balance;
+  line-height: 0.97; letter-spacing: -0.04em; text-wrap: balance;
 }
 .hero-side { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: 22px; }
 .hero-side p { margin: 0; color: var(--muted); font-size: var(--step-1); line-height: 1.5; max-width: 40ch; }
@@ -94,108 +89,156 @@ nav.primary a:hover { color: var(--fg); }
   background: var(--ink); color: var(--on-ink); text-decoration: none;
   padding: 13px 20px; border-radius: 3px; font-weight: 500;
 }
-.cta:hover { opacity: 0.9; }
-.cta svg { display: block; }
+.cta:hover { opacity: 0.88; }
 
 /* Weave */
 .weave-band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
-.weave { display: grid; grid-template-columns: minmax(150px, 15%) minmax(0, 1fr); }
-.threads { list-style: none; margin: 0; padding: 48px 0 16px; border-right: 1px solid var(--line); }
-.threads button {
-  appearance: none; background: none; border: 0; width: 100%; height: 48px; padding: 0 16px 0 0;
-  display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; color: var(--fg);
+.weave-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 16px; border-bottom: 1px solid var(--line); }
+.weave { position: relative; padding-block: 8px 12px; }
+.weave > svg { display: block; width: 100%; }
+.weave > svg .dim { opacity: 0.18; }
+.weave > svg * { transition: opacity 180ms ease; }
+.wbtn {
+  position: absolute; appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--muted); display: flex; align-items: center; gap: 10px; font: inherit;
 }
-.threads .sw { width: 12px; height: 12px; flex: none; }
-.threads .ns { font-family: var(--font-mono); font-size: 0.875rem; }
-.threads .lib { font-size: var(--step--1); color: var(--faint); margin-left: auto; white-space: nowrap; }
-.threads button[aria-pressed="false"].dimmed { opacity: 0.4; }
-.threads button:hover { opacity: 1; }
-.canvas { position: relative; min-width: 0; }
-.canvas svg { display: block; width: 100%; }
+.wbtn:hover, .wbtn[aria-pressed="true"] { color: var(--fg); }
+.wbtn.row { justify-content: flex-start; }
+.wbtn.row .n { font-family: var(--font-mono); font-size: 0.8125rem; white-space: nowrap; }
+.wbtn.col { flex-direction: column; justify-content: center; gap: 6px; }
+.wbtn.col .n { font-size: 0.75rem; white-space: nowrap; }
 .call {
-  display: grid; grid-template-columns: minmax(150px, 15%) minmax(0, 1fr);
-  border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: 196px minmax(0, 1fr) auto; align-items: center;
+  border-top: 1px solid var(--line); min-height: 64px;
 }
-.call .eyebrow { padding: 18px 16px 18px 0; border-right: 1px solid var(--line); }
-.call pre { margin: 0; padding: 16px 24px; overflow-x: auto; font-size: 0.9375rem; line-height: 1.7; }
-.call .route { color: var(--faint); }
-
-/* Sections */
-section.block { padding-block: clamp(48px, 7vw, 104px); border-bottom: 1px solid var(--line); }
-.block-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; margin-bottom: clamp(24px, 3vw, 44px); }
-.block-head .eyebrow { grid-column: span 3; padding-top: 10px; }
-.block-head h2 {
-  grid-column: span 9; margin: 0; max-width: 28ch;
-  font-family: var(--font-display); font-weight: 600; font-size: var(--step-3); line-height: 1.08; letter-spacing: -0.025em; text-wrap: balance;
-}
-.block-head p { grid-column: 4 / span 9; margin: 14px 0 0; color: var(--muted); max-width: 62ch; }
-
-.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--code-bg); }
-.compare > div { min-width: 0; display: flex; flex-direction: column; }
-.compare > div + div { border-left: 1px solid var(--line); }
-.compare .cap { display: flex; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
-.compare .cap strong { color: var(--fg); font-weight: 600; }
-.compare pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.75; flex: 1; }
+.call .pair { font-size: var(--step--1); color: var(--muted); padding-right: 16px; }
+.call pre { margin: 0; padding: 16px 24px 16px 0; overflow-x: auto; font-size: 0.9375rem; line-height: 1.6; }
+.call .runs { display: flex; align-items: center; gap: 10px; font-size: var(--step--1); color: var(--muted); white-space: nowrap; padding-left: 16px; }
+.call .runs strong { color: var(--fg); font-weight: 500; font-family: var(--font-mono); font-size: 0.8125rem; }
 .k { color: var(--code-k); }
 .s { color: var(--code-s); }
-.f { color: var(--code-f); }
-.mark-http { box-shadow: inset 3px 0 0 var(--t-http); }
-.mark-kafka { box-shadow: inset 3px 0 0 var(--t-kafka); }
-.mark-ws { box-shadow: inset 3px 0 0 var(--t-ws); }
-.compare pre span.row { display: block; padding-left: 12px; margin-left: -12px; }
+.f { color: var(--code-f); font-weight: 500; }
 
-.contract { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--code-bg); }
+/* Logo wall */
+.wall { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 24px; padding-block: 28px; border-bottom: 1px solid var(--line); align-items: start; }
+.wall .eyebrow { padding-top: 4px; }
+.logos { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); row-gap: 18px; column-gap: 16px; }
+.logos div { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.875rem; min-width: 0; }
+.logos span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wall .fine { grid-column: 2; margin: 4px 0 0; font-size: 0.75rem; color: var(--faint); }
+
+/* Sections */
+section.block { padding-block: clamp(56px, 7vw, 112px); border-bottom: 1px solid var(--line); }
+.block-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; margin-bottom: clamp(28px, 3.5vw, 48px); }
+.block-head .eyebrow { grid-column: span 3; padding-top: 12px; }
+.block-head h2 {
+  grid-column: span 9; margin: 0; max-width: 26ch;
+  font-family: var(--font-display); font-weight: 600; font-size: var(--step-3); line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance;
+}
+.block-head p { grid-column: 4 / span 9; margin: 16px 0 0; color: var(--muted); max-width: 62ch; }
+
+.panel { border: 1px solid var(--line); background: var(--surface); }
+.cap { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); min-height: 50px; }
+.cap strong { color: var(--fg); font-weight: 600; }
+.cap .files { font-family: var(--font-mono); }
+.panel pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.75; }
+
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.compare > div { min-width: 0; display: flex; flex-direction: column; }
+.compare > div + div { border-left: 1px solid var(--line); }
+.compare .ic { display: flex; gap: 8px; color: var(--muted); }
+
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.steps > div { min-width: 0; display: flex; flex-direction: column; }
+.steps > div + div { border-left: 1px solid var(--line); }
+.steps .sh { padding: 20px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; }
+.steps .n { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); padding-top: 3px; }
+.steps h3 { margin: 0; font-size: var(--step-1); font-weight: 600; }
+.steps .sh p { grid-column: 2; margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.steps pre { flex: 1; }
+
+.contract { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); }
 .contract > div { min-width: 0; }
 .contract .src { grid-column: span 5; border-right: 1px solid var(--line); }
 .contract .out { grid-column: span 7; display: flex; flex-direction: column; }
-.contract .cap { padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); display: flex; gap: 24px; align-items: center; }
-.tabs { display: flex; gap: 24px; }
+.tabs { display: flex; gap: 22px; flex-wrap: wrap; }
 .tabs button {
-  appearance: none; background: none; border: 0; padding: 0 0 4px; cursor: pointer;
-  font: inherit; font-family: var(--font-mono); color: var(--muted); border-bottom: 2px solid transparent;
+  appearance: none; background: none; border: 0; padding: 2px 0 6px; cursor: pointer;
+  font: inherit; color: var(--muted); border-bottom: 2px solid transparent;
+  display: flex; align-items: center; gap: 8px;
 }
-.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--ink); }
-.contract pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.75; }
-.contract .note { margin-left: auto; color: var(--faint); }
+.tabs button:hover { color: var(--fg); }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--fg); }
+.contract .note { color: var(--faint); white-space: nowrap; }
 
-.tlist { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
-.tlist dl { grid-column: 4 / span 9; margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1.4fr); }
-.tlist dt, .tlist dd { margin: 0; padding: 12px 0; border-top: 1px solid var(--line); }
-.tlist dt { font-family: var(--font-mono); font-size: 0.875rem; padding-right: 32px; }
-.tlist dd.p { padding-right: 24px; }
-.tlist dd.l { color: var(--muted); font-size: 0.875rem; }
+.behave { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.behave > div { padding: 24px 24px 8px 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.behave > div + div { padding-left: 24px; border-left: 1px solid var(--line); }
+.behave .hd { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.behave p { margin: 0; color: var(--muted); font-size: 0.9375rem; max-width: 36ch; }
 
-.status { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
-.status .eyebrow { grid-column: span 3; padding-top: 4px; }
-.status p { grid-column: span 6; margin: 0; font-size: var(--step-1); line-height: 1.5; max-width: 52ch; }
-.status p + p { grid-column: 4 / span 6; margin-top: 14px; color: var(--muted); font-size: var(--step-0); }
+.dash { display: grid; grid-template-columns: minmax(0, 1fr) 320px; }
+.dash .map { min-width: 0; overflow-x: auto; border-right: 1px solid var(--line); }
+.dash .map svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.dash aside { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.dash aside h3 { margin: 0; font-family: var(--font-mono); font-size: 1rem; font-weight: 500; }
+.dash dl { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 16px; row-gap: 10px; font-size: 0.875rem; }
+.dash dt { color: var(--faint); }
+.dash dd { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.dash dd span { display: flex; align-items: center; gap: 8px; }
+
+.status { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 24px; }
+.status .eyebrow { grid-column: span 3; padding-top: 6px; }
+.status .lead { grid-column: span 6; margin: 0; font-family: var(--font-display); font-size: var(--step-3); font-weight: 600; letter-spacing: -0.03em; line-height: 1.08; text-wrap: balance; }
+.phases { grid-column: 4 / span 9; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.phases div { padding: 18px 20px 0 0; min-width: 0; }
+.phases div + div { padding-left: 20px; border-left: 1px solid var(--line); }
+.phases h3 { margin: 0 0 6px; font-size: 0.9375rem; font-weight: 600; }
+.phases p { margin: 0; color: var(--muted); font-size: 0.9375rem; }
 
 footer .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 24px; font-size: var(--step--1); color: var(--faint); }
-footer nav { display: flex; gap: 24px; }
+footer nav { display: flex; gap: 24px; flex-wrap: wrap; }
 footer a { text-decoration: none; color: var(--muted); }
+footer a:hover { color: var(--fg); }
 
+@media (max-width: 1100px) {
+  .logos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .behave { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .behave > div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .behave > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .dash { grid-template-columns: minmax(0, 1fr); }
+  .dash .map { border-right: 0; border-bottom: 1px solid var(--line); }
+}
 @media (max-width: 980px) {
   nav.primary { display: none; }
   .hero h1, .hero-side { grid-column: 1 / -1; }
   .block-head .eyebrow, .block-head h2, .block-head p { grid-column: 1 / -1; }
-  .block-head h2 { margin-top: 8px; }
+  .block-head h2 { margin-top: 10px; }
   .contract .src, .contract .out { grid-column: 1 / -1; border-right: 0; }
   .contract .src { border-bottom: 1px solid var(--line); }
-  .tlist dl, .status .eyebrow, .status p, .status p + p { grid-column: 1 / -1; }
-  .status p { margin-top: 10px; }
+  .steps { grid-template-columns: minmax(0, 1fr); }
+  .steps > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .status .eyebrow, .status .lead, .phases { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
   .compare { grid-template-columns: minmax(0, 1fr); }
   .compare > div + div { border-left: 0; border-top: 1px solid var(--line); }
-  .weave, .call { grid-template-columns: 92px minmax(0, 1fr); }
-  .threads .lib { display: none; }
-  .threads .ns { font-size: 0.75rem; }
-  .threads button { gap: 8px; padding-right: 8px; }
-  .call .eyebrow { padding-right: 8px; font-size: 0.75rem; }
-  .call pre { padding-inline: 14px; font-size: 0.8125rem; }
-  .tlist dl { grid-template-columns: max-content minmax(0, 1fr); }
-  .tlist dd.l { grid-column: 2; border-top: 0; padding-top: 0; }
-  .header-end .state { display: none; }
+  .call { grid-template-columns: minmax(0, 1fr); }
+  .call .pair { padding-top: 12px; }
+  .call pre { padding: 8px 0; font-size: 0.8125rem; }
+  .call .runs { padding: 0 0 12px; }
+  .wall { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .wall .fine { grid-column: 1; }
+  .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .behave { grid-template-columns: minmax(0, 1fr); }
+  .behave > div, .behave > div + div { padding-left: 0; border-left: 0; }
+  .behave > div + div { border-top: 1px solid var(--line); }
+  .phases { grid-template-columns: minmax(0, 1fr); }
+  .phases div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); margin-top: 16px; }
+  .header-end .state span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .weave > svg * { transition: none; }
 }
 </style>
 
@@ -203,25 +246,26 @@ footer a { text-decoration: none; color: var(--muted); }
   <div class="wrap header-row">
     <a class="wordmark" href="#top">
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-        <rect x="4" y="0" width="2" height="20" fill="var(--warp)"/>
-        <rect x="14" y="0" width="2" height="20" fill="var(--warp)"/>
-        <rect x="0" y="4" width="20" height="3" fill="var(--t-http)"/>
-        <rect x="0" y="13" width="20" height="3" fill="var(--t-kafka)"/>
-        <rect x="13" y="3" width="4" height="5" fill="var(--bg)"/>
-        <rect x="14" y="3" width="2" height="5" fill="var(--warp)"/>
-        <rect x="3" y="12" width="4" height="5" fill="var(--bg)"/>
-        <rect x="4" y="12" width="2" height="5" fill="var(--warp)"/>
+        <rect x="4" y="0" width="3" height="20" fill="var(--warp)"/>
+        <rect x="13" y="0" width="3" height="20" fill="var(--warp)"/>
+        <rect x="0" y="4" width="20" height="3" fill="var(--fg)"/>
+        <rect x="0" y="13" width="20" height="3" fill="var(--fg)"/>
+        <rect x="12" y="3" width="5" height="5" fill="var(--bg)"/>
+        <rect x="13" y="3" width="3" height="5" fill="var(--warp)"/>
+        <rect x="3" y="12" width="5" height="5" fill="var(--bg)"/>
+        <rect x="4" y="12" width="3" height="5" fill="var(--warp)"/>
       </svg>
       Weft
     </a>
     <nav class="primary" aria-label="Primary">
       <a href="#compare">Before and after</a>
+      <a href="#how">How it works</a>
       <a href="#contract">Contracts</a>
-      <a href="#transports">Transports</a>
+      <a href="#dashboard">Dashboard</a>
       <a href="#status">Status</a>
     </nav>
     <div class="header-end">
-      <span class="state">In development</span>
+      <span class="state"><i aria-hidden="true"></i><span>In development</span></span>
       <button class="theme-btn" id="theme-toggle" type="button">Theme</button>
     </div>
   </div>
@@ -231,36 +275,44 @@ footer a { text-decoration: none; color: var(--muted); }
   <div class="wrap hero">
     <h1>One interface for every way your services talk.</h1>
     <div class="hero-side">
-      <p>Each line below is a transport running between real services. With Weft they share one API, one set of types and one way to fail, while Express, KafkaJS and Socket.io keep doing the work underneath.</p>
+      <p>Call <code>weft.http</code>, <code>weft.kafka</code> or <code>weft.ws</code> from any of eleven languages. Weft runs the library you already use underneath, with types from one contract.</p>
       <a class="cta" href="#status">
         Read the design
-        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <svg class="ico" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
       </a>
     </div>
   </div>
 
   <div class="weave-band">
     <div class="wrap">
-      <div class="weave">
-        <ul class="threads" id="threads" aria-label="Transports in the map"></ul>
-        <div class="canvas" id="canvas"></div>
+      <div class="weave-head">
+        <span class="eyebrow">Languages run vertically, transports across. Every crossing is one <code>weft.*</code> call.</span>
+        <span class="eyebrow">A gap is a combination the ecosystem does not support.</span>
       </div>
+      <div class="weave" id="weave"></div>
       <div class="call" aria-live="polite">
-        <div class="eyebrow">The call</div>
-        <pre id="call"></pre>
+        <div class="pair" id="call-pair"></div>
+        <pre id="call-code"></pre>
+        <div class="runs" id="call-runs"></div>
       </div>
     </div>
+  </div>
+
+  <div class="wrap wall" aria-label="Frameworks">
+    <div class="eyebrow">Designed to run on</div>
+    <div class="logos" id="logos"></div>
+    <p class="fine">Weft adapts these libraries and frameworks. It is not affiliated with or endorsed by their authors.</p>
   </div>
 
   <section class="block wrap" id="compare" aria-labelledby="cmp-title">
     <div class="block-head">
       <div class="eyebrow">Before and after</div>
       <h2 id="cmp-title">The same endpoint, written twice.</h2>
-      <p>Take an order over HTTP, publish it to Kafka, tell the customer's browser over a socket. Today that means three libraries, three setups and a request body typed as <code>any</code>.</p>
+      <p>Take an order over HTTP, publish it to Kafka and tell the customer's browser over a socket. Today that is three libraries, three setups and a request body typed as <code>any</code>.</p>
     </div>
-    <div class="compare">
+    <div class="panel compare">
       <div>
-        <div class="cap"><strong>Express, KafkaJS and Socket.io</strong><span>server.ts</span></div>
+        <div class="cap"><span class="ic" id="before-icons"></span><span class="files">server.ts</span></div>
 <pre><span class="k">import</span> express <span class="k">from</span> <span class="s">"express"</span>
 <span class="k">import</span> { createServer } <span class="k">from</span> <span class="s">"node:http"</span>
 <span class="k">import</span> { Kafka } <span class="k">from</span> <span class="s">"kafkajs"</span>
@@ -275,15 +327,81 @@ app.<span class="f">use</span>(express.<span class="f">json</span>())
 <span class="k">const</span> producer = kafka.<span class="f">producer</span>()
 <span class="k">await</span> producer.<span class="f">connect</span>()
 
-<span class="row mark-http">app.<span class="f">post</span>(<span class="s">"/orders"</span>, <span class="k">async</span> (req, res) =&gt; {</span><span class="row mark-http">  <span class="k">const</span> order = <span class="k">await</span> orders.<span class="f">create</span>(req.body)   <span class="k">// req.body: any</span></span><span class="row mark-kafka">  <span class="k">await</span> producer.<span class="f">send</span>({</span><span class="row mark-kafka">    topic: <span class="s">"order.placed"</span>,</span><span class="row mark-kafka">    messages: [{ key: order.id, value: JSON.<span class="f">stringify</span>(order) }],</span><span class="row mark-kafka">  })</span><span class="row mark-ws">  io.<span class="f">to</span>(<span class="s">`order:${order.id}`</span>).<span class="f">emit</span>(<span class="s">"order.status"</span>, <span class="s">"placed"</span>)</span><span class="row mark-http">  res.<span class="f">json</span>(order)</span><span class="row mark-http">})</span>
+app.<span class="f">post</span>(<span class="s">"/orders"</span>, <span class="k">async</span> (req, res) =&gt; {
+  <span class="k">const</span> order = <span class="k">await</span> orders.<span class="f">create</span>(req.body)   <span class="k">// req.body: any</span>
+  <span class="k">await</span> producer.<span class="f">send</span>({
+    topic: <span class="s">"order.placed"</span>,
+    messages: [{ key: order.id, value: JSON.<span class="f">stringify</span>(order) }],
+  })
+  io.<span class="f">to</span>(<span class="s">`order:${order.id}`</span>).<span class="f">emit</span>(<span class="s">"order.status"</span>, <span class="s">"placed"</span>)
+  res.<span class="f">json</span>(order)
+})
 server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
       </div>
       <div>
-        <div class="cap"><strong>Weft</strong><span>server.ts</span></div>
+        <div class="cap"><strong>Weft</strong><span class="files">server.ts</span></div>
 <pre><span class="k">import</span> { weft } <span class="k">from</span> <span class="s">"./weft.gen"</span>
 
-<span class="row mark-http">weft.http.<span class="f">post</span>(<span class="s">"/orders"</span>, <span class="k">async</span> ({ body }) =&gt; {   <span class="k">// body: CreateOrder</span></span><span class="row mark-http">  <span class="k">const</span> order = <span class="k">await</span> orders.<span class="f">create</span>(body)</span><span class="row mark-kafka">  <span class="k">await</span> weft.kafka.<span class="f">publish</span>(<span class="s">"order.placed"</span>, order)   <span class="k">// key from the contract</span></span><span class="row mark-ws">  weft.ws.<span class="f">to</span>(<span class="s">`order:${order.id}`</span>).<span class="f">emit</span>(<span class="s">"order.status"</span>, <span class="s">"placed"</span>)</span><span class="row mark-http">  <span class="k">return</span> order                                    <span class="k">// must be Order</span></span><span class="row mark-http">})</span>
-<span class="k">await</span> weft.<span class="f">start</span>()   <span class="k">// port, brokers and socket path come from weft.yaml</span></pre>
+weft.http.<span class="f">post</span>(<span class="s">"/orders"</span>, <span class="k">async</span> ({ body }) =&gt; {   <span class="k">// body: CreateOrder</span>
+  <span class="k">const</span> order = <span class="k">await</span> orders.<span class="f">create</span>(body)
+  <span class="k">await</span> weft.kafka.<span class="f">publish</span>(<span class="s">"order.placed"</span>, order)   <span class="k">// key comes from the contract</span>
+  weft.ws.<span class="f">to</span>(<span class="s">`order:${order.id}`</span>).<span class="f">emit</span>(<span class="s">"order.status"</span>, <span class="s">"placed"</span>)
+  <span class="k">return</span> order                                    <span class="k">// must be an Order</span>
+})
+
+<span class="k">await</span> weft.<span class="f">start</span>()   <span class="k">// port, brokers and socket path come from weft.yaml</span>
+
+<span class="k">// Express, KafkaJS and Socket.io still run underneath.</span>
+<span class="k">// weft.kafka.client is the raw KafkaJS client when you need it.</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="how" aria-labelledby="how-title">
+    <div class="block-head">
+      <div class="eyebrow">How it works</div>
+      <h2 id="how-title">Set up, write the contract, call.</h2>
+    </div>
+    <div class="panel steps">
+      <div>
+        <div class="sh"><span class="n">1</span><h3>Set up</h3><p><code>weft init</code> asks which transports you use and which library runs each one.</p></div>
+<pre><span class="k">$</span> npx @weft-sdk/cli init
+<span class="k">? Which communication do you use?</span>
+  HTTP, GraphQL, Kafka, WebSockets
+<span class="k">? HTTP library?</span>       Express
+<span class="k">? GraphQL library?</span>    Apollo
+<span class="k">? Kafka library?</span>      KafkaJS
+<span class="k">? WebSocket library?</span>  Socket.io
+Installed @weft-sdk/core and 4 adapters
+Wrote weft.yaml</pre>
+      </div>
+      <div>
+        <div class="sh"><span class="n">2</span><h3>Write the contract</h3><p>Names and types, once, in a file every language reads.</p></div>
+<pre><span class="k">// contracts/orders.weft</span>
+<span class="k">package</span> orders <span class="f">@version</span>(<span class="s">"1.0.0"</span>)
+
+<span class="k">type</span> Order {
+  id: uuid
+  items: OrderItem[]
+  total: Money
+}
+
+<span class="k">event</span> order.placed: Order {
+  key: id
+}</pre>
+      </div>
+      <div>
+        <div class="sh"><span class="n">3</span><h3>Generate and call</h3><p><code>weft gen</code> writes typed code. Every name and payload is checked by your compiler.</p></div>
+<pre><span class="k">$</span> weft gen
+
+<span class="k">import</span> { weft } <span class="k">from</span> <span class="s">"./weft.gen"</span>
+
+weft.kafka.<span class="f">on</span>(<span class="s">"order.placed"</span>, <span class="k">async</span> (order) =&gt; {
+  <span class="k">// order: Order</span>
+  <span class="k">await</span> payments.<span class="f">charge</span>(order.id, order.total)
+})
+
+<span class="k">await</span> weft.<span class="f">start</span>()</pre>
       </div>
     </div>
   </section>
@@ -291,16 +409,18 @@ server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
   <section class="block wrap" id="contract" aria-labelledby="ct-title">
     <div class="block-head">
       <div class="eyebrow">Contracts</div>
-      <h2 id="ct-title">Write the type once. Every language gets it.</h2>
-      <p>A <code>.weft</code> file names each event, route and call with its type. <code>weft gen</code> turns it into code for each service, so a Go consumer cannot drift from a TypeScript producer.</p>
+      <h2 id="ct-title">One event, six languages.</h2>
+      <p>Each service gets the <code>Order</code> type in its own language, from the same <code>.weft</code> file. A Go consumer cannot drift from a TypeScript producer without the compiler saying so.</p>
     </div>
-    <div class="contract">
+    <div class="panel contract">
       <div class="src">
-        <div class="cap">contracts/orders.weft</div>
+        <div class="cap"><span class="files">contracts/orders.weft</span></div>
 <pre><span class="k">package</span> orders <span class="f">@version</span>(<span class="s">"1.0.0"</span>)
 
+<span class="k">enum</span> Currency { EUR GBP USD }
+
 <span class="k">type</span> Money {
-  amount: int        <span class="k">// minor units</span>
+  amount: int            <span class="k">// minor units</span>
   currency: Currency
 }
 
@@ -318,11 +438,7 @@ server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
       </div>
       <div class="out">
         <div class="cap">
-          <div class="tabs" role="tablist" aria-label="Language" id="lang-tabs">
-            <button type="button" role="tab" aria-selected="true" data-l="ts">TypeScript</button>
-            <button type="button" role="tab" aria-selected="false" data-l="go">Go</button>
-            <button type="button" role="tab" aria-selected="false" data-l="py">Python</button>
-          </div>
+          <div class="tabs" role="tablist" aria-label="Language" id="lang-tabs"></div>
           <span class="note">Planned API</span>
         </div>
         <pre id="lang-code" role="tabpanel"></pre>
@@ -330,21 +446,43 @@ server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
     </div>
   </section>
 
-  <section class="block wrap" id="transports" aria-labelledby="tl-title">
+  <section class="block wrap" id="behaviour" aria-labelledby="bh-title">
     <div class="block-head">
-      <div class="eyebrow">Transports</div>
-      <h2 id="tl-title">Thirteen namespaces, each running a library you already know.</h2>
+      <div class="eyebrow">Behaviour</div>
+      <h2 id="bh-title">The same rules on every transport.</h2>
+      <p>Each library handles tracing, retries and errors its own way. Weft does them once, the same way, in every language.</p>
     </div>
-    <div class="tlist">
-      <dl id="tlist"></dl>
+    <div class="behave" id="behave"></div>
+  </section>
+
+  <section class="block wrap" id="dashboard" aria-labelledby="db-title">
+    <div class="block-head">
+      <div class="eyebrow">Dashboard</div>
+      <h2 id="db-title">See which services talk, over what, in what language.</h2>
+      <p><code>weft dashboard</code> draws the map from your contracts, so it works before any traffic flows. Planned to run on your laptop, inside your cluster, or in Weft Cloud.</p>
+    </div>
+    <div class="panel">
+      <div class="cap"><span class="files">localhost:4747</span><span>Design preview</span></div>
+      <div class="dash">
+        <div class="map" id="map"></div>
+        <aside>
+          <div class="eyebrow">Event</div>
+          <h3>order.placed</h3>
+          <dl id="dash-dl"></dl>
+        </aside>
+      </div>
     </div>
   </section>
 
   <section class="block wrap" id="status" aria-labelledby="st-title">
     <div class="status">
       <div class="eyebrow" id="st-title">Status</div>
-      <p>Weft is in the design stage. The contract language, the API and the architecture are written. No package is published and no code runs yet.</p>
-      <p>Next comes this website, then the compiler and CLI, then the TypeScript and Go packages.</p>
+      <p class="lead">Weft is being designed in the open. Nothing is published yet.</p>
+      <div class="phases">
+        <div><h3>Written</h3><p>The contract language, the <code>weft.*</code> API, the language packages, the CLI and the architecture.</p></div>
+        <div><h3>Now</h3><p>This website.</p></div>
+        <div><h3>Next</h3><p>The compiler and CLI, then the TypeScript and Go packages, checked against each other by a shared test suite.</p></div>
+      </div>
     </div>
   </section>
 </main>
@@ -352,37 +490,115 @@ server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
 <footer>
   <div class="wrap row">
     <span>Weft, in development</span>
-    <nav aria-label="Footer"><a href="#compare">Before and after</a><a href="#contract">Contracts</a><a href="#transports">Transports</a></nav>
+    <nav aria-label="Footer"><a href="#compare">Before and after</a><a href="#how">How it works</a><a href="#contract">Contracts</a><a href="#dashboard">Dashboard</a></nav>
   </div>
 </footer>
 
 <script>
 (function () {
-  var SERVICES = ["web", "api", "orders", "payments", "tracking", "emails"];
-  var THREADS = [
-    { id: "http",  lib: "Express",   from: 0, to: [1],    call: 'weft.http.<f>post</f>(<s>"/orders"</s>, createOrder)',               route: "web to api" },
-    { id: "gql",   lib: "Apollo",    from: 0, to: [1],    call: 'weft.gql.<f>query</f>(<s>"order"</s>, ({ id }) =&gt; orders.<f>find</f>(id))', route: "web to api" },
-    { id: "grpc",  lib: "grpc-js",   from: 1, to: [2],    call: '<k>await</k> weft.grpc.<f>call</f>(<s>"orders.CreateOrder"</s>, req)',  route: "api to orders" },
-    { id: "kafka", lib: "KafkaJS",   from: 2, to: [3, 5], call: '<k>await</k> weft.kafka.<f>publish</f>(<s>"order.placed"</s>, order)', route: "orders to payments and emails" },
-    { id: "mq",    lib: "amqplib",   from: 3, to: [5],    call: 'weft.mq.<f>send</f>(<s>"emails"</s>, receipt)',                      route: "payments to emails" },
-    { id: "ws",    lib: "Socket.io", from: 4, to: [0],    call: 'weft.ws.<f>to</f>(<s>`order:${id}`</s>).<f>emit</f>(<s>"courier.moved"</s>, pos)', route: "tracking to web" }
-  ];
-  var TOP = 48, ROW = 48, BOTTOM = 16;
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var canvas = document.getElementById("canvas");
-  var list = document.getElementById("threads");
-  var callEl = document.getElementById("call");
-  var NS = "http://www.w3.org/2000/svg";
-  var selected = null;
-  var movers = [];
-  var width = 0;
-
-  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function hl(s) {
-    return s.replace(/<f>/g, '<span class="f">').replace(/<\/f>/g, '</span>')
-            .replace(/<s>/g, '<span class="s">').replace(/<\/s>/g, '</span>')
-            .replace(/<k>/g, '<span class="k">').replace(/<\/k>/g, '</span>');
+  var ICONS = {"apachekafka":"M9.71 2.136a1.43 1.43 0 0 0-2.047 0h-.007a1.48 1.48 0 0 0-.421 1.042c0 .41.161.777.422 1.039l.007.007c.257.264.616.426 1.019.426.404 0 .766-.162 1.027-.426l.003-.007c.261-.262.421-.629.421-1.039 0-.408-.159-.777-.421-1.042H9.71zM8.683 22.295c.404 0 .766-.167 1.027-.429l.003-.008c.261-.261.421-.631.421-1.036 0-.41-.159-.778-.421-1.044H9.71a1.42 1.42 0 0 0-1.027-.432 1.4 1.4 0 0 0-1.02.432h-.007c-.26.266-.422.634-.422 1.044 0 .406.161.775.422 1.036l.007.008c.258.262.617.429 1.02.429zm7.89-4.462c.359-.096.683-.33.882-.684l.027-.052a1.47 1.47 0 0 0 .114-1.067 1.454 1.454 0 0 0-.675-.896l-.021-.014a1.425 1.425 0 0 0-1.078-.132c-.36.091-.684.335-.881.686-.2.349-.241.75-.146 1.119.099.363.33.691.675.896h.002c.346.203.737.239 1.101.144zm-6.405-7.342a2.083 2.083 0 0 0-1.485-.627c-.58 0-1.103.242-1.482.627-.378.385-.612.916-.612 1.507s.233 1.124.612 1.514a2.08 2.08 0 0 0 2.967 0c.379-.39.612-.923.612-1.514s-.233-1.122-.612-1.507zm-.835-2.51c.843.141 1.6.552 2.178 1.144h.004c.092.093.182.196.265.299l1.446-.851a3.176 3.176 0 0 1-.047-1.808 3.149 3.149 0 0 1 1.456-1.926l.025-.016a3.062 3.062 0 0 1 2.345-.306c.77.21 1.465.721 1.898 1.482v.002c.431.757.518 1.626.313 2.408a3.145 3.145 0 0 1-1.456 1.928l-.198.118h-.02a3.095 3.095 0 0 1-2.154.201 3.127 3.127 0 0 1-1.514-.944l-1.444.848a4.162 4.162 0 0 1 0 2.879l1.444.846c.413-.47.939-.789 1.514-.944a3.041 3.041 0 0 1 2.371.319l.048.023v.002a3.17 3.17 0 0 1 1.408 1.906 3.215 3.215 0 0 1-.313 2.405l-.026.053-.003-.005a3.147 3.147 0 0 1-1.867 1.436 3.096 3.096 0 0 1-2.371-.318v-.006a3.156 3.156 0 0 1-1.456-1.927 3.175 3.175 0 0 1 .047-1.805l-1.446-.848a3.905 3.905 0 0 1-.265.294l-.004.005a3.938 3.938 0 0 1-2.178 1.138v1.699a3.09 3.09 0 0 1 1.56.862l.002.004c.565.572.914 1.368.914 2.243 0 .873-.35 1.664-.914 2.239l-.002.009a3.1 3.1 0 0 1-2.21.931 3.1 3.1 0 0 1-2.206-.93h-.002v-.009a3.186 3.186 0 0 1-.916-2.239c0-.875.35-1.672.916-2.243v-.004h.002a3.1 3.1 0 0 1 1.558-.862v-1.699a3.926 3.926 0 0 1-2.176-1.138l-.006-.005a4.098 4.098 0 0 1-1.173-2.874c0-1.122.452-2.136 1.173-2.872h.006a3.947 3.947 0 0 1 2.176-1.144V6.289a3.137 3.137 0 0 1-1.558-.864h-.002v-.004a3.192 3.192 0 0 1-.916-2.243c0-.871.35-1.669.916-2.243l.002-.002A3.084 3.084 0 0 1 8.683 0c.861 0 1.641.355 2.21.932v.002h.002c.565.574.914 1.372.914 2.243 0 .876-.35 1.667-.914 2.243l-.002.005a3.142 3.142 0 0 1-1.56.864v1.692zm8.121-1.129l-.012-.019a1.452 1.452 0 0 0-.87-.668 1.43 1.43 0 0 0-1.103.146h.002c-.347.2-.58.529-.677.896-.095.365-.054.768.146 1.119l.007.009c.2.347.519.579.874.673.357.103.755.059 1.098-.144l.019-.009a1.47 1.47 0 0 0 .657-.885 1.493 1.493 0 0 0-.141-1.118","apachepulsar":"M24 8.925h-5.866c-1.586-3.041-3.262-5.402-5.544-5.402-2.97 0-4.367 2.593-5.717 5.115l-.118.22H0v1.5h3.934c1.39 0 1.673.468 1.673.468-1.09 1.691-2.4 3.363-4.584 3.363H0v1.574h1.03c4.234 0 6.083-3.434 7.567-6.193 1.361-2.541 2.31-4.08 3.993-4.08 1.747 0 3.584 3.801 5.201 7.157.237.488.477.988.72 1.483-6.2.197-9.155 1.649-11.559 2.833-1.759.866-3.147 1.94-5.433 1.94H0v1.574h1.507c2.754 0 4.47-.85 6.295-1.751 2.53-1.243 5.398-2.652 12.157-2.652h3.907V14.5H21.66a1.18 1.18 0 01-.972-.393 70.83 70.83 0 01-1.133-2.321l-.511-1.047s.366-.393 1.38-.393H24Z","apollographql":"M12,0C5.372,0 0,5.373 0,12 0,18.628 5.372,24 12,24 18.627,24 24,18.628 24,12A12.014,12.014 0 0 0 23.527,8.657 0.6,0.6 0 0 0 22.4,9.066H22.398C22.663,10.009 22.8,10.994 22.8,12A10.73,10.73 0 0 1 19.637,19.637 10.729,10.729 0 0 1 12,22.8 10.73,10.73 0 0 1 4.363,19.637 10.728,10.728 0 0 1 1.2,12 10.73,10.73 0 0 1 4.363,4.363 10.728,10.728 0 0 1 12,1.2C14.576,1.2 17.013,2.096 18.958,3.74A1.466,1.466 0 1 0 19.82,2.9 11.953,11.953 0 0 0 12,0ZM10.56,5.88 6.36,16.782H8.99L9.677,14.934H13.646L12.927,12.892H10.314L12.014,8.201 15.038,16.781H17.669L13.47,5.88Z","dart":"M4.105 4.105S9.158 1.58 11.684.316a3.079 3.079 0 0 1 1.481-.315c.766.047 1.677.788 1.677.788L24 9.948v9.789h-4.263V24H9.789l-9-9C.303 14.5 0 13.795 0 13.105c0-.319.18-.818.316-1.105l3.789-7.895zm.679.679v11.787c.002.543.021 1.024.498 1.508L10.204 23h8.533v-4.263L4.784 4.784zm12.055-.678c-.899-.896-1.809-1.78-2.74-2.643-.302-.267-.567-.468-1.07-.462-.37.014-.87.195-.87.195L6.341 4.105l10.498.001z","django":"M11.146 0h3.924v18.166c-2.013.382-3.491.535-5.096.535-4.791 0-7.288-2.166-7.288-6.32 0-4.002 2.65-6.6 6.753-6.6.637 0 1.121.05 1.707.203zm0 9.143a3.894 3.894 0 00-1.325-.204c-1.988 0-3.134 1.223-3.134 3.365 0 2.09 1.096 3.236 3.109 3.236.433 0 .79-.025 1.35-.102V9.142zM21.314 6.06v9.098c0 3.134-.229 4.638-.917 5.937-.637 1.249-1.478 2.039-3.211 2.905l-3.644-1.733c1.733-.815 2.574-1.53 3.109-2.625.561-1.121.739-2.421.739-5.835V6.059h3.924zM17.39.021h3.924v4.026H17.39z","dotnet":"M24 8.77h-2.468v7.565h-1.425V8.77h-2.462V7.53H24zm-6.852 7.565h-4.821V7.53h4.63v1.24h-3.205v2.494h2.953v1.234h-2.953v2.604h3.396zm-6.708 0H8.882L4.78 9.863a2.896 2.896 0 0 1-.258-.51h-.036c.032.189.048.592.048 1.21v5.772H3.157V7.53h1.659l3.965 6.32c.167.261.275.442.323.54h.024c-.04-.233-.06-.629-.06-1.185V7.529h1.372zm-8.703-.693a.868.829 0 0 1-.869.829.868.829 0 0 1-.868-.83.868.829 0 0 1 .868-.828.868.829 0 0 1 .869.829Z","elixir":"M19.793 16.575c0 3.752-2.927 7.426-7.743 7.426-5.249 0-7.843-3.71-7.843-8.29 0-5.21 3.892-12.952 8-15.647a.397.397 0 0 1 .61.371 9.716 9.716 0 0 0 1.694 6.518c.522.795 1.092 1.478 1.763 2.352.94 1.227 1.637 1.906 2.644 3.842l.015.028a7.107 7.107 0 0 1 .86 3.4z","express":"M24 18.588a1.529 1.529 0 01-1.895-.72l-3.45-4.771-.5-.667-4.003 5.444a1.466 1.466 0 01-1.802.708l5.158-6.92-4.798-6.251a1.595 1.595 0 011.9.666l3.576 4.83 3.596-4.81a1.435 1.435 0 011.788-.668L21.708 7.9l-2.522 3.283a.666.666 0 000 .994l4.804 6.412zM.002 11.576l.42-2.075c1.154-4.103 5.858-5.81 9.094-3.27 1.895 1.489 2.368 3.597 2.275 5.973H1.116C.943 16.447 4.005 19.009 7.92 17.7a4.078 4.078 0 002.582-2.876c.207-.666.548-.78 1.174-.588a5.417 5.417 0 01-2.589 3.957 6.272 6.272 0 01-7.306-.933 6.575 6.575 0 01-1.64-3.858c0-.235-.08-.455-.134-.666A88.33 88.33 0 010 11.577zm1.127-.286h9.654c-.06-3.076-2.001-5.258-4.59-5.278-2.882-.04-4.944 2.094-5.071 5.264z","fastapi":"M12 .0387C5.3729.0384.0003 5.3931 0 11.9988c-.001 6.6066 5.372 11.9628 12 11.9625 6.628.0003 12.001-5.3559 12-11.9625-.0003-6.6057-5.3729-11.9604-12-11.96m-.829 5.4153h7.55l-7.5805 5.3284h5.1828L5.279 18.5436q2.9466-6.5444 5.892-13.0896","fastify":"M23.245 6.49L24 4.533l-.031-.121-7.473 1.967c.797-1.153.523-2.078.523-2.078s-2.387 1.524-4.193 1.485c-1.804-.04-2.387-.52-5.155.362-2.768.882-3.551 3.59-4.351 4.173-.804.583-3.32 2.477-3.32 2.477l.006.034 2.27-.724s-.622.585-1.945 2.37l-.062-.057.002.011s1.064 1.626 2.107 1.324a2.14 2.14 0 0 0 .353-.147c.419.234.967.463 1.572.525 0 0-.41-.475-.752-1.017l.238-.154.865.318-.096-.812c.003-.003.006-.003.008-.006l.849.311-.105-.738a5.65 5.65 0 0 1 .322-.158l.885-3.345 3.662-2.497-.291.733c-.741 1.826-2.135 2.256-2.135 2.256l-.582.22c-.433.512-.614.637-.764 2.353.348-.088.682-.107.984-.028 1.564.421 2.107 2.307 1.685 2.827-.104.13-.356.354-.673.617H7.77l-.008.514-.065.051h-.645l-.009.504-.17.127c-.607.011-1.373-.518-1.373-.518 0 .481.401 1.225.401 1.225l.07-.034-.061.045s1.625 1.083 2.646.681c.91-.356 3.263-2.213 5.296-3.093l6.15-1.62.811-2.1-4.688 1.235v-1.889l5.5-1.448.811-2.1-6.31 1.662V8.367zm-11.163 4l1.459-.384.02.074-.455 1.179-1.513.398zm.503 2.526l-1.512.398.489-1.266 1.459-.385.02.074zm1.971-.424l-1.513.398.49-1.266 1.459-.385.02.073Z","flask":"M7.172 20.36c-.914-.72-1.89-1.41-2.556-2.38-1.402-1.712-2.482-3.694-3.22-5.777-.446-1.355-.6-2.808-1.174-4.11-.602-.944.103-1.978 1.138-2.28.46-.087 1.272-.522.293-.211-.878.644-.963-.585-.063-.662.615-.082.84-.585.63-1.037-.66-.43 1.6-.903.463-1.544C1.5 1.08 4.34.835 3.64 2.285 3.473 3.4 5.624 2.08 5.125 3.368c.507.619 1.9.14 1.865 1.009.74.05.993.672 1.687.72.72.325 2.022.58 2.266 1.39-.713.566-2.364-1.165-2.443.398.215 2.31.16 4.689 1.004 6.888.4 1.332 1.37 2.38 2.244 3.418.837 1.016 1.971 1.73 3.127 2.333 1.014.478 2.107.795 3.213.994.448-.343 1.24-1.617 1.938-1.08.033.604-1.388 1.263-.067 1.196.776-.234 1.314.6 1.953-.152.588.697 2.446-.446 2.027.98-.566.364-1.392.144-1.959.646-.935-.467-1.68.418-2.715.306a19.86 19.86 0 01-3.484.29c-1.912-.15-3.865-.214-5.684-.88-1.024-.297-2.023-.881-2.924-1.464zm1.615.7c1 .432 1.978.888 3.074 1.026 1.74.24 3.537.614 5.283.274-.79-.357-1.608.14-2.395-.255-.944.203-1.957-.052-2.917-.177-1.092-.486-2.27-.82-3.291-1.452-1.277-.466.66.598 1.005.685.798.453-.877-.233-1.114-.421-.668-.375-.754-.297-.066.084.139.08.276.166.42.235zm-1.904-1.346c.97.359-.004-.682-.45-.622-.196-.341-.751-.557-.36-.74-.704.244-.737-.93-1.07-.763-.744-.235-.29-1.07-1.176-1.58-.081-.54-.882-1.008-1.138-1.822-.113-.416-.905-1.613-.418-.5.414 1.072 1.143 1.99 1.75 2.907.47.873 1.027 1.786 1.885 2.33.29.278.568.703.977.79zM4.09 16.647c.033-.146.177.317 0 0zm3.954 3.497c.215-.096-.31-.12 0 0zm.526.192c-.054-.265-.24.148 0 0zm.66.275c.312-.3-.484-.188 0 0zm1.127.63c.191-.282-.61-.107 0 0zM8.19 19.728c.487-.315-.63-.004 0 0zm.494.246c-.014-.166-.176.075 0 0zm2.47 1.542c.397.25 2.32.55 1.115.103-.2.042-2.23-.574-1.116-.103zm-3.921-3.054c-.04-.167-.616-.185 0 0zm1.15.67c.3-.21-.621-.16 0 0zm.966.593c.43-.162-.696-.163 0 0zm-2.584-1.773c.466.358 1.88.046.714-.213-.53-.283-1.727-.476-.912.17zm3.24 1.978c.193-.33-.815-.19 0 0zm-.984-.783c1.14.323-.958-.72-.281-.118l.15.068.13.05zm1.973 1.14c1.08.01-.975-.147 0 0zm-4.644-2.96c-.042-.2-.266.018 0 0zm6.47 3.985c.028-.363-.353.27 0 0zm-4.63-2.856c-.064-.191-.336-.008 0 0zm-1.738-1.254c.62-.037-.848-.273 0 0zm-2.06-1.332c-.077-.297-.674-.534 0 0zm5.407 3.435c-.114-.13-.054.028 0 0zm3.366 2.065c-.01-.197-.183.075 0 0zm-3.664-2.373c.06-.255-.528-.077 0 0zm-2.506-1.592c.46-.05-.74-.311 0 0zm4.241 2.637c.718-.285-.7-.14 0 0zM9.03 18.545c.827.106-.985-.563-.181-.06zm2.876 1.768c.773-.462.518 1.082 1.311.13.782-.57-.675.707.29.103.696-.467 1.726.22 2.376.445.468-.023.923.405 1.403.145.923-.25-1.806-.37-1.09-.81-.845.245-1.47-.294-1.885-.835-.948-.22-2.044-.703-2.517-1.542-.192-.315.28.044-.166-.47-.57-.508-.856-1.085-1.24-1.702-.457-.244-.51-.963-.557-.024.004-.593-.553-.992-.688-.826-.002-.571.595-.285.176-.707-.09-.592-.386-1.21-.475-1.877-.138-.322-.02-1.011-.473-.282-.165.77-.055-.947.202-.38.337-.58-.12-.51-.14-.43.22-.488.14-1.18-.057-.916.117-.517.185-1.902-.175-1.656.218-.54.414-2.473-.534-1.736-.384.005-1.048.14-1.363.296.986.543-.1.196-.5.11-.052.502-.45.285-.946.29.793.098-.386.81-.841.534-.59.282.51.987.012 1.205.06.328-.905-.12-.83.64-.573-.241-.078.9.209.514.975.264.686.866.71 1.437-.158.333-.784-.783-.14-.731-.507-.827-.561-.3-.984.085-.1.028 1.079.547.34.803.65.1.668.67.8 1.03.39.407.31-.45.779.04-.296-.436-1.567-1.228-.544-.974-.005-.44-.185-.793.129-.784.31-.562-.325 1.387.375.672.193-.085.24-.563.59.045.505.498.182.858-.531.403.127.433.954.587.799 1.265.165.595.395.376.596.342.158.578.247.153.255-.123.72.155.552.58.778.88.497.224-.712-1.522.142-.526.898.81.337 1.15-.47 1.02.51-.041.675.69 1.313.664.582.277.975 1.34-.027.897-.348-.313-1.58-.7-.573-.104.929.43 1.665.688 2.561 1.227.64.458.918.982 1.16 1.086-.538.257-1.623-.206-.817-.348-.503-.091-1.068-.345-.587.28.41.343 1.45.306 1.637.345-.159.348-.43.376.006.403-.486.26.156.3.201.448zm-.994-2.808c-.296-.31-.373-.89-.053-.385.164.066.525.947.053.385zm3.238 2.057c.185-.011.006.14 0 0zm-3.706-2.816c-.01-.468.107.36 0 0zm-.322-.433c-.372-.72.47.204 0 0zm-3.9-2.692c.219-.06.108.374 0 0zm3.104 1.682c.134-.504.158.424 0 0zm-2.192-1.525c-.155-.278.323.26 0 0zm1.882.604c-.352-.79.25-.432.078.13zM5.77 12.217c-.158-.26-.418-1.02-.334-1.252.076.378.804 1.627.357.518-.494-.93.59.302.702.534.05.23-.305-.063-.064.478-.44-.617-.26.34-.661-.278zm-1.003-.691c.04-.603.23.413 0 0zm.45.155c.216-.455.366.634 0 0zm-1.084-.84c-.374-.37-.644-.713.017-.23.255.01-.566-.778.06-.25.66.12.327 1.082-.077.48zm.57-.015c.217-.215.115.212 0 0zm.35.113c-.328-.617.4.258 0 0zm-.697-.667c-1.086-.966 1.365.506.177.18zm3.11 1.808c-.47-.282-.123-1.984.037-.82.457-.148-.025.6.315.594-.053.473-.206.643-.35.226zm1.15.68c.048-.513.099.35 0 0zm-.2-.198c.054-.22.007.258 0 0zM4.57 9.955c-.697-.963 2.027.973.447.244-.165-.043-.364-.06-.447-.244zm2.216 1.175c-.066-.81.147.134 0 0zm1.682 1.079c.13-.462.01.305 0 0zM4.676 9.587c.415-.088 1.718.729.52.234-.132-.148-.416-.08-.52-.234zm3.56 1.775c.044-.83.248-.495.002.118zM4.985 9.299c.169-.248-.45-1.12.089-.313.232.185.672.31.283.387.61.539-.15.146-.372-.074zm3.075 1.804c.117-.944.103.553 0 0zM4.632 8.427c.129-.055.068.172 0 0zm.802.478c.206-.434.38.483 0 0zm2.263 1.259c-.002-.167.043.242 0 0zm-.131-.29c-.314-.776.292.41 0 0zm-.193-.51c-.053-.32.18.404 0 0zm.314-.51c-.216-.38.272-1.673.326-.87-.227.625-.065.975.093.136.293-.66-.063 1.303-.42.735zm.322-1.923c.094-.115.02.139 0 0zM7.47 17.544c-.128-.111.016.07 0 0zm1.11.56c.615.16.612-.095.055-.17-.3-.28-1.246-.575-.4-.035.057.142.235.139.344.206zM6.389 16.65c.34.253 1.28.719.484.096.269-.312-.514-.478-.254-.686-.66-.404-.52-.368-.058-.356-.794-.354.114-.328.07-.51-.305-.06-1.52-.54-.804.04-.726-.37-.173.138-.392.084-.743-.202.66.565-.118.375.425.337 1.146.864.18.357-.128.183.69.46.892.6zm1.16.667c1.41.454-.691-.556 0 0zm5.94 3.598c.02-.28-.193.24 0 0zm.611.257c.325-.315.013.503.54-.077.005-.415-.017-.66-.606-.156-.162.09-.234.473.066.233zm-9.692-6.087c-.1-.393-.7-.39 0 0zm.652.428c-.242-.402-.864-.364 0 0zm3.71 2.237c.362.32 1.662.236.44.04-.182-.27-1.151-.204-.44-.04zm5.097 3.149c.558-.468-.54.208 0 0zm1.16.796c.003-.15-.24.066 0 0zm.001-.21c.617-.654-.598.039 0 0zM2.805 13.743c-.526-.75-.327-1.088-.835-1.7-.096-.47-.87-1.533-.4-.406.43.659.558 1.679 1.235 2.106zm12.03 7.534c1.135-.734-.466-.32 0 0zm.866.34c.57-.488-.36-.102 0 0zM4.215 14.255c.163-.242-.42-.031 0 0zm11.305 7.129c.551-.355-.126-.3-.1.032zm-7.47-4.71c-.02-.24-.291.02 0 0zm.46.267c-.145-.297-.224.047 0 0zm7.894 4.684c.705-.51-.428-.098-.148.096zm-.27-.13c.574-.482-.607.213 0 0zm1.38.918c.386-.258-.469-.083 0 0zM4.57 14.08c.517.116 2.066 1.274 1.152.08-.468-.138-.187-1.283-.665-1.08.32.535.264.763-.41.426-.845-.413-.474.204-.31.374-.224.052.299.196.233.2zm-2.356-1.86c.092-.383-.853-2.107-.446-.864.146.26.13.754.446.864zm4.324 2.666c-.266-.223-.013-.032 0 0zm.656.152c0-.405-.725-.164 0 0zm5.681 3.583c-.108-.278-.428-.006 0 0zm.273.199c-.04-.155-.157.03 0 0zM15.4 20.24c.216-.16-.27-.02 0 0zM3.39 12.52c.62-.24-.664-.17 0 0zm8.984 5.662c-.007-.401-.395.1 0 0zm-9.23-6.231c.399-.135-.367-.09 0 0zm1.156.56c-.007-.133-.122.05 0 0zm14.09 8.64c.512-.104 1.678.26 1.866-.136-.62-.015-2.15-.438-2.222.1l.136.023.22.013zM4.667 12.603c.009-.407-.317-.015 0 0zM1.63 10.495c-.138-.775-.525-.118 0 0zm.724.182c.009-.25-.663-.224 0 0zm.414.203c-.12-.097-.094.122 0 0zm2.605 1.67c.122-.112-.29-.083 0 0zm-2.88-2.128c-.07-.585-.84-.088 0 0zm-1.486-.964c-.02-.27-.144.102 0 0zm.22-.167c-.035-.32-.19.04 0 0zm1.22.729c.518-.203-.94-.42-.104-.04zm16.334 10.089c.33-.303-.42-.094 0 0zm1.974 1.023c.132-.392-.334.05 0 0zM2.573 9.38c.055-.38-.41.075 0 0zM.837 8.218c-.093-.535-.08-1.474.812-1.156-1.191.236.824 1.48.57.498.5.024.98-.296.716.19.987-.11 1.67-.964 2.624-.845.742-.098 1.554-.172 2.354-.471.658-.048 1.29-.756.93-1.175-.896-.076-1.835.036-2.827.233-1.098.228-2.096.662-3.205.849-1.08.145.217.4-.092.456-.564.196.672.328-.073.534-.46-.088-.94-.246-.743-.73-1.035.133-1.945.563-1.127 1.616h.06zm2.494-1.27c.243-.894 1.3.735.398.118-.108-.08-.285-.146-.398-.12zm.047-.434c.35-.26.186.146 0 0zm.445.008c.032-.411 1.018.218.163.148zm.608-.245c.222-.26.064.23 0 0zm.156-.104c.37-.444 2.095-.283.832-.043-.338-.255-.598.15-.832.043zm2.25-.347c-.055-1.214 1.119.432 0 0zm.64-.004c.233-.612.906-.245.108-.123.017.065-.024.316-.108.123zM2.322 9.067c.697-.427-.741-.37 0 0zm.515.144c.245-.26-.531-.106 0 0zm-1.52-1.08c.399-.305-.471-.116 0 0zm20.602 12.89c.012-.355-.304.16 0 0zm-2.093-1.43c.06-.408-.27.037 0 0zm2.67 1.568c.557 0 1.688-.173.475-.173-.19.03-1.109.024-.476.173zM3.29 8.959c.45-.03.706-.497-.087-.47-1.23-.127 1.084.42-.158.264-.167.11.236.237.245.207zm.398.202c-.048-.29-.14.154 0 0zm.47-1.257c.197-.243-.27-.065 0 0zm-1.5-2.508c.806-.274 1.907-.581 2.287.135-.387-.466-.156-.924.21-.243.516.689.775-.313.438-.545.383.476.819.7.257.03.61-.734-1.223.097-1.64.088-.2.09-2.071.477-1.551.535zm.472-.903c.46-.347 1.588.206.864-.345-.07-.062-1.586.418-.864.345zm1.674.069c.538.013-.231-.722.409-.39-.105-.343-.746-.407-1.06-.544-.176.314.36.938.65.934zm-1.38-1.52c.186-.252-.326.128 0 0zm.684.164c.866-.115-.22-.373-.174-.01zm-1.277-1c-.61-.796 1.146.134.527-.7-.522-.415-1.023.468-.527.7zm7.824 4.215c.28-.496-1.155-.668-.188-.175.09.03.07.21.188.175z","gin":"M11.836 23.977c-2.0587-.1046-3.3698-.3594-4.468-.8684-.131-.0606-.1153-.0272-.278-.596-.2755-.9627-.5534-2.128-.7848-3.29-.135-.678-.1535-.7614-.4716-2.1176-.5104-2.1762-.6402-2.831-.804-4.0557-.1064-.7962.1223-1.3156.2754-.6255.6026 2.7148 1.124 4.6969 1.6753 6.3684.1901.5764.1752.5525.3347.537.1095-.0105.1097-.0096.0278.1811-.1118.2604-.0573.3991.2913.7409.2612.256.2638.2712.0407.2387-.174-.0254-.1655-.0434-.1023.2138.0295.1199.0809.3448.1141.4997.2644 1.2314.6094 1.8336 1.1121 1.941 1.4684.3139 3.6012.4502 5.4794.3503 2.1817-.116 2.7037-.1989 3.3812-.5368.4582-.2286.8528-.6569.611-.6632-.1781-.0047-.1948-.0464-.0437-.109.329-.1365.468-.2818.4411-.4612-.008-.0535.0021-.1094.0422-.2318.1232-.3762.1439-.6822.1123-1.664-.0146-.4543-.0136-.487.021-.6574.0912-.449.132-.7886.199-1.6564.0474-.6126.0627-.766.1118-1.1186.0491-.3532.0648-.5537.0929-1.1868.0549-1.2385.116-1.7317.2287-1.8443.1884-.1885.1874-.289-.006-.5633-.2205-.3129-.2198-.4765.003-.711.1085-.1142.1132-.242.0391-1.0652-.019-.2114-.0394-.5284-.0452-.7045-.0073-.217-.0169-.3202-.0297-.3202-.041 0-.306.2264-.8894.76-.6635.6068-.8368.75-1.2089.9984-.7674.5123-1.5042.7633-2.7787.9462-1.2864.1847-2.8008.1411-3.7922-.1092-.6681-.1686-1.055-.3507-1.8085-.8512-.7058-.4688-.6674-1.2277.079-1.5624.3362-.1507.076-.3149-.5986-.3778-.5074-.0474-.2495-.1461.3996-.153.7887-.0083 1.349-.2884 2.0736-1.0363.3034-.3131.374-.3746.7782-.677.6428-.4808.8696-.6895.972-.8947.0776-.155.0733-.3082-.0094-.3397-.0271-.0103-.0404-.029-.0404-.0566 0-.0517.1571-.0442-2.5615-.122-2.8682-.0822-5.0395-.2118-6.1476-.367-.2164-.0304-.1133.1615.1509.2806.0836.0377.0914.0714.0198.0852-.1952.0377-.1844.01-.1284.3283.2173 1.235.5548 1.5418 1.2152 1.1047.1309-.0866.1765-.1027.4961-.1753.7-.1589 1.4556-.2464 2.5838-.2993 1.1633-.0545 1.2892-.0588 1.3032-.0448.0305.0304-.5599.1101-1.5935.215-1.07.1086-1.4287.1577-1.926.2638-.1342.0286-.2802.0521-.3245.0522-.2895.0008-.7114.2931-.8644.5988-.1926.3851-.0152.6153.5107.6627.1761.0159.6063.0923.6826.1213.0658.025.0525.0663-.0337.1044-.0932.0413-.093.039-.0085.0922.1688.1066.0969.0998-.37-.0351-.7785-.225-.9368-.2379-.723-.0588.1015.085.0972.1096-.0132.076-.1712-.0519-.1676-.0865-.0636.6052.1332.8858.031.8419-.1545-.0665-.2554-1.25-.6686-2.3144-.484-1.2466.04.2318.0853.4146.2197.888.1811.638.2872 1.2493.2237 1.2885-.0297.0184-.1904-.4844-.3028-.947-.124-.5102-.1767-.8005-.4328-2.3821-.1298-.802-.2425-1.3464-.378-1.8265-.0773-.2736-.0497-.403.128-.6008.3644-.4052 1.2746-.6528 1.2746-.3466 0 .147-.187.2458-.6436.3402-.5204.1076-.5632.1751-.2897.4578.2486.2569 1.8142.4808 3.7254.5327.3663.01.9119.0259 1.2124.0354 2.1339.0674 4.3877.0663 4.5184-.0022.015-.0079.0837-.105.1527-.2158.2825-.454.552-.795.9445-1.1954.2782-.2838.2865-.2942.2417-.3055-.132-.033-.1427-.5621-.0127-.6282.2383-.121.3542-.2918.7283-1.0725.198-.4133.3093-.5955.4777-.7825.1457-.1618.2569-.385.421-.8452.1614-.4524.2639-.6635.3799-.7823.223-.2285.2324-.103.0363.4903-.162.49-.7111 1.686-1.1268 2.4542-.355.656-.307.8451.1881.7427.0883-.0182.1706-.024.2462-.017.1306.0119.2723-.0174.6213-.1284.2892-.092.3264-.0769.201.0818-.0891.1128-.0887.1142.053.1799.1405.065.1301.0783-.0611.0783-.265 0-.4498.1059-.4766.2732-.0118.074-.0118.074-.1226-.0473-.3058-.335-.6452-.2808-.851.136-.072.1458-.1856.2528-.2684.2528-.0513 0-.0393-.0339.082-.232.293-.4784.2985-.5618.028-.4245-.308.1563-.7837.8261-.803 1.1308-.017.2655.2956.4083.5327.2434.9017-.627 1.348-.8748.9794-.5438-.0765.0687-.159.148-.1832.1762-.1744.2028-.3106.2933-.5656.3757-.8493.2745-.8493.6558 0 .6355.2265-.0055.4225-.0022.4774.0079.412.0756 2.2334-.2378 3.1616-.544.5878-.1938.6844-.4293.3229-.7867-.4647-.4592-.959-.3684-.6466.1189.1936.302-.3882.6232-1.3705.7565-.4425.06-.6113.0898-.7738.1363-.1108.0318-.4379.0719-.704.0863-.3523.019-.4642-.0274-.1925-.08.4158-.0804.5822-.105 1.0783-.1598 1.3303-.1468 1.7592-.3548 1.7627-.8548.0019-.2777-.2227-.3198-.8506-.1598-.201.0513-.2093.0324-.0248-.0564.2821-.1358.2599-.2519-.0717-.374-.1107-.0408-.1107-.0408.0516-.0538.7422-.0595 1.1048-.3546.7593-.6182-.0677-.0516-.0657-.0685.01-.0837.029-.0058.086-.0344.1266-.0635.1634-.1174.2997.246.1556.4144-.198.2313-.0359.5312.357.6602.403.1323.5887-.0506.4222-.4158-.03-.0657-.089-.2578-.131-.4269-.2398-.9631-.7595-2.0407-.9843-2.0407-.0216 0-.036-.0196-.0475-.064-.2147-.8343-.2878-.9893-.5348-1.1333-.4195-.2445-.551-.6687-.1636-.5275.8873.3236 1.8223 1.4494 2.5325 3.0495.5654 1.274.6932 3.168.3239 4.8039-.203.8994-.363 2.6656-.5462 6.0301-.0749 1.3745-.1492 2.3884-.2385 3.2532-.0223.216-.0453.4696-.051.5635-.0438.708-.2035 2.0275-.3607 2.98-.033.1995-.0473.3696-.0585.6915-.0422 1.2204-.4315 1.8227-1.2581 1.9468a2.7189 2.7189 0 0 0-.325.075c-1.0801.3317-2.166.471-4.3425.557-.728.0288-.7087.0288-1.3064-.0016zm.2615-.2356c.0474-.0474-.2411-.0896-.8847-.1297-.1644-.0102-.3527-.026-.4184-.0352-.4177-.058-1.1698-.1029-1.1698-.0699 0 .1276 2.3564.3514 2.473.2348zm-4.0952-.8634c0-.0406-.3364-1.3698-.4044-1.5977-.1252-.42-.3766-1.0159-.4231-1.003-.0697.0192.0988.9043.2754 1.447.1744.5358.5521 1.3252.5521 1.1537zm-.5246-.1305c.0433-.2745-.0418-.6732-.3351-1.5704-.176-.5382-.2341-.7414-.276-.9641-.0441-.2356-.0402-.2248-.0799-.2188-.1655.0246-.151.285.054.9752.1484.4996.1654.5673.1879.7506.064.5203.4057 1.3021.449 1.0275zm-.7904-3.2816c-.0001-.3436-.0485-.6234-.2044-1.1826-.1744-.6253-.2435-.896-.2825-1.1058-.0745-.4017-.2292-.621-.1807-.2564.026.1948.215 1.1792.2665 1.3878.0233.094.0618.3268.0857.5174.0662.5282.1018.6734.197.8049.0977.1347.1185.1055.1184-.1653zm5.7823-8.2201c.047-.0521.0384-.1659-.0348-.4592-.1-.3999-.0996-.5862.0013-.7401.1707-.2607-.8164-.3768-1.398-.1645-.53.1934-.648.5174-.3192.877.1613.1766-.0747.272-.2973.1203-.3041-.2074-.2766-.8612.0363-.8612.0362 0 .106-.073.106-.111 0-.0561-.0674-.1035-.211-.148-.1984-.0617-.1974-.0741.0085-.108.4832-.0793.939-.4219 1.6589-1.2467.935-1.0714 1.3075-1.3927.8116-.7002-.2504.3497-.4599.592-.8783 1.016-.7501.7603-.8434.9222-.5313.9222.472 0 .6826-.1937 1.1142-1.0246.4076-.7848.6084-.9866.8963-.901.1217.0362.121.0386-.2186.8754-.314.7736-.2997.986.0543.8106.1767-.0875.17-.0762.2403-.4093.173-.8206.5299-1.9468.617-1.9468.1153 0 .0463.5054-.1424 1.0417-.2842.8081-.298 1.0686-.0684 1.2959.2501.2476.5305.202.7474-.1216.0793-.1184.1145-.1023.1763.0809.046.1363.0536.1408.244.1434.2617.0037.6195-.091.6392-.169.0064-.0254.0206-.0402.035-.0364.1408.0369.1388-.1065-.0025-.1673-.0918-.0395-.0998-.0645-.032-.0992.1499-.0764.3061.038.3061.2243 0 .0784.0186.0885.205.11 1.2175.1412 1.9496-.176 2.364-1.024.0706-.1445.205-.4086.299-.587.3348-.6367.4726-1.1026.4121-1.3938-.0352-.1699-.0169-.164-.3792-.12-1.8582.2256-3.5292.3794-4.933.454-.2677.0141-.5553.0298-.639.0348-.1525.009-.1525.009-.4526.3035-.4846.4754-.9042.8606-1.7005 1.5606-.2254.1982-.4329.3853-.461.4158-.0804.0868-.3442.2954-.7344.5806-.815.5957-1.2381 1.0543-1.0973 1.189.1613.1545 1.371.3751 2.378.4339.1692.0099.4035.029.521.0426.3097.036.319.0367.4797.0397.1296.0024.1506-.0015.1793-.0333zm4.9335-2.6883c-.6352-.103-1.2474-.4616-1.8828-1.103-.419-.4228-.3704-.4557.2256-.1524.4367.2222.5944.2777.7778.2734.0704-.0017.1626-.0037.2049-.0045.1903-.0038.9252.4017.8551.4718-.024.024-.159-.0192-.4196-.1342-.8347-.3685-1.3685-.3711-.8026-.0041.5953.3862 1.2494.571 1.64.4632.146-.0402.186-.0393.1923.0044.0242.1694-.3493.257-.7907.1854zm-3.5168 2.6903c.0746-.0187.3623-.0728.6394-.1204 1.31-.2247 1.6092-.3389 2.4225-.9243.552-.3972.6191-.7887.1254-.731-.5517.0644-.6125.1133-.7745.6229-.1885.5932-.272.665-.7748.6656-.5271.0006-.7398-.181-.889-.7596-.0528-.2045-.067-.2222-.2166-.2715-.5559-.1833-.8321.1858-.8322 1.112 0 .1586-.0097.1672-.1927.1722-.2981.0081-.3303-.091-.1542-.4747.2334-.509.2423-.6089.0614-.6855-.392-.1659-.7831.2546-.7091.7622.0663.4551.3933.6953.8023.5892.116-.0301.116-.0301.2182.0226.123.0634.1069.0622.274.0203zm1.822-.7768c.2327-.0208.3877-.1848.3877-.4102 0-.3258-.2825-.4682-.6292-.317-.1015.0442-.1223.0476-.2064.034-.3571-.0575-.5023.2388-.2548.52.1594.1812.2799.2108.7026.1732zm-3.2106-.9502c.373-.1904.8327-1.1638.6843-1.4494-.0437-.0844-.0598-.0769-.158.0736-.048.0734-.1677.2402-.266.3708-.458.6076-.5777.8672-.4559.989.0617.0617.0998.0648.1956.016zM10.302 21.2613c-.1018-.013-.4553-.0772-.7855-.1426-.6434-.1273-.9326-.1714-1.1234-.1714-.1763 0-.2162-.0341-.1669-.1425.0536-.1175.2172-.105.7572.0579.3561.1074.6022.167.7437.1803.061.0057.1494.021.1964.0338.1346.037 1.2056.1779 1.3516.1779.0044 0 .0033.0077-.0025.017-.0158.0257-.751.0177-.9706-.0104zm1.7587-.7484c-.2231-.1093-.2921-.2537-.3514-.7354-.0621-.5045-.1591-.66-.4529-.7263a4.0909 4.0909 0 0 1-.1152-.0274c-.0404-.011-.0716-.173-.0565-.2939.034-.2724.2048-.4916.7172-.9203.1127-.0943.2348-.2026.2713-.2405.3605-.3747 1.5306.1053 1.9894.816.3258.5047.322.6185-.028.8492-.4315.2844-.4933.3657-.4846.6372.003.0892.0065.2044.008.2561.0095.3235-.1771.4074-.6452.29-.3964-.0994-.5232-.0838-.6829.0842-.0597.0628-.0632.063-.1692.0111zm1.1381-.2254c.31-.1586.3749-.5512.1474-.892-.244-.3652-.5598-.2393-.5485.2187.0139.5637.1544.7995.4011.6733zm-.8657-.0823c.245-.1105.326-.537.1665-.8751-.1556-.3297-.4463-.1355-.5016.335a3.7214 3.7214 0 0 1-.033.2215c-.0671.345.062.4567.3681.3186zm-.5397-1.1367c.2714-.1816.542-.19 1.3747-.043.4775.0845.8627.0285.8621-.1253-.0023-.5725-.3483-.7422-1.2293-.603-.5545.0876-.7589.0879-1.0083.0016-.2747-.095-.6015.1652-.5532.4404.045.2565.3721.451.554.3293zm-2.0236-.8882c-1.242-.2611-2.0297-1.7477-1.3788-2.6022.1995-.2618.2624-.1704.1232.1789-.5807 1.4577 1.2303 2.8224 2.6353 1.9858 1.027-.6115 1.0144-2.1067-.0221-2.619a3.1056 3.1056 0 0 1-.1964-.1114c-.4015-.247-.8534-.2309-1.7165.0612-.504.1705-.4886.1706-.3296-.0011.6047-.6532 1.8983-.6335 2.6865.041 1.4324 1.2255.1142 3.4695-1.8016 3.0668zm5.0377-.1125c-1.9591-.3-2.6203-2.1867-1.1535-3.2915 1.3107-.9873 3.3222-.0095 3.2577 1.5836-.0398.9811-1.1207 1.8585-2.1042 1.708zm.4013-.3203c1.5031-.02 2.0059-1.9306.735-2.7936-.7982-.5421-2.0927-.295-2.5552.4876-.542.9171.0474 2.1467 1.1115 2.3185.0282.0045.1473.0043.2647-.0006.1174-.005.3172-.0103.444-.012zm-1.504-.8356c-.4402-.1245-.5095-.6544-.1381-1.0566.3355-.3633.817-.2062 1.0182.3322.0892.2387.058.2748-.2225.2581-.1793-.0106-.2639.0025-.2635.041 0 .0067.0603.0566.134.1109.2197.162.2247.2153.0267.2836-.144.0497-.4316.0657-.5548.0308zm-4.6535.1072c-.4663-.0444-.6306-.2972-.4418-.6793.224-.453.732-.5855 1.0146-.2645.4276.4858.1102 1.0088-.5728.9438zM5.2609 4.894c-.0061-.01.0088-.0465.0331-.0811.0243-.0347.0641-.0913.0885-.1258.0243-.0345.0483-.0939.0534-.132.0058-.043.0197-.0722.037-.0775.0706-.0214.6893-.1486.9498-.1953.6694-.12.851-.132 2.3652-.156 2.81-.0445 3.8851-.08 4.9246-.1626.3576-.0284.3387-.0321.4233.0843.1331.1833.0163.311-.3377.3693-.4252.0699-2.1378.0258-2.5939-.0668-.4837-.0983-.636-.0931-.7755.0264-.0812.0694-.0633.0696-.2775-.0018-.27-.09-.507-.1186-.8766-.106-.3002.0103-.417.0236-1.1357.129-.1925.0283-.4615.0599-.5976.0701-.4723.0356-1.013.1356-1.7562.325-.4978.1267-.507.1285-.5242.1008Zm11.997-1.2081c0-.0854.1102-.209.595-.6678.2691-.2547.4638-.4815.4638-.5401 0-.0556.0477-.0598.0665-.006.1044.2996-.1068.597-.6983.9833a31.133 31.133 0 0 0-.3207.2115c-.0847.0578-.1062.0617-.1062.019z","go":"M1.811 10.231c-.047 0-.058-.023-.035-.059l.246-.315c.023-.035.081-.058.128-.058h4.172c.046 0 .058.035.035.07l-.199.303c-.023.036-.082.07-.117.07zM.047 11.306c-.047 0-.059-.023-.035-.058l.245-.316c.023-.035.082-.058.129-.058h5.328c.047 0 .07.035.058.07l-.093.28c-.012.047-.058.07-.105.07zm2.828 1.075c-.047 0-.059-.035-.035-.07l.163-.292c.023-.035.07-.07.117-.07h2.337c.047 0 .07.035.07.082l-.023.28c0 .047-.047.082-.082.082zm12.129-2.36c-.736.187-1.239.327-1.963.514-.176.046-.187.058-.34-.117-.174-.199-.303-.327-.548-.444-.737-.362-1.45-.257-2.115.175-.795.514-1.204 1.274-1.192 2.22.011.935.654 1.706 1.577 1.835.795.105 1.46-.175 1.987-.77.105-.13.198-.27.315-.434H10.47c-.245 0-.304-.152-.222-.35.152-.362.432-.97.596-1.274a.315.315 0 01.292-.187h4.253c-.023.316-.023.631-.07.947a4.983 4.983 0 01-.958 2.29c-.841 1.11-1.94 1.8-3.33 1.986-1.145.152-2.209-.07-3.143-.77-.865-.655-1.356-1.52-1.484-2.595-.152-1.274.222-2.419.993-3.424.83-1.086 1.928-1.776 3.272-2.02 1.098-.2 2.15-.07 3.096.571.62.41 1.063.97 1.356 1.648.07.105.023.164-.117.2m3.868 6.461c-1.064-.024-2.034-.328-2.852-1.029a3.665 3.665 0 01-1.262-2.255c-.21-1.32.152-2.489.947-3.529.853-1.122 1.881-1.706 3.272-1.95 1.192-.21 2.314-.095 3.33.595.923.63 1.496 1.484 1.648 2.605.198 1.578-.257 2.863-1.344 3.962-.771.783-1.718 1.273-2.805 1.495-.315.06-.63.07-.934.106zm2.78-4.72c-.011-.153-.011-.27-.034-.387-.21-1.157-1.274-1.81-2.384-1.554-1.087.245-1.788.935-2.045 2.033-.21.912.234 1.835 1.075 2.21.643.28 1.285.244 1.905-.07.923-.48 1.425-1.228 1.484-2.233z","graphql":"M12.002 0a2.138 2.138 0 1 0 0 4.277 2.138 2.138 0 1 0 0-4.277zm8.54 4.931a2.138 2.138 0 1 0 0 4.277 2.138 2.138 0 1 0 0-4.277zm0 9.862a2.138 2.138 0 1 0 0 4.277 2.138 2.138 0 1 0 0-4.277zm-8.54 4.931a2.138 2.138 0 1 0 0 4.276 2.138 2.138 0 1 0 0-4.276zm-8.542-4.93a2.138 2.138 0 1 0 0 4.276 2.138 2.138 0 1 0 0-4.277zm0-9.863a2.138 2.138 0 1 0 0 4.277 2.138 2.138 0 1 0 0-4.277zm8.542-3.378L2.953 6.777v10.448l9.049 5.224 9.047-5.224V6.777zm0 1.601 7.66 13.27H4.34zm-1.387.371L3.97 15.037V7.363zm2.774 0 6.646 3.838v7.674zM5.355 17.44h13.293l-6.646 3.836z","hono":"M12.445.002a45.529 45.529 0 0 0-5.252 8.146 8.595 8.595 0 0 1-.555-.53 27.796 27.796 0 0 0-1.205-1.542 8.762 8.762 0 0 0-1.251 2.12 20.743 20.743 0 0 0-1.448 5.88 8.867 8.867 0 0 0 .338 3.468c1.312 3.48 3.794 5.593 7.445 6.337 3.055.438 5.755-.333 8.097-2.312 2.677-2.59 3.359-5.634 2.047-9.132a33.287 33.287 0 0 0-2.988-5.59A91.34 91.34 0 0 0 12.615.053a.216.216 0 0 0-.17-.051Zm-.336 3.906a50.93 50.93 0 0 1 4.794 6.552c.448.767.817 1.57 1.108 2.41.606 2.386-.044 4.354-1.951 5.904-1.845 1.298-3.87 1.683-6.072 1.156-2.376-.737-3.75-2.335-4.121-4.794a5.107 5.107 0 0 1 .242-2.266c.358-.908.79-1.774 1.3-2.601l1.446-2.121a397.33 397.33 0 0 0 3.254-4.24Z","kotlin":"M24 24H0V0h24L12 12Z","laravel":"M23.642 5.43a.364.364 0 01.014.1v5.149c0 .135-.073.26-.189.326l-4.323 2.49v4.934a.378.378 0 01-.188.326L9.93 23.949a.316.316 0 01-.066.027c-.008.002-.016.008-.024.01a.348.348 0 01-.192 0c-.011-.002-.02-.008-.03-.012-.02-.008-.042-.014-.062-.025L.533 18.755a.376.376 0 01-.189-.326V2.974c0-.033.005-.066.014-.098.003-.012.01-.02.014-.032a.369.369 0 01.023-.058c.004-.013.015-.022.023-.033l.033-.045c.012-.01.025-.018.037-.027.014-.012.027-.024.041-.034H.53L5.043.05a.375.375 0 01.375 0L9.93 2.647h.002c.015.01.027.021.04.033l.038.027c.013.014.02.03.033.045.008.011.02.021.025.033.01.02.017.038.024.058.003.011.01.021.013.032.01.031.014.064.014.098v9.652l3.76-2.164V5.527c0-.033.004-.066.013-.098.003-.01.01-.02.013-.032a.487.487 0 01.024-.059c.007-.012.018-.02.025-.033.012-.015.021-.03.033-.043.012-.012.025-.02.037-.028.014-.01.026-.023.041-.032h.001l4.513-2.598a.375.375 0 01.375 0l4.513 2.598c.016.01.027.021.042.031.012.01.025.018.036.028.013.014.022.03.034.044.008.012.019.021.024.033.011.02.018.04.024.06.006.01.012.021.015.032zm-.74 5.032V6.179l-1.578.908-2.182 1.256v4.283zm-4.51 7.75v-4.287l-2.147 1.225-6.126 3.498v4.325zM1.093 3.624v14.588l8.273 4.761v-4.325l-4.322-2.445-.002-.003H5.04c-.014-.01-.025-.021-.04-.031-.011-.01-.024-.018-.035-.027l-.001-.002c-.013-.012-.021-.025-.031-.04-.01-.011-.021-.022-.028-.036h-.002c-.008-.014-.013-.031-.02-.047-.006-.016-.014-.027-.018-.043a.49.49 0 01-.008-.057c-.002-.014-.006-.027-.006-.041V5.789l-2.18-1.257zM5.23.81L1.47 2.974l3.76 2.164 3.758-2.164zm1.956 13.505l2.182-1.256V3.624l-1.58.91-2.182 1.255v9.435zm11.581-10.95l-3.76 2.163 3.76 2.163 3.759-2.164zm-.376 4.978L16.21 7.087 14.63 6.18v4.283l2.182 1.256 1.58.908zm-8.65 9.654l5.514-3.148 2.756-1.572-3.757-2.163-4.323 2.489-3.941 2.27z","mqtt":"M10.657 23.994h-9.45A1.212 1.212 0 0 1 0 22.788v-9.18h.071c5.784 0 10.504 4.65 10.586 10.386Zm7.606 0h-4.045C14.135 16.246 7.795 9.977 0 9.942V6.038h.071c9.983 0 18.121 8.044 18.192 17.956Zm4.53 0h-.97C21.754 12.071 11.995 2.407 0 2.372v-1.16C0 .55.544.006 1.207.006h7.64C15.733 2.49 21.257 7.789 24 14.508v8.291c0 .663-.544 1.195-1.207 1.195ZM16.713.006h6.092A1.19 1.19 0 0 1 24 1.2v5.914c-.91-1.242-2.046-2.65-3.158-3.762C19.588 2.11 18.122.987 16.714.005Z","natsdotio":"M12.004 0H.404v18.807h9.938l1.714 1.602v-.026L15.966 24v-5.193h7.63V0H12.003zm7.578 14.45H15.38L6.898 6.519v7.93H4.116V4.376h4.349l8.344 7.784V4.375h2.773V14.45z","nestjs":"M14.131.047c-.173 0-.334.037-.483.087.316.21.49.49.576.806.007.043.019.074.025.117a.681.681 0 0 1 .013.112c.024.545-.143.614-.26.936-.18.415-.13.861.086 1.22a.74.74 0 0 0 .074.137c-.235-1.568 1.073-1.803 1.314-2.293.019-.428-.334-.713-.613-.911a1.37 1.37 0 0 0-.732-.21zM16.102.4c-.024.143-.006.106-.012.18-.006.05-.006.112-.012.161-.013.05-.025.1-.044.149-.012.05-.03.1-.05.149l-.067.142c-.02.025-.031.05-.05.075l-.037.055a2.152 2.152 0 0 1-.093.124c-.037.038-.068.081-.112.112v.006c-.037.031-.074.068-.118.1-.13.099-.278.173-.415.266-.043.03-.087.056-.124.093a.906.906 0 0 0-.118.099c-.043.037-.074.074-.111.118-.031.037-.068.08-.093.124a1.582 1.582 0 0 0-.087.13c-.025.05-.043.093-.068.142-.019.05-.037.093-.05.143a2.007 2.007 0 0 0-.043.155c-.006.025-.006.056-.012.08-.007.025-.007.05-.013.075 0 .05-.006.105-.006.155 0 .037 0 .074.006.111 0 .05.006.1.019.155.006.05.018.1.03.15.02.049.032.098.05.148.013.03.031.062.044.087l-1.426-.552c-.241-.068-.477-.13-.719-.186l-.39-.093c-.372-.074-.75-.13-1.128-.167-.013 0-.019-.006-.031-.006A11.082 11.082 0 0 0 8.9 2.855c-.378.025-.756.074-1.134.136a12.45 12.45 0 0 0-.837.174l-.279.074c-.092.037-.18.08-.266.118l-.205.093c-.012.006-.024.006-.03.012-.063.031-.118.056-.174.087a2.738 2.738 0 0 0-.236.118c-.043.018-.086.043-.124.062a.559.559 0 0 1-.055.03c-.056.032-.112.063-.162.094a1.56 1.56 0 0 0-.148.093c-.044.03-.087.055-.124.086-.006.007-.013.007-.019.013-.037.025-.08.056-.118.087l-.012.012-.093.074c-.012.007-.025.019-.037.025-.031.025-.062.056-.093.08-.006.013-.019.02-.025.025-.037.038-.074.069-.111.106-.007 0-.007.006-.013.012a1.742 1.742 0 0 0-.111.106c-.007.006-.007.012-.013.012a1.454 1.454 0 0 0-.093.1c-.012.012-.03.024-.043.036a1.374 1.374 0 0 1-.106.112c-.006.012-.018.019-.024.03-.05.05-.093.1-.143.15l-.018.018c-.1.106-.205.211-.317.304-.111.1-.229.192-.347.273a3.777 3.777 0 0 1-.762.421c-.13.056-.267.106-.403.149-.26.056-.527.161-.756.18-.05 0-.105.012-.155.018l-.155.037-.149.056c-.05.019-.099.044-.148.068-.044.031-.093.056-.137.087a1.011 1.011 0 0 0-.124.106c-.043.03-.087.074-.124.111-.037.043-.074.08-.105.124-.031.05-.068.093-.093.143a1.092 1.092 0 0 0-.087.142c-.025.056-.05.106-.068.161-.019.05-.037.106-.056.161-.012.05-.025.1-.03.15 0 .005-.007.012-.007.018-.012.056-.012.13-.019.167C.006 7.95 0 7.986 0 8.03a.657.657 0 0 0 .074.31v.006c.019.037.044.075.069.112.024.037.05.074.08.111.031.031.068.069.106.1a.906.906 0 0 0 .117.099c.149.13.186.173.378.272.031.019.062.031.1.05.006 0 .012.006.018.006 0 .013 0 .019.006.031a1.272 1.272 0 0 0 .08.298c.02.037.032.074.05.111.007.013.013.025.02.031.024.05.049.093.073.137l.093.13c.031.037.069.08.106.118.037.037.074.068.118.105 0 0 .006.006.012.006.037.031.074.062.112.087a.986.986 0 0 0 .136.08c.043.025.093.05.142.069a.73.73 0 0 0 .124.043c.007.006.013.006.025.012.025.007.056.013.08.019-.018.335-.024.65.026.762.055.124.328-.254.6-.688-.036.428-.061.93 0 1.079.069.155.44-.329.763-.862 4.395-1.016 8.405 2.02 8.826 6.31-.08-.67-.905-1.041-1.283-.948-.186.458-.502 1.047-1.01 1.413.043-.41.025-.83-.062-1.24a4.009 4.009 0 0 1-.769 1.562c-.588.043-1.177-.242-1.487-.67-.025-.018-.031-.055-.05-.08-.018-.043-.037-.087-.05-.13a.515.515 0 0 1-.037-.13c-.006-.044-.006-.087-.006-.137v-.093a.992.992 0 0 1 .031-.13c.013-.043.025-.086.044-.13.024-.043.043-.087.074-.13.105-.298.105-.54-.087-.682a.706.706 0 0 0-.118-.062c-.024-.006-.055-.018-.08-.025l-.05-.018a.847.847 0 0 0-.13-.031.472.472 0 0 0-.13-.019 1.01 1.01 0 0 0-.136-.012c-.031 0-.062.006-.093.006a.484.484 0 0 0-.137.019c-.043.006-.086.012-.13.024a1.068 1.068 0 0 0-.13.044c-.043.018-.08.037-.124.056-.037.018-.074.043-.118.062-1.444.942-.582 3.148.403 3.787-.372.068-.75.148-.855.229l-.013.012c.267.161.546.298.837.416.397.13.818.247 1.004.297v.006a5.996 5.996 0 0 0 1.562.112c2.746-.192 4.996-2.281 5.405-5.033l.037.161c.019.112.043.23.056.347v.006c.012.056.018.112.025.162v.024c.006.056.012.112.012.162.006.068.012.136.012.204v.1c0 .03.007.067.007.098 0 .038-.007.075-.007.112v.087c0 .043-.006.08-.006.124 0 .025 0 .05-.006.08 0 .044-.006.087-.006.137-.006.018-.006.037-.006.055l-.02.143c0 .019 0 .037-.005.056-.007.062-.019.118-.025.18v.012l-.037.174v.018l-.037.167c0 .007-.007.02-.007.025a1.663 1.663 0 0 1-.043.168v.018c-.019.062-.037.118-.05.174-.006.006-.006.012-.006.012l-.056.186c-.024.062-.043.118-.068.18-.025.062-.043.124-.068.18-.025.062-.05.117-.074.18h-.007c-.024.055-.05.117-.08.173a.302.302 0 0 1-.019.043c-.006.006-.006.013-.012.019a5.867 5.867 0 0 1-1.742 2.082c-.05.031-.099.069-.149.106-.012.012-.03.018-.043.03a2.603 2.603 0 0 1-.136.094l.018.037h.007l.26-.037h.006c.161-.025.322-.056.483-.087.044-.006.093-.019.137-.031l.087-.019c.043-.006.086-.018.13-.024.037-.013.074-.02.111-.031.62-.15 1.221-.354 1.798-.595a9.926 9.926 0 0 1-3.85 3.142c.714-.05 1.426-.167 2.114-.366a9.903 9.903 0 0 0 5.857-4.68 9.893 9.893 0 0 1-1.667 3.986 9.758 9.758 0 0 0 1.655-1.376 9.824 9.824 0 0 0 2.61-5.268c.21.98.272 1.99.18 2.987 4.474-6.241.371-12.712-1.346-14.416-.006-.013-.012-.019-.012-.031-.006.006-.006.006-.006.012 0-.006 0-.006-.007-.012 0 .074-.006.148-.012.223a8.34 8.34 0 0 1-.062.415c-.03.136-.068.273-.105.41-.044.13-.093.266-.15.396a5.322 5.322 0 0 1-.185.378 4.735 4.735 0 0 1-.477.688c-.093.111-.192.21-.292.31a3.994 3.994 0 0 1-.18.155l-.142.124a3.459 3.459 0 0 1-.347.241 4.295 4.295 0 0 1-.366.211c-.13.062-.26.118-.39.174a4.364 4.364 0 0 1-.818.223c-.143.025-.285.037-.422.05a4.914 4.914 0 0 1-.297.012 4.66 4.66 0 0 1-.422-.025 3.137 3.137 0 0 1-.421-.062 3.136 3.136 0 0 1-.415-.105h-.007c.137-.013.273-.025.41-.05a4.493 4.493 0 0 0 .818-.223c.136-.05.266-.112.39-.174.13-.062.248-.13.372-.204.118-.08.235-.161.347-.248.112-.087.217-.18.316-.279.105-.093.198-.198.291-.304.093-.111.18-.223.26-.334.013-.019.026-.044.038-.062.062-.1.124-.199.18-.298a4.272 4.272 0 0 0 .334-.775c.044-.13.075-.266.106-.403.025-.142.05-.278.062-.415.012-.142.025-.285.025-.421 0-.1-.007-.199-.013-.298a6.726 6.726 0 0 0-.05-.415 4.493 4.493 0 0 0-.092-.415c-.044-.13-.087-.267-.137-.397-.05-.13-.111-.26-.173-.384-.069-.124-.137-.248-.211-.366a6.843 6.843 0 0 0-.248-.34c-.093-.106-.186-.212-.285-.317a3.878 3.878 0 0 0-.161-.155c-.28-.217-.57-.421-.862-.607a1.154 1.154 0 0 0-.124-.062 2.415 2.415 0 0 0-.589-.26Z","opentelemetry":"M12.6974 13.1173c-1.0224 1.0224-1.0224 2.68 0 3.7024 1.0224 1.0224 2.68 1.0224 3.7024 0 1.0224-1.0223 1.0224-2.68 0-3.7024-1.0223-1.0223-2.68-1.0223-3.7024 0zm2.7677 2.7701c-.5063.5063-1.3267.5063-1.833 0s-.5063-1.3266 0-1.833c.5063-.5062 1.3267-.5062 1.833 0 .5063.504.5063 1.3267 0 1.833zM16.356.2355l-1.6041 1.6042c-.314.314-.314.83 0 1.144L21.015 9.247c.314.314.83.314 1.144 0l1.6042-1.6041c.314-.314.314-.83 0-1.144L17.4976.2354c-.314-.314-.8276-.314-1.1416 0zM5.1173 20.734c.2848-.2848.2848-.7497 0-1.0345l-.8155-.8155c-.2848-.2848-.7497-.2848-1.0345 0l-1.6845 1.6845-.0024.0024-.4625-.4625c-.2556-.2556-.6718-.2556-.925 0-.2556.2556-.2556.6718 0 .925l2.775 2.775c.2556.2556.6718.2556.925 0 .2532-.2556.2556-.6718 0-.925l-.4625-.4625.0024-.0024zm8.4856-15.893-3.5637 3.5637c-.3164.3164-.3164.8374 0 1.1538l2.2006 2.2005c1.5554-1.1197 3.7365-.981 5.1361.4187l1.7819-1.7818c.3164-.3165.3164-.8374 0-1.1538l-4.401-4.401c-.3165-.319-.8374-.319-1.1539 0zm-2.2881 7.8455-1.2999-1.2999c-.3043-.3043-.8033-.3043-1.1076 0l-4.5836 4.586c-.3042.3043-.3042.8033 0 1.1076l2.5973 2.5973c.3043.3043.8033.3043 1.1076 0l2.9478-2.9527c-.6231-1.2877-.5112-2.8431.3384-4.0383z","phoenixframework":"m9.012 15.241-.188-.036c-1.34-.248-2.186-1.06-2.588-2.334-.25-.794.204-1.38 1.038-1.416.682-.032 1.15.36 1.562.816.532.588 1.02 1.216 1.542 1.814.754.86 1.64 1.412 2.854 1.24a5.404 5.404 0 0 0 2.86-1.308c.124-.108.26-.2.392-.302l-.084-.098a6.034 6.034 0 0 1-2.12.252c-1.092-.054-2.132-.282-3.064-.882-.848-.548-1.476-1.28-1.774-2.26-.24-.79.252-1.344 1.072-1.23.313.049.606.187.842.398.2.168.39.346.594.51.958.77 2.294.812 3.508-.022-1.996-.01-3.354-1.108-4.548-2.5-.466-.544-.922-1.1-1.4-1.636-.92-1.038-1.944-1.952-3.346-2.264-1.79-.398-3.518-.136-5.176.622A4.214 4.214 0 0 0 0 5.217h.352c.836-.022 1.464.35 1.916 1.034.328.498.482 1.06.6 1.64.176.86.086 1.734.188 2.598.26 2.22 1.394 3.768 3.506 4.56.774.292 1.568.39 2.45.19v.002zM3.674 5.113c-.334.084-.6-.05-.874-.328.47-.118.886-.164 1.332-.18a.562.562 0 0 1-.458.508zm10.938 12.96c-.03-.212-.212-.306-.356-.42-.634-.492-1.378-.668-2.164-.682a4.08 4.08 0 0 1-1.378-.208c-.204-.076-.43-.174-.426-.436.006-.266.238-.34.448-.404.174-.052.352-.084.548-.13-.5-.32-.988-.364-1.636-.102-1.024.41-2.032.36-3.052-.006-.574-.208-1.086-.534-1.618-.824l-.026.02c.44.722 1.038 1.304 1.71 1.8 1.296.96 2.712 1.53 4.37 1.276a22.8 22.8 0 0 1 1.614-.19c.676-.054 1.32.136 1.966.308v-.002zm-3.124-10.37c-.036-.026-.07-.09-.144-.024a5.258 5.258 0 0 0 2.284 1.776c1.488.604 3 .708 4.544.174 1.2-.414 2.06-.01 2.508 1.156.066-1.352-.73-2.338-1.996-2.53-.712-.11-1.37.128-2.038.32-1.856.54-3.584.274-5.16-.872h.002zm9.256 5.272.726.064c-.546-.48-1.212-.52-1.888-.48-1.026.058-1.766.65-2.44 1.356-.594.624-1.13 1.324-2.016 1.574l.02.04c.12.002.24.008.36.002 1.288-.058 2.5-.33 3.464-1.264.306-.294.576-.62.87-.926.226-.258.562-.394.904-.366zm-2.992-1.596c-.96.084-1.794.48-2.58 1.006-.602.404-1.248.594-1.972.468-.128-.022-.258-.04-.384-.058l-.006.054c.046.024.092.05.14.07.12.048.24.106.364.136 1.396.33 2.732.16 3.936-.618.76-.49 1.546-.582 2.398-.456.086.014.172.028.258.036.08.008.164.088.272 0a3.454 3.454 0 0 0-2.426-.638zm-3.434-3.26a2.68 2.68 0 0 0 1.534-.364c-.154.014-.22.014-.282.026a2.296 2.296 0 0 1-1.96-.472l-.646-.5c-.856-.652-1.836-.872-2.91-.852.018.052.02.088.038.106 1.168 1.18 2.52 1.996 4.226 2.054v.002zm8.452 6.06c-.724-.72-1.694-.81-2.59-.186.594.028 1.04.216 1.4.592.128.134.262.26.404.378.548.44 1.474.46 2.016.052-.636-.248-.636-.248-1.23-.838v.002zm-7.198 5.486c-.634-1.18-1.7-1.448-2.936-1.368.364.1.708.26 1.02.474.286.2.526.448.764.702.472.504 1.208.812 1.696.708-.224-.14-.546-.514-.546-.514h-.012l.008.006.004.018c.004-.02.006-.016.008-.01h.02l-.028-.012v.01l.01.004s.114.208-.008-.018z","php":"M7.01 10.207h-.944l-.515 2.648h.838c.556 0 .97-.105 1.242-.314.272-.21.455-.559.55-1.049.092-.47.05-.802-.124-.995-.175-.193-.523-.29-1.047-.29zM12 5.688C5.373 5.688 0 8.514 0 12s5.373 6.313 12 6.313S24 15.486 24 12c0-3.486-5.373-6.312-12-6.312zm-3.26 7.451c-.261.25-.575.438-.917.551-.336.108-.765.164-1.285.164H5.357l-.327 1.681H3.652l1.23-6.326h2.65c.797 0 1.378.209 1.744.628.366.418.476 1.002.33 1.752a2.836 2.836 0 0 1-.305.847c-.143.255-.33.49-.561.703zm4.024.715l.543-2.799c.063-.318.039-.536-.068-.651-.107-.116-.336-.174-.687-.174H11.46l-.704 3.625H9.388l1.23-6.327h1.367l-.327 1.682h1.218c.767 0 1.295.134 1.586.401s.378.7.263 1.299l-.572 2.944h-1.389zm7.597-2.265a2.782 2.782 0 0 1-.305.847c-.143.255-.33.49-.561.703a2.44 2.44 0 0 1-.917.551c-.336.108-.765.164-1.286.164h-1.18l-.327 1.682h-1.378l1.23-6.326h2.649c.797 0 1.378.209 1.744.628.366.417.477 1.001.331 1.751zM17.766 10.207h-.943l-.516 2.648h.838c.557 0 .971-.105 1.242-.314.272-.21.455-.559.551-1.049.092-.47.049-.802-.125-.995s-.524-.29-1.047-.29z","python":"M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z","rabbitmq":"M23.035 9.601h-7.677a.956.956 0 01-.962-.962V.962a.956.956 0 00-.962-.956H10.56a.956.956 0 00-.962.956V8.64a.956.956 0 01-.962.962H5.762a.956.956 0 01-.961-.962V.962A.956.956 0 003.839 0H.959a.956.956 0 00-.956.962v22.076A.956.956 0 00.965 24h22.07a.956.956 0 00.962-.962V10.58a.956.956 0 00-.962-.98zm-3.86 8.152a1.437 1.437 0 01-1.437 1.443h-1.924a1.437 1.437 0 01-1.436-1.443v-1.917a1.437 1.437 0 011.436-1.443h1.924a1.437 1.437 0 011.437 1.443z","redis":"M22.71 13.145c-1.66 2.092-3.452 4.483-7.038 4.483-3.203 0-4.397-2.825-4.48-5.12.701 1.484 2.073 2.685 4.214 2.63 4.117-.133 6.94-3.852 6.94-7.239 0-4.05-3.022-6.972-8.268-6.972-3.752 0-8.4 1.428-11.455 3.685C2.59 6.937 3.885 9.958 4.35 9.626c2.648-1.904 4.748-3.13 6.784-3.744C8.12 9.244.886 17.05 0 18.425c.1 1.261 1.66 4.648 2.424 4.648.232 0 .431-.133.664-.365a100.49 100.49 0 0 0 5.54-6.765c.222 3.104 1.748 6.898 6.014 6.898 3.819 0 7.604-2.756 9.33-8.965.2-.764-.73-1.361-1.261-.73zm-4.349-5.013c0 1.959-1.926 2.922-3.685 2.922-.941 0-1.664-.247-2.235-.568 1.051-1.592 2.092-3.225 3.21-4.973 1.972.334 2.71 1.43 2.71 2.619z","ruby":"M20.156.083c3.033.525 3.893 2.598 3.829 4.77L24 4.822 22.635 22.71 4.89 23.926h.016C3.433 23.864.15 23.729 0 19.139l1.645-3 2.819 6.586.503 1.172 2.805-9.144-.03.007.016-.03 9.255 2.956-1.396-5.431-.99-3.9 8.82-.569-.615-.51L16.5 2.114 20.159.073l-.003.01zM0 19.089zM5.13 5.073c3.561-3.533 8.157-5.621 9.922-3.84 1.762 1.777-.105 6.105-3.673 9.636-3.563 3.532-8.103 5.734-9.864 3.957-1.766-1.777.045-6.217 3.612-9.75l.003-.003z","rubyonrails":"M.741 19.365h8.36s-1.598-7.291 3.693-10.243l.134-.066c1.286-.637 4.907-2.431 10.702 1.854.19-.159.37-.286.37-.286s-5.503-5.492-11.63-4.878c-3.079.275-6.867 3.079-9.09 6.783C1.058 16.233.741 19.365.741 19.365Zm8.804-.783a10.682 10.682 0 0 1-.127-1.333l1.143.412c.063.498.159.963.254 1.376l-1.27-.455Zm-7.799-4.317L.529 13.82c-.201.455-.423.984-.529 1.27l1.217.444c.137-.359.36-.878.529-1.269Zm7.831.296.857.677c.042-.413.116-.825.222-1.238l-.762-.603c-.137.391-.233.783-.317 1.164Zm2.042-2.646-.508-.762c.191-.243.413-.486.656-.709l.476.72a5.958 5.958 0 0 0-.624.751ZM4.19 8.878l.752.656c-.254.265-.498.551-.72.836l-.815-.698c.244-.265.508-.529.783-.794Zm9.799 1.027-.243-.73c.265-.117.571-.233.931-.339l.233.698a6.82 6.82 0 0 0-.921.371Zm3.122-.656.042-.667c.339.021.688.064 1.048.138l-.042.656a5.859 5.859 0 0 0-1.048-.127ZM8.942 6.392l-.476-.731c-.265.138-.54.286-.826.455l.487.741c.275-.169.54-.328.815-.465Zm9.217-.053.042-.709c-.095-.053-.36-.18-1.026-.371l-.043.699c.349.116.688.243 1.027.381ZM13.238 5.28h.106l-.212-.645c-.328 0-.666.021-1.016.063l.201.625a8.87 8.87 0 0 1 .921-.043Z","rust":"M23.8346 11.7033l-1.0073-.6236a13.7268 13.7268 0 00-.0283-.2936l.8656-.8069a.3483.3483 0 00-.1154-.578l-1.1066-.414a8.4958 8.4958 0 00-.087-.2856l.6904-.9587a.3462.3462 0 00-.2257-.5446l-1.1663-.1894a9.3574 9.3574 0 00-.1407-.2622l.49-1.0761a.3437.3437 0 00-.0274-.3361.3486.3486 0 00-.3006-.154l-1.1845.0416a6.7444 6.7444 0 00-.1873-.2268l.2723-1.153a.3472.3472 0 00-.417-.4172l-1.1532.2724a14.0183 14.0183 0 00-.2278-.1873l.0415-1.1845a.3442.3442 0 00-.49-.328l-1.076.491c-.0872-.0476-.1742-.0952-.2623-.1407l-.1903-1.1673A.3483.3483 0 0016.256.955l-.9597.6905a8.4867 8.4867 0 00-.2855-.086l-.414-1.1066a.3483.3483 0 00-.5781-.1154l-.8069.8666a9.2936 9.2936 0 00-.2936-.0284L12.2946.1683a.3462.3462 0 00-.5892 0l-.6236 1.0073a13.7383 13.7383 0 00-.2936.0284L9.9803.3374a.3462.3462 0 00-.578.1154l-.4141 1.1065c-.0962.0274-.1903.0567-.2855.086L7.744.955a.3483.3483 0 00-.5447.2258L7.009 2.348a9.3574 9.3574 0 00-.2622.1407l-1.0762-.491a.3462.3462 0 00-.49.328l.0416 1.1845a7.9826 7.9826 0 00-.2278.1873L3.8413 3.425a.3472.3472 0 00-.4171.4171l.2713 1.1531c-.0628.075-.1255.1509-.1863.2268l-1.1845-.0415a.3462.3462 0 00-.328.49l.491 1.0761a9.167 9.167 0 00-.1407.2622l-1.1662.1894a.3483.3483 0 00-.2258.5446l.6904.9587a13.303 13.303 0 00-.087.2855l-1.1065.414a.3483.3483 0 00-.1155.5781l.8656.807a9.2936 9.2936 0 00-.0283.2935l-1.0073.6236a.3442.3442 0 000 .5892l1.0073.6236c.008.0982.0182.1964.0283.2936l-.8656.8079a.3462.3462 0 00.1155.578l1.1065.4141c.0273.0962.0567.1914.087.2855l-.6904.9587a.3452.3452 0 00.2268.5447l1.1662.1893c.0456.088.0922.1751.1408.2622l-.491 1.0762a.3462.3462 0 00.328.49l1.1834-.0415c.0618.0769.1235.1528.1873.2277l-.2713 1.1541a.3462.3462 0 00.4171.4161l1.153-.2713c.075.0638.151.1255.2279.1863l-.0415 1.1845a.3442.3442 0 00.49.327l1.0761-.49c.087.0486.1741.0951.2622.1407l.1903 1.1662a.3483.3483 0 00.5447.2268l.9587-.6904a9.299 9.299 0 00.2855.087l.414 1.1066a.3452.3452 0 00.5781.1154l.8079-.8656c.0972.0111.1954.0203.2936.0294l.6236 1.0073a.3472.3472 0 00.5892 0l.6236-1.0073c.0982-.0091.1964-.0183.2936-.0294l.8069.8656a.3483.3483 0 00.578-.1154l.4141-1.1066a8.4626 8.4626 0 00.2855-.087l.9587.6904a.3452.3452 0 00.5447-.2268l.1903-1.1662c.088-.0456.1751-.0931.2622-.1407l1.0762.49a.3472.3472 0 00.49-.327l-.0415-1.1845a6.7267 6.7267 0 00.2267-.1863l1.1531.2713a.3472.3472 0 00.4171-.416l-.2713-1.1542c.0628-.0749.1255-.1508.1863-.2278l1.1845.0415a.3442.3442 0 00.328-.49l-.49-1.076c.0475-.0872.0951-.1742.1407-.2623l1.1662-.1893a.3483.3483 0 00.2258-.5447l-.6904-.9587.087-.2855 1.1066-.414a.3462.3462 0 00.1154-.5781l-.8656-.8079c.0101-.0972.0202-.1954.0283-.2936l1.0073-.6236a.3442.3442 0 000-.5892zm-6.7413 8.3551a.7138.7138 0 01.2986-1.396.714.714 0 11-.2997 1.396zm-.3422-2.3142a.649.649 0 00-.7715.5l-.3573 1.6685c-1.1035.501-2.3285.7795-3.6193.7795a8.7368 8.7368 0 01-3.6951-.814l-.3574-1.6684a.648.648 0 00-.7714-.499l-1.473.3158a8.7216 8.7216 0 01-.7613-.898h7.1676c.081 0 .1356-.0141.1356-.088v-2.536c0-.074-.0536-.0881-.1356-.0881h-2.0966v-1.6077h2.2677c.2065 0 1.1065.0587 1.394 1.2088.0901.3533.2875 1.5044.4232 1.8729.1346.413.6833 1.2381 1.2685 1.2381h3.5716a.7492.7492 0 00.1296-.0131 8.7874 8.7874 0 01-.8119.9526zM6.8369 20.024a.714.714 0 11-.2997-1.396.714.714 0 01.2997 1.396zM4.1177 8.9972a.7137.7137 0 11-1.304.5791.7137.7137 0 011.304-.579zm-.8352 1.9813l1.5347-.6824a.65.65 0 00.33-.8585l-.3158-.7147h1.2432v5.6025H3.5669a8.7753 8.7753 0 01-.2834-3.348zm6.7343-.5437V8.7836h2.9601c.153 0 1.0792.1772 1.0792.8697 0 .575-.7107.7815-1.2948.7815zm10.7574 1.4862c0 .2187-.008.4363-.0243.651h-.9c-.09 0-.1265.0586-.1265.1477v.413c0 .973-.5487 1.1846-1.0296 1.2382-.4576.0517-.9648-.1913-1.0275-.4717-.2704-1.5186-.7198-1.8436-1.4305-2.4034.8817-.5599 1.799-1.386 1.799-2.4915 0-1.1936-.819-1.9458-1.3769-2.3153-.7825-.5163-1.6491-.6195-1.883-.6195H5.4682a8.7651 8.7651 0 014.907-2.7699l1.0974 1.151a.648.648 0 00.9182.0213l1.227-1.1743a8.7753 8.7753 0 016.0044 4.2762l-.8403 1.8982a.652.652 0 00.33.8585l1.6178.7188c.0283.2875.0425.577.0425.8717zm-9.3006-9.5993a.7128.7128 0 11.984 1.0316.7137.7137 0 01-.984-1.0316zm8.3389 6.71a.7107.7107 0 01.9395-.3625.7137.7137 0 11-.9405.3635z","socketdotio":"M11.9362.0137a12.1694 12.1694 0 00-2.9748.378C4.2816 1.5547.5678 5.7944.0918 10.6012c-.59 4.5488 1.7079 9.2856 5.6437 11.6345 3.8608 2.4179 9.0926 2.3199 12.8734-.223 3.3969-2.206 5.5118-6.2277 5.3858-10.2845-.058-4.0159-2.31-7.9167-5.7588-9.9796C16.354.5876 14.1431.0047 11.9362.0137zm-.063 1.696c4.9448-.007 9.7886 3.8137 10.2815 8.9245.945 5.6597-3.7528 11.4125-9.4875 11.5795-5.4538.544-10.7245-4.0798-10.8795-9.5566-.407-4.4338 2.5159-8.8346 6.6977-10.2995a9.1126 9.1126 0 013.3878-.647zm5.0908 3.2248c-2.6869 2.0849-5.2598 4.3078-7.8886 6.4567 1.2029.017 2.4118.016 3.6208.01 1.41-2.165 2.8589-4.3008 4.2678-6.4667zm-5.6647 7.6536c-1.41 2.166-2.86 4.3088-4.2699 6.4737 2.693-2.0799 5.2548-4.3198 7.9017-6.4557a255.4132 255.4132 0 00-3.6318-.018z","spring":"M21.8537 1.4158a10.4504 10.4504 0 0 1-1.284 2.2471A11.9666 11.9666 0 1 0 3.8518 20.7757l.4445.3951a11.9543 11.9543 0 0 0 19.6316-8.2971c.3457-3.0126-.568-6.8649-2.0743-11.458zM5.5805 20.8745a1.0174 1.0174 0 1 1-.1482-1.4323 1.0396 1.0396 0 0 1 .1482 1.4323zm16.1991-3.5806c-2.9385 3.9263-9.2601 2.5928-13.2852 2.7904 0 0-.7161.0494-1.4323.1481 0 0 .2717-.1234.6174-.2469 2.8398-.9877 4.1732-1.1853 5.9018-2.0743 3.2349-1.6545 6.4698-5.2844 7.1118-9.0379-1.2347 3.6053-4.9881 6.7167-8.3959 7.9761-2.3459.8643-6.5685 1.7039-6.5685 1.7039l-.1729-.0988c-2.8645-1.4076-2.9632-7.6304 2.2718-9.6306 2.2966-.889 4.4696-.395 6.9637-.9877 2.6422-.6174 5.7043-2.5929 6.939-5.1857 1.3828 4.1732 3.062 10.643.0493 14.6434z","swift":"M7.508 0c-.287 0-.573 0-.86.002-.241.002-.483.003-.724.01-.132.003-.263.009-.395.015A9.154 9.154 0 0 0 4.348.15 5.492 5.492 0 0 0 2.85.645 5.04 5.04 0 0 0 .645 2.848c-.245.48-.4.972-.495 1.5-.093.52-.122 1.05-.136 1.576a35.2 35.2 0 0 0-.012.724C0 6.935 0 7.221 0 7.508v8.984c0 .287 0 .575.002.862.002.24.005.481.012.722.014.526.043 1.057.136 1.576.095.528.25 1.02.495 1.5a5.03 5.03 0 0 0 2.205 2.203c.48.244.97.4 1.498.495.52.093 1.05.124 1.576.138.241.007.483.009.724.01.287.002.573.002.86.002h8.984c.287 0 .573 0 .86-.002.241-.001.483-.003.724-.01a10.523 10.523 0 0 0 1.578-.138 5.322 5.322 0 0 0 1.498-.495 5.035 5.035 0 0 0 2.203-2.203c.245-.48.4-.972.495-1.5.093-.52.124-1.05.138-1.576.007-.241.009-.481.01-.722.002-.287.002-.575.002-.862V7.508c0-.287 0-.573-.002-.86a33.662 33.662 0 0 0-.01-.724 10.5 10.5 0 0 0-.138-1.576 5.328 5.328 0 0 0-.495-1.5A5.039 5.039 0 0 0 21.152.645 5.32 5.32 0 0 0 19.654.15a10.493 10.493 0 0 0-1.578-.138 34.98 34.98 0 0 0-.722-.01C17.067 0 16.779 0 16.492 0H7.508zm6.035 3.41c4.114 2.47 6.545 7.162 5.549 11.131-.024.093-.05.181-.076.272l.002.001c2.062 2.538 1.5 5.258 1.236 4.745-1.072-2.086-3.066-1.568-4.088-1.043a6.803 6.803 0 0 1-.281.158l-.02.012-.002.002c-2.115 1.123-4.957 1.205-7.812-.022a12.568 12.568 0 0 1-5.64-4.838c.649.48 1.35.902 2.097 1.252 3.019 1.414 6.051 1.311 8.197-.002C9.651 12.73 7.101 9.67 5.146 7.191a10.628 10.628 0 0 1-1.005-1.384c2.34 2.142 6.038 4.83 7.365 5.576C8.69 8.408 6.208 4.743 6.324 4.86c4.436 4.47 8.528 6.996 8.528 6.996.154.085.27.154.36.213.085-.215.16-.437.224-.668.708-2.588-.09-5.548-1.893-7.992z","trpc":"M24 12c0 6.62-5.38 12-12 12S0 18.62 0 12 5.38 0 12 0s12 5.38 12 12ZM1.21 12A10.78 10.78 0 0 0 12 22.79 10.78 10.78 0 0 0 22.79 12 10.78 10.78 0 0 0 12 1.21 10.78 10.78 0 0 0 1.21 12Zm10.915-6.086 2.162 1.248a.25.25 0 0 1 .125.217v1.103l2.473 1.428a.25.25 0 0 1 .125.217v2.355l.955.551a.25.25 0 0 1 .125.217v2.496a.25.25 0 0 1-.125.217l-2.162 1.248a.25.25 0 0 1-.25 0l-.956-.552-2.472 1.427a.25.25 0 0 1-.25 0l-2.472-1.427-.956.552a.25.25 0 0 1-.25 0l-2.162-1.248a.25.25 0 0 1-.125-.217V13.25a.25.25 0 0 1 .125-.217l.955-.551v-2.355a.25.25 0 0 1 .125-.217l2.473-1.428V7.38a.25.25 0 0 1 .125-.217l2.162-1.248a.25.25 0 0 1 .25 0Zm1.268 10.049a.25.25 0 0 1-.125-.217V13.25a.25.25 0 0 1 .125-.217l2.16-1.248a.25.25 0 0 1 .25 0l.707.408v-1.922l-2.098-1.21v.814a.25.25 0 0 1-.125.217l-2.162 1.248a.25.25 0 0 1-.25 0l-2.162-1.248a.25.25 0 0 1-.125-.217V9.06L7.49 10.271v1.922l.707-.408a.25.25 0 0 1 .25 0l2.16 1.248a.25.25 0 0 1 .125.217v2.496a.25.25 0 0 1-.125.217l-.705.408L12 17.582l2.098-1.211ZM10.088 9.73l1.662.96V8.766l-1.662-.955Zm3.824 0V7.811l-1.662.955v1.924ZM12 6.418l-1.66.96 1.66.954 1.66-.954Zm-5.59 9.184 1.66.958v-1.921l-1.66-.956Zm3.822 0v-1.92l-1.662.957v1.923Zm-1.91-3.311-1.662.96 1.661.955 1.66-.956Zm5.446 3.31 1.66.96v-1.922l-1.66-.956Zm3.822 0v-1.918l-1.662.956v1.922Zm-1.912-3.31-1.66.96 1.66.955 1.66-.956Z","typescript":"M1.125 0C.502 0 0 .502 0 1.125v21.75C0 23.498.502 24 1.125 24h21.75c.623 0 1.125-.502 1.125-1.125V1.125C24 .502 23.498 0 22.875 0zm17.363 9.75c.612 0 1.154.037 1.627.111a6.38 6.38 0 0 1 1.306.34v2.458a3.95 3.95 0 0 0-.643-.361 5.093 5.093 0 0 0-.717-.26 5.453 5.453 0 0 0-1.426-.2c-.3 0-.573.028-.819.086a2.1 2.1 0 0 0-.623.242c-.17.104-.3.229-.393.374a.888.888 0 0 0-.14.49c0 .196.053.373.156.529.104.156.252.304.443.444s.423.276.696.41c.273.135.582.274.926.416.47.197.892.407 1.266.628.374.222.695.473.963.753.268.279.472.598.614.957.142.359.214.776.214 1.253 0 .657-.125 1.21-.373 1.656a3.033 3.033 0 0 1-1.012 1.085 4.38 4.38 0 0 1-1.487.596c-.566.12-1.163.18-1.79.18a9.916 9.916 0 0 1-1.84-.164 5.544 5.544 0 0 1-1.512-.493v-2.63a5.033 5.033 0 0 0 3.237 1.2c.333 0 .624-.03.872-.09.249-.06.456-.144.623-.25.166-.108.29-.234.373-.38a1.023 1.023 0 0 0-.074-1.089 2.12 2.12 0 0 0-.537-.5 5.597 5.597 0 0 0-.807-.444 27.72 27.72 0 0 0-1.007-.436c-.918-.383-1.602-.852-2.053-1.405-.45-.553-.676-1.222-.676-2.005 0-.614.123-1.141.369-1.582.246-.441.58-.804 1.004-1.089a4.494 4.494 0 0 1 1.47-.629 7.536 7.536 0 0 1 1.77-.201zm-15.113.188h9.563v2.166H9.506v9.646H6.789v-9.646H3.375z"};
+  /* Monoline glyphs for transports that have no logo of their own. */
+  var GLYPHS = {
+    http: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+    grpc: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+    ws: '<path d="M3 9h15l-3-3M21 15H6l3 3"/><path d="M3 9v0M21 15v0"/>',
+    sse: '<path d="M3 7h12M3 12h15M3 17h18l-3-3m3 3-3 3"/>',
+    cloud: '<path d="M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 10.1 4 4 0 0 0 7 18Z"/>',
+    retry: '<path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/>',
+    error: '<rect x="3.5" y="3.5" width="17" height="17"/><path d="M12 7.5v6M12 16v.5"/>',
+    check: '<path d="M4 6h10M4 12h16M4 18h8"/><path d="m15 17 2 2 4-4"/>',
+    envelope: '<rect x="3" y="5" width="18" height="14"/><path d="m3 6 9 7 9-7"/>'
+  };
+  function icon(key, size) {
+    size = size || 18;
+    if (ICONS[key]) return '<svg class="ico" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="' + ICONS[key] + '"/></svg>';
+    if (GLYPHS[key]) return '<svg class="ico" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">' + GLYPHS[key] + '</svg>';
+    return "";
   }
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Data, from docs/languages.md ---------- */
+  var LANGS = [
+    { id: "ts", name: "TypeScript", short: "TS", icon: "typescript" },
+    { id: "go", name: "Go", short: "Go", icon: "go" },
+    { id: "py", name: "Python", short: "Py", icon: "python" },
+    { id: "jvm", name: "Kotlin, Java", short: "JVM", icon: "kotlin" },
+    { id: "net", name: "C#, F#", short: ".NET", icon: "dotnet" },
+    { id: "rs", name: "Rust", short: "Rust", icon: "rust" },
+    { id: "rb", name: "Ruby", short: "Ruby", icon: "ruby" },
+    { id: "php", name: "PHP", short: "PHP", icon: "php" },
+    { id: "ex", name: "Elixir", short: "Elixir", icon: "elixir" },
+    { id: "swift", name: "Swift", short: "Swift", icon: "swift" },
+    { id: "dart", name: "Dart", short: "Dart", icon: "dart" }
+  ];
+  var TRANSPORTS = [
+    { id: "http", name: "HTTP", icon: "http", m: "post", a: ['"/orders"', "createOrder"],
+      libs: ["Express", "net/http", "FastAPI", "Spring Web", "ASP.NET Core", "axum", "Rails", "Laravel", "Phoenix", "Vapor", "shelf"] },
+    { id: "gql", name: "GraphQL", icon: "graphql", m: "query", a: ['"order"', "findOrder"],
+      libs: ["Apollo Server", "gqlgen", "Strawberry", "Spring GraphQL", "Hot Chocolate", "async-graphql", "graphql-ruby", "Lighthouse", "Absinthe", "Apollo iOS", "ferry"] },
+    { id: "grpc", name: "gRPC", icon: "grpc", m: "call", a: ['"orders.CreateOrder"', "req"],
+      libs: ["grpc-js", "grpc-go", "grpcio", "grpc-java", "Grpc.Net", "tonic", "grpc", "RoadRunner", "grpc-elixir", "grpc-swift", "grpc-dart"] },
+    { id: "rpc", name: "Typed RPC", icon: "trpc", m: "call", a: ['"orders.createOrder"', "input"],
+      libs: ["tRPC or Connect", "connect-go", "Connect protocol", "Connect protocol", "Connect protocol", "Connect protocol", "Connect protocol", "Connect protocol", "Connect protocol", "Connect protocol", "Connect protocol"] },
+    { id: "ws", name: "WebSockets", icon: "ws", m: "emit", a: ['"courier.moved"', "position"],
+      libs: ["Socket.io", "gorilla/websocket", "websockets", "Spring WebSocket", "SignalR", "tokio-tungstenite", "Action Cable", "Ratchet", "Phoenix Channels", "Starscream", "web_socket_channel"] },
+    { id: "sse", name: "Server-sent events", icon: "sse", m: "send", a: ['"order.status"', "status"],
+      libs: ["the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter", "the HTTP adapter"] },
+    { id: "kafka", name: "Kafka", icon: "apachekafka", m: "publish", a: ['"order.placed"', "order"],
+      libs: ["KafkaJS", "franz-go", "confluent-kafka", "spring-kafka", "Confluent.Kafka", "rust-rdkafka", "Karafka", "php-rdkafka", "brod", "swift-kafka-client", null] },
+    { id: "mq", name: "RabbitMQ", icon: "rabbitmq", m: "send", a: ['"emails"', "message"],
+      libs: ["amqplib", "amqp091-go", "aio-pika", "spring-amqp", "RabbitMQ.Client", "lapin", "Bunny", "php-amqplib", "amqp", null, null] },
+    { id: "nats", name: "NATS", icon: "natsdotio", m: "request", a: ['"pricing.quote"', "req"],
+      libs: ["official NATS client", "official NATS client", "official NATS client", "official NATS client", "official NATS client", "official NATS client", "official NATS client", null, "official NATS client", "official NATS client", null] },
+    { id: "redis", name: "Redis", icon: "redis", m: "publish", a: ['"cart.updated"', "cart"],
+      libs: ["ioredis", "go-redis", "redis-py", "Lettuce", "StackExchange.Redis", "redis-rs", "redis-rb", "Predis", "Redix", null, null] },
+    { id: "cloud", name: "Cloud queues", icon: "cloud", ns: "cloud.sqs", m: "send", a: ['"emails"', "message"],
+      libs: ["AWS SDK", "AWS SDK", "AWS SDK", "AWS SDK", "AWS SDK", "AWS SDK", "AWS SDK", "AWS SDK", "AWS SDK", null, null] },
+    { id: "mqtt", name: "MQTT", icon: "mqtt", m: "publish", a: ['"courier.position"', "position"],
+      libs: ["MQTT.js", "paho", "paho", "paho", "MQTTnet", "rumqttc", "ruby-mqtt", "php-mqtt", "Tortoise", null, null] },
+    { id: "pulsar", name: "Pulsar", icon: "apachepulsar", m: "publish", a: ['"order.placed"', "order"],
+      libs: ["official Pulsar client", "official Pulsar client", "official Pulsar client", "official Pulsar client", "official Pulsar client", "official Pulsar client", null, null, null, null, null] }
+  ];
+  var GAP_WHY = {
+    dart: "Dart targets Flutter apps. Apps do not connect to brokers; that stays server-side.",
+    swift: "No server-side adapter is planned for Swift on this transport yet.",
+    other: "No adapter is planned for this combination yet."
+  };
+
+  /* ---------- Call shapes per language (planned, not final) ---------- */
+  var GO_NS = { http: "HTTP", gql: "GQL", grpc: "GRPC", rpc: "RPC", ws: "WS", sse: "SSE", kafka: "Kafka", mq: "MQ", nats: "NATS", redis: "Redis", "cloud.sqs": "Cloud.SQS", mqtt: "MQTT", pulsar: "Pulsar" };
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function S(x) { return '<span class="s">' + esc(x) + "</span>"; }
+  function K(x) { return '<span class="k">' + esc(x) + "</span>"; }
+  function F(x) { return '<span class="f">' + esc(x) + "</span>"; }
+  function callFor(t, l) {
+    var ns = t.ns || t.id, m = t.m, a0 = t.a[0], a1 = t.a[1];
+    var sq = "'" + a0.slice(1, -1) + "'";
+    switch (l.id) {
+      case "ts": return K("await ") + "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "go": return "err := weft." + GO_NS[ns] + "." + F(cap(m)) + "(ctx, " + S(a0) + ", " + a1 + ")";
+      case "py": return K("await ") + "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "jvm": return "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "net": return K("await ") + "weft." + GO_NS[ns] + "." + F(cap(m)) + "(" + S(a0) + ", " + cap(a1) + ");";
+      case "rs": return "weft." + ns + "." + F(m) + "(" + S(a0) + ", &amp;" + a1 + ")." + K("await") + "?;";
+      case "rb": return "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "php": return "$weft-&gt;" + ns.replace(".", "-&gt;") + "-&gt;" + F(m) + "(" + S(sq) + ", $" + a1 + ");";
+      case "ex": return "Weft." + GO_NS[ns].replace("GQL", "GraphQL") + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "swift": return K("try await ") + "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "dart": return K("await ") + "weft." + ns + "." + F(m) + "(" + S(sq) + ", " + a1 + ");";
+    }
+  }
+
+  /* ---------- The weave ---------- */
+  var host = document.getElementById("weave");
+  var NS = "http://www.w3.org/2000/svg";
+  var sel = { t: 6, l: 0 };
+  var auto = null;
+  var tour = [[6, 0], [6, 1], [2, 2], [4, 0], [0, 3], [7, 5], [1, 6], [6, 10], [3, 4], [9, 8], [11, 7], [12, 1]];
+  var tourAt = 0;
+
   function el(tag, attrs, parent) {
     var e = document.createElementNS(NS, tag);
     for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -390,165 +606,222 @@ server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
     return e;
   }
 
-  THREADS.forEach(function (t, i) {
-    var li = document.createElement("li");
-    var b = document.createElement("button");
-    b.type = "button"; b.dataset.i = i;
-    b.setAttribute("aria-pressed", "false");
-    b.innerHTML = '<span class="sw" style="background:var(--t-' + t.id + ')"></span><span class="ns">weft.' + t.id + '</span><span class="lib">' + t.lib + '</span>';
-    b.addEventListener("click", function () { select(selected === i ? null : i); });
-    b.addEventListener("mouseenter", function () { if (selected === null) preview(i); });
-    b.addEventListener("mouseleave", function () { if (selected === null) preview(null); });
-    li.appendChild(b); list.appendChild(li);
-  });
-
-  function colX(c) {
-    var inset = Math.max(36, width * 0.06);
-    return inset + c * (width - inset * 2) / (SERVICES.length - 1);
-  }
-  function rowY(r) { return TOP + r * ROW + ROW / 2; }
-
   function draw() {
-    width = canvas.clientWidth;
-    var h = TOP + THREADS.length * ROW + BOTTOM;
-    canvas.innerHTML = "";
-    var svg = el("svg", { width: width, height: h, viewBox: "0 0 " + width + " " + h, role: "img",
-      "aria-label": "Six services joined by six transports: HTTP and GraphQL from web to api, gRPC from api to orders, Kafka from orders to payments and emails, RabbitMQ from payments to emails, WebSockets from tracking to web." }, canvas);
-    var bg = css("--surface"), warp = css("--warp"), line = css("--line"), faint = css("--muted");
-    var small = width < 520;
+    var W = host.clientWidth;
+    var wide = W >= 760;
+    var L = wide ? 196 : 40;
+    var H = wide ? 64 : 36;
+    var rowH = wide ? 40 : 28;
+    var band = wide ? 12 : 8;
+    var n = LANGS.length;
+    var s = (W - L) / n;
+    var h = H + TRANSPORTS.length * rowH + 4;
+    host.innerHTML = "";
+    host.style.height = h + "px";
+    var cx = function (c) { return L + s * (c + 0.5); };
+    var ry = function (r) { return H + r * rowH + rowH / 2; };
+    var bg = css("--surface"), thread = css("--thread"), warp = css("--warp"), fg = css("--fg");
 
-    SERVICES.forEach(function (s, c) {
-      var x = colX(c);
-      var t = el("text", { x: x, y: 26, "text-anchor": "middle", fill: faint, "font-family": css("--font-mono"), "font-size": small ? 9.5 : 12 }, svg);
-      t.textContent = small ? s.slice(0, 5) : s;
-    });
-    THREADS.forEach(function (t, r) {
-      el("line", { x1: 0, x2: width, y1: rowY(r), y2: rowY(r), stroke: line, "stroke-width": 1 }, svg);
-    });
-    SERVICES.forEach(function (s, c) {
-      el("rect", { x: colX(c) - 1, y: TOP - 4, width: 2, height: h - TOP - BOTTOM + 8, fill: warp }, svg);
-    });
+    var svg = el("svg", { width: W, height: h, viewBox: "0 0 " + W + " " + h, "aria-hidden": "true" }, host);
+    var rows = [], cols = [];
 
-    movers = [];
-    THREADS.forEach(function (t, r) {
-      var g = el("g", { "data-i": r, class: "thread" }, svg);
-      var cols = [t.from].concat(t.to);
-      var lo = Math.min.apply(null, cols), hi = Math.max.apply(null, cols);
-      var y = rowY(r), color = css("--t-" + t.id);
-      el("rect", { x: colX(lo), y: y - 2.5, width: colX(hi) - colX(lo), height: 5, fill: color }, g);
-      for (var c = lo + 1; c < hi; c++) {
-        if ((c + r) % 2 === 0) {
-          el("rect", { x: colX(c) - 5, y: y - 4, width: 10, height: 8, fill: bg }, g);
-          el("rect", { x: colX(c) - 1, y: y - 4, width: 2, height: 8, fill: warp }, g);
-        }
-      }
-      cols.forEach(function (c) {
-        el("rect", { x: colX(c) - 6, y: y - 6, width: 12, height: 12, fill: color, stroke: bg, "stroke-width": 2 }, g);
+    TRANSPORTS.forEach(function (t, r) {
+      var g = el("g", { "data-r": r }, svg);
+      el("rect", { x: L - 8, y: ry(r) - band / 2, width: W - L + 8, height: band, fill: thread }, g);
+      t.libs.forEach(function (lib, c) {
+        if (lib === null) el("rect", { x: cx(c) - s / 2 + 4, y: ry(r) - band / 2 - 1, width: s - 8, height: band + 2, fill: bg }, g);
       });
-      t.to.forEach(function (dst, k) {
-        var m = el("rect", { width: 6, height: 6, y: y - 3, fill: bg, stroke: color, "stroke-width": 2, x: colX(t.from) - 3 }, g);
-        movers.push({ el: m, x0: colX(t.from), x1: colX(dst), offset: (r * 0.37 + k * 0.5) % 1, dur: 2200 + Math.abs(dst - t.from) * 260 });
+      rows.push(g);
+    });
+    LANGS.forEach(function (l, c) {
+      var g = el("g", { "data-c": c }, svg);
+      el("rect", { x: cx(c) - band / 2, y: H - 10, width: band, height: h - H + 10, fill: warp, stroke: bg, "stroke-width": 2, "paint-order": "stroke" }, g);
+      cols.push(g);
+    });
+    TRANSPORTS.forEach(function (t, r) {
+      t.libs.forEach(function (lib, c) {
+        if (lib === null || (r + c) % 2 !== 0) return;
+        var x = cx(c) - band / 2 - 2, y = ry(r) - band / 2;
+        el("rect", { x: x, y: y - 2, width: band + 4, height: 2, fill: bg }, rows[r]);
+        el("rect", { x: x, y: y + band, width: band + 4, height: 2, fill: bg }, rows[r]);
+        el("rect", { x: x, y: y, width: band + 4, height: band, fill: thread }, rows[r]);
       });
     });
-    applyFocus(selected);
+    var mark = el("rect", { width: band + 14, height: band + 14, fill: "none", stroke: fg, "stroke-width": 1.5 }, svg);
+
+    /* hit areas for pointer users; keyboard users use the buttons */
+    TRANSPORTS.forEach(function (t, r) {
+      LANGS.forEach(function (l, c) {
+        var hit = el("rect", { x: cx(c) - s / 2, y: ry(r) - rowH / 2, width: s, height: rowH, fill: "transparent" }, svg);
+        hit.style.cursor = "pointer";
+        hit.addEventListener("mouseenter", function () { stopTour(); select(r, c); });
+        hit.addEventListener("click", function () { stopTour(); select(r, c); });
+      });
+    });
+
+    TRANSPORTS.forEach(function (t, r) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "wbtn row";
+      b.style.left = "0px"; b.style.top = (ry(r) - rowH / 2) + "px"; b.style.height = rowH + "px"; b.style.width = (L - 16) + "px";
+      b.setAttribute("aria-label", t.name);
+      b.innerHTML = icon(t.icon, wide ? 18 : 16) + (wide ? '<span class="n">weft.' + (t.ns || t.id) + "</span>" : "");
+      b.addEventListener("click", function () { stopTour(); select(r, sel.l); });
+      b.addEventListener("mouseenter", function () { stopTour(); select(r, sel.l); });
+      host.appendChild(b);
+      t._btn = b;
+    });
+    LANGS.forEach(function (l, c) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "wbtn col";
+      b.style.left = (cx(c) - s / 2) + "px"; b.style.top = "0px"; b.style.width = s + "px"; b.style.height = (H - 14) + "px";
+      b.setAttribute("aria-label", l.name);
+      b.innerHTML = icon(l.icon, wide ? 20 : 15) + (wide ? '<span class="n">' + l.short + "</span>" : "");
+      b.addEventListener("click", function () { stopTour(); select(sel.t, c); });
+      b.addEventListener("mouseenter", function () { stopTour(); select(sel.t, c); });
+      host.appendChild(b);
+      l._btn = b;
+    });
+
+    host._rows = rows; host._cols = cols; host._mark = mark;
+    host._geo = { cx: cx, ry: ry, band: band };
+    select(sel.t, sel.l);
   }
 
-  function applyFocus(i) {
-    var gs = canvas.querySelectorAll("g.thread");
-    Array.prototype.forEach.call(gs, function (g) {
-      var on = i === null || +g.getAttribute("data-i") === i;
-      g.setAttribute("opacity", on ? "1" : "0.18");
-    });
-    Array.prototype.forEach.call(list.querySelectorAll("button"), function (b) {
-      b.classList.toggle("dimmed", i !== null && +b.dataset.i !== i);
-    });
-    var t = THREADS[i === null ? 3 : i];
-    callEl.innerHTML = hl(t.call) + '\n<span class="route">' + t.route + ", " + t.lib + " underneath</span>";
-  }
-  function preview(i) { applyFocus(i); }
-  function select(i) {
-    selected = i;
-    Array.prototype.forEach.call(list.querySelectorAll("button"), function (b) {
-      b.setAttribute("aria-pressed", +b.dataset.i === i ? "true" : "false");
-    });
-    applyFocus(i);
+  function select(r, c) {
+    sel = { t: r, l: c };
+    host._rows.forEach(function (g, i) { g.classList.toggle("dim", i !== r); });
+    host._cols.forEach(function (g, i) { g.classList.toggle("dim", i !== c); });
+    var geo = host._geo;
+    host._mark.setAttribute("x", geo.cx(c) - geo.band / 2 - 7);
+    host._mark.setAttribute("y", geo.ry(r) - geo.band / 2 - 7);
+    TRANSPORTS.forEach(function (t, i) { t._btn.setAttribute("aria-pressed", i === r ? "true" : "false"); });
+    LANGS.forEach(function (l, i) { l._btn.setAttribute("aria-pressed", i === c ? "true" : "false"); });
+
+    var t = TRANSPORTS[r], l = LANGS[c], lib = t.libs[c];
+    document.getElementById("call-pair").innerHTML = esc(l.name) + " &middot; " + esc(t.name);
+    var runs = document.getElementById("call-runs");
+    if (lib === null) {
+      document.getElementById("call-code").innerHTML = '<span class="k">' + esc(GAP_WHY[l.id] || GAP_WHY.other) + "</span>";
+      runs.innerHTML = "Not supported";
+    } else {
+      document.getElementById("call-code").innerHTML = callFor(t, l);
+      runs.innerHTML = "Runs on <strong>" + esc(lib) + "</strong>";
+    }
   }
 
-  function tick(now) {
-    movers.forEach(function (m) {
-      var p = ((now / m.dur) + m.offset) % 1;
-      var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
-      m.el.setAttribute("x", (m.x0 + (m.x1 - m.x0) * e - 3).toFixed(1));
-    });
-    requestAnimationFrame(tick);
-  }
-
+  function stopTour() { if (auto) { clearInterval(auto); auto = null; } }
   draw();
-  if (!reduce) requestAnimationFrame(tick);
-  else movers.forEach(function (m) { m.el.setAttribute("x", (m.x0 + (m.x1 - m.x0) * 0.5 - 3).toFixed(1)); });
+  if (!reduce) {
+    auto = setInterval(function () { tourAt = (tourAt + 1) % tour.length; select(tour[tourAt][0], tour[tourAt][1]); }, 2600);
+  }
+  host.addEventListener("focusin", stopTour);
   var rt;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(draw, 80); });
 
-  /* Contract tabs */
-  var LANG = {
-    ts: '<k>import</k> { weft } <k>from</k> <s>"./weft.gen"</s>\n\nweft.kafka.<f>on</f>(<s>"order.placed"</s>, <k>async</k> (order) =&gt; {\n  <k>// order: Order</k>\n  <k>await</k> payments.<f>charge</f>(order.customerId, order.total)\n})\n\n<k>await</k> weft.<f>start</f>()',
-    go: 'weft.Kafka.<f>On</f>(<s>"order.placed"</s>, <k>func</k>(ctx context.Context, order orders.Order) <k>error</k> {\n    <k>// order.Total.Amount is int64</k>\n    <k>return</k> payments.<f>Charge</f>(ctx, order.CustomerID, order.Total)\n})\n\nweft.<f>Start</f>(ctx)',
-    py: '<k>from</k> weft_gen <k>import</k> weft, Order\n\n<f>@weft.kafka.on</f>(<s>"order.placed"</s>)\n<k>async def</k> <f>charge</f>(order: Order) -&gt; <k>None</k>:\n    <k>await</k> payments.<f>charge</f>(order.customer_id, order.total)\n\n<k>await</k> weft.<f>start</f>()'
-  };
-  var tabs = document.getElementById("lang-tabs");
-  var langCode = document.getElementById("lang-code");
-  function showLang(l) {
-    Array.prototype.forEach.call(tabs.children, function (b) {
-      var on = b.dataset.l === l;
-      b.setAttribute("aria-selected", on ? "true" : "false"); b.tabIndex = on ? 0 : -1;
-    });
-    langCode.innerHTML = hl(LANG[l]);
-  }
-  Array.prototype.forEach.call(tabs.children, function (b, i, all) {
-    b.addEventListener("click", function () { showLang(b.dataset.l); });
+  /* ---------- Logo wall ---------- */
+  var WALL = [["express", "Express"], ["fastify", "Fastify"], ["hono", "Hono"], ["nestjs", "NestJS"], ["apollographql", "Apollo"], ["spring", "Spring"], ["fastapi", "FastAPI"], ["django", "Django"],
+              ["flask", "Flask"], ["gin", "Gin"], ["rubyonrails", "Rails"], ["laravel", "Laravel"], ["phoenixframework", "Phoenix"], ["apachekafka", "Kafka"], ["rabbitmq", "RabbitMQ"], ["redis", "Redis"]];
+  document.getElementById("logos").innerHTML = WALL.map(function (w) { return "<div>" + icon(w[0], 20) + "<span>" + w[1] + "</span></div>"; }).join("");
+  document.getElementById("before-icons").innerHTML = icon("express", 16) + icon("apachekafka", 16) + icon("socketdotio", 16);
+
+  /* ---------- Contract tabs, examples from docs/api.md ---------- */
+  var LANG_EX = [
+    { id: "ts", name: "TypeScript", icon: "typescript", code:
+      K("// TypeScript, orders service") + "\n" + K("import") + " { weft } " + K("from") + " " + S('"./weft.gen"') + "\n\n" +
+      K("await") + " weft.kafka." + F("publish") + "(" + S('"order.placed"') + ", order)   " + K("// order: Order") },
+    { id: "go", name: "Go", icon: "go", code:
+      K("// Go, payments service") + "\nweft.Kafka." + F("On") + "(" + S('"order.placed"') + ", " + K("func") + "(ctx context.Context, o orders.Order, m weft.Meta) " + K("error") + " {\n    " + K("return") + " " + F("charge") + "(ctx, o.ID, o.Total)\n})" },
+    { id: "py", name: "Python", icon: "python", code:
+      K("# Python, notifications service") + "\n" + F("@weft.kafka.on") + "(" + S('"order.placed"') + ")\n" + K("async def") + " " + F("send_confirmation") + "(order: Order, ctx: Context) -&gt; " + K("None") + ":\n    " + K("await") + " email." + F("send") + "(order.customer_id, " + S('"Order received"') + ")" },
+    { id: "kt", name: "Kotlin", icon: "kotlin", code:
+      K("// Kotlin, inventory service") + "\nweft.kafka." + F("on") + "(" + S('"order.placed"') + ") { order: Order, ctx -&gt;\n    stock." + F("reserve") + "(order.items)\n}" },
+    { id: "cs", name: "C#", icon: "dotnet", code:
+      K("// C#") + "\nweft.Kafka." + F("On") + "&lt;Order&gt;(" + S('"order.placed"') + ", " + K("async") + " (order, ctx) =&gt; " + K("await") + " " + F("Reserve") + "(order));" },
+    { id: "rb", name: "Ruby", icon: "ruby", code:
+      K("# Ruby") + "\nweft.kafka." + F("on") + "(" + S('"order.placed"') + ") { |order, ctx| Reserve." + F("call") + "(order) }" }
+  ];
+  var tabs = document.getElementById("lang-tabs"), langCode = document.getElementById("lang-code");
+  LANG_EX.forEach(function (x, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "tab"); b.innerHTML = icon(x.icon, 15) + x.name;
+    b.addEventListener("click", function () { showLang(i); });
     b.addEventListener("keydown", function (e) {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       e.preventDefault();
-      var n = all[(i + (e.key === "ArrowRight" ? 1 : all.length - 1)) % all.length];
-      showLang(n.dataset.l); n.focus();
+      var j = (i + (e.key === "ArrowRight" ? 1 : LANG_EX.length - 1)) % LANG_EX.length;
+      showLang(j); tabs.children[j].focus();
     });
+    tabs.appendChild(b);
   });
-  showLang("ts");
-
-  /* Transport list */
-  var TL = [
-    ["weft.http", "HTTP and REST", "Express, Fastify, Hono, NestJS"],
-    ["weft.gql", "GraphQL", "Apollo Server, GraphQL Yoga"],
-    ["weft.grpc", "gRPC", "grpc-js, Connect"],
-    ["weft.rpc", "Typed RPC", "Connect protocol, tRPC in TypeScript"],
-    ["weft.ws", "WebSockets", "Socket.io, ws"],
-    ["weft.sse", "Server-sent events", "Built on the HTTP adapter"],
-    ["weft.kafka", "Kafka", "KafkaJS, confluent-kafka-javascript"],
-    ["weft.mq", "RabbitMQ and AMQP", "amqplib"],
-    ["weft.nats", "NATS", "Official NATS client"],
-    ["weft.redis", "Redis Pub/Sub and Streams", "ioredis, node-redis"],
-    ["weft.cloud", "SQS, SNS, EventBridge, Pub/Sub, Service Bus", "Official cloud SDKs"],
-    ["weft.mqtt", "MQTT", "MQTT.js"],
-    ["weft.pulsar", "Pulsar", "Official Pulsar client"]
-  ];
-  var dl = document.getElementById("tlist");
-  TL.forEach(function (r) {
-    var dt = document.createElement("dt"); dt.textContent = r[0];
-    var d1 = document.createElement("dd"); d1.className = "p"; d1.textContent = r[1];
-    var d2 = document.createElement("dd"); d2.className = "l"; d2.textContent = r[2];
-    dl.appendChild(dt); dl.appendChild(d1); dl.appendChild(d2);
-  });
-
-  /* Theme */
-  var root = document.documentElement, btn = document.getElementById("theme-toggle");
-  function isDark() {
-    var t = root.getAttribute("data-theme");
-    if (t) return t === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  function showLang(i) {
+    Array.prototype.forEach.call(tabs.children, function (b, j) { b.setAttribute("aria-selected", i === j ? "true" : "false"); b.tabIndex = i === j ? 0 : -1; });
+    langCode.innerHTML = LANG_EX[i].code;
   }
+  showLang(0);
+
+  /* ---------- Behaviour ---------- */
+  var BEH = [
+    ["opentelemetry", "Tracing", "Every call carries OpenTelemetry context, so one trace follows a request from HTTP into Kafka and out over a socket."],
+    ["envelope", "Event metadata", "Messages travel in a CloudEvents envelope. Every consumer, in every language, sees the same id, type, source and time."],
+    ["retry", "Retries and timeouts", "One set of options with the same defaults, whether the call is gRPC, RabbitMQ or SQS."],
+    ["check", "Breaking changes", "weft check compares a contract against its last version and fails the build before a change breaks a consumer."]
+  ];
+  document.getElementById("behave").innerHTML = BEH.map(function (b) {
+    return '<div><div class="hd">' + icon(b[0], 18) + b[1] + "</div><p>" + b[2].replace("weft check", "<code>weft check</code>") + "</p></div>";
+  }).join("");
+
+  /* ---------- Dashboard preview ---------- */
+  var NODES = {
+    web: { x: 40, y: 50, lang: "typescript", label: "web" },
+    api: { x: 330, y: 50, lang: "typescript", label: "api" },
+    orders: { x: 620, y: 50, lang: "go", label: "orders" },
+    tracking: { x: 40, y: 270, lang: "elixir", label: "tracking" },
+    emails: { x: 330, y: 270, lang: "python", label: "emails" },
+    payments: { x: 620, y: 270, lang: "kotlin", label: "payments" }
+  };
+  /* path, label x, label y, anchor, text, highlighted */
+  var EDGES = [
+    ["M172 72H330", 251, 62, "middle", "HTTP, GraphQL", false],
+    ["M462 72H620", 541, 62, "middle", "gRPC", false],
+    ["M686 94V270", 696, 186, "start", "Kafka order.placed", true],
+    ["M640 94V180H396V270", 518, 172, "middle", "Kafka order.placed", true],
+    ["M620 292H462", 541, 284, "middle", "RabbitMQ emails", false],
+    ["M106 270V94", 116, 186, "start", "WebSockets", false]
+  ];
+  function drawMap() {
+    var map = document.getElementById("map");
+    var fg = css("--fg"), muted = css("--muted"), line = css("--line-strong"), bgc = css("--bg");
+    var NW = 132, NH = 44;
+    var o = '<svg viewBox="0 0 800 350" role="img" aria-label="Six services: web, api, orders, payments, emails and tracking, joined by HTTP, GraphQL, gRPC, Kafka, RabbitMQ and WebSockets.">';
+    EDGES.forEach(function (e) {
+      o += '<path d="' + e[0] + '" fill="none" stroke="' + (e[5] ? fg : line) + '" stroke-width="' + (e[5] ? 2 : 1.5) + '"/>';
+      o += '<text x="' + e[1] + '" y="' + e[2] + '" text-anchor="' + e[3] + '" font-family="JetBrains Mono, monospace" font-size="11" fill="' + (e[5] ? fg : muted) + '">' + e[4] + "</text>";
+    });
+    Object.keys(NODES).forEach(function (k) {
+      var nd = NODES[k];
+      o += '<rect x="' + nd.x + '" y="' + nd.y + '" width="' + NW + '" height="' + NH + '" fill="' + bgc + '" stroke="' + line + '" stroke-width="1"/>';
+      o += '<g transform="translate(' + (nd.x + 14) + " " + (nd.y + 13) + ') scale(0.75)" fill="' + fg + '"><path d="' + ICONS[nd.lang] + '"/></g>';
+      o += '<text x="' + (nd.x + 42) + '" y="' + (nd.y + 27) + '" font-family="Instrument Sans, sans-serif" font-size="14" fill="' + fg + '">' + nd.label + "</text>";
+    });
+    o += "</svg>";
+    map.innerHTML = o;
+  }
+  drawMap();
+  document.getElementById("dash-dl").innerHTML =
+    "<dt>Transport</dt><dd><span>" + icon("apachekafka", 14) + "Kafka, via franz-go</span></dd>" +
+    "<dt>Type</dt><dd><span><code>orders.Order</code></span></dd>" +
+    "<dt>Contract</dt><dd><span><code>orders 1.0.0</code></span></dd>" +
+    "<dt>Producer</dt><dd><span>" + icon("go", 14) + "orders</span></dd>" +
+    "<dt>Consumers</dt><dd><span>" + icon("kotlin", 14) + "payments</span><span>" + icon("python", 14) + "emails</span></dd>" +
+    "<dt>Key</dt><dd><span><code>id</code></span></dd>";
+
+  /* ---------- Theme ---------- */
+  var root = document.documentElement, btn = document.getElementById("theme-toggle");
+  function isDark() { var t = root.getAttribute("data-theme"); return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; }
   function label() { btn.textContent = isDark() ? "Light theme" : "Dark theme"; }
-  btn.addEventListener("click", function () { root.setAttribute("data-theme", isDark() ? "light" : "dark"); label(); draw(); });
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { label(); draw(); });
+  function redraw() { label(); draw(); drawMap(); }
+  btn.addEventListener("click", function () { root.setAttribute("data-theme", isDark() ? "light" : "dark"); redraw(); });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
   label();
 })();
 </script>
