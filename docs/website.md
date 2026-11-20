@@ -58,7 +58,7 @@ Dark is the default theme; light is the alternative. Both are near-neutral.
 | `--line` | `#262626` | `#dcdcd9` | Rules between sections, table rows, borders |
 | `--fg` | `#ececea` | `#141414` | Text |
 | `--muted` | `#a2a2a0` | `#5e5e5c` | Secondary text |
-| `--faint` | `#5f5f5d` | `#9a9a97` | Labels, comments, keywords |
+| `--faint` | `#82827f` | `#686866` | Labels, comments, keywords. Meets 4.5:1 contrast on `--bg` and `--raised` |
 | `--accent` | `#7d92ff` | `#2447f5` | Prompt `$`, namespace names, the cursor, the call to action, "now" in status |
 | `--on-accent` | `#0d0d14` | `#ffffff` | Text on the accent |
 
