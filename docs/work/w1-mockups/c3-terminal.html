@@ -4,9 +4,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
-/* Concept C3, terminal. The page reads like one terminal session, top to bottom:
-   each section is a command in the left gutter and its output on the right, full width.
-   Display type appears only where the output is a statement. Dark-first. */
+/* Terminal direction, round 6. The page reads like one terminal session, top to bottom:
+   each section opens with its command as a prompt line, then its output at full width.
+   Display type appears only where the output is a statement. Dark-first. No sidebar. */
 :root {
   --bg: #111111; --fg: #ececea; --muted: #a2a2a0; --faint: #5f5f5d; --line: #262626; --raised: #181818;
   --accent: #7d92ff; --on-accent: #0d0d14;
@@ -15,7 +15,6 @@
   --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   --pl: max(clamp(16px, 2vw, 32px), env(safe-area-inset-left, 0px));
   --pr: max(clamp(16px, 2vw, 32px), env(safe-area-inset-right, 0px));
-  --gut: clamp(160px, 18vw, 280px);
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f4f4f3; --fg: #141414; --muted: #5e5e5c; --faint: #9a9a97; --line: #dcdcd9; --raised: #ececea; --accent: #2447f5; --on-accent: #ffffff; color-scheme: light; } }
@@ -35,13 +34,12 @@ a { color: inherit; }
 .top nav a:hover { color: var(--fg); }
 .top button { appearance: none; background: none; border: 0; font: inherit; color: var(--muted); cursor: pointer; padding: 0; }
 
-.cmd { display: grid; grid-template-columns: var(--gut) minmax(0, 1fr); border-bottom: 1px solid var(--line); }
-.cmd > .in { padding: 28px 24px 28px 0; color: var(--muted); font-size: 0.8125rem; border-right: 1px solid var(--line); }
-.cmd > .in b { color: var(--accent); font-weight: 500; }
-.cmd > .in span { display: block; position: sticky; top: 20px; }
-.cmd > .out { padding: 28px 0 32px 28px; min-width: 0; }
-
-.hero .out { padding-block: clamp(40px, 6vw, 88px); }
+.cmd { border-bottom: 1px solid var(--line); padding-block: clamp(36px, 5vw, 72px); }
+.prompt { font-size: 0.8125rem; color: var(--muted); margin-bottom: clamp(20px, 2.4vw, 32px); display: flex; gap: 10px; align-items: baseline; }
+.prompt b { color: var(--accent); font-weight: 500; }
+.prompt span { color: var(--faint); }
+.out { min-width: 0; }
+.hero { padding-block: clamp(48px, 7vw, 104px); }
 .hero h1 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: clamp(2.75rem, 7vw, 7rem); line-height: 0.94; letter-spacing: -0.045em; text-wrap: balance; max-width: 15ch; }
 .hero h1 .cur { display: inline-block; width: 0.08em; height: 0.8em; background: var(--accent); margin-left: 0.06em; vertical-align: -0.04em; animation: blink 1.1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -64,6 +62,11 @@ tbody tr:hover td { background: var(--raised); }
 .scroll { overflow-x: auto; }
 
 .lead { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.75rem, 3.2vw, 3rem); letter-spacing: -0.035em; line-height: 1.04; margin: 0 0 28px; max-width: 22ch; text-wrap: balance; }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 4vw, 72px); align-items: start; }
+.split .lead { margin-bottom: 16px; }
+.split p.body { margin: 0; font-family: var(--font-sans); color: var(--muted); font-size: 1.0625rem; max-width: 44ch; }
+.term { margin: 0; padding: 20px 22px; background: var(--raised); border: 1px solid var(--line); border-radius: 3px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.8; }
+.ok { color: var(--accent); }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
 .two pre { margin: 0; padding: 20px; background: var(--raised); border: 1px solid var(--line); overflow-x: auto; font-size: 0.8125rem; line-height: 1.8; border-radius: 3px; }
 .two .lab { font-size: 0.75rem; color: var(--faint); margin-bottom: 10px; display: flex; justify-content: space-between; }
@@ -84,9 +87,7 @@ tbody tr:hover td { background: var(--raised); }
 .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 20px 28px; font-size: 0.75rem; color: var(--faint); }
 
 @media (max-width: 900px) {
-  .cmd { grid-template-columns: minmax(0, 1fr); }
-  .cmd > .in { border-right: 0; padding: 20px 0 0; }
-  .cmd > .out { padding: 14px 0 28px; }
+  .split { grid-template-columns: minmax(0, 1fr); }
   .two { grid-template-columns: minmax(0, 1fr); }
   .langs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .status { grid-template-columns: minmax(0, 1fr); }
@@ -97,13 +98,13 @@ tbody tr:hover td { background: var(--raised); }
 
 <div class="w top">
   <a class="mark" href="#"><b>~/</b>weft</a>
-  <nav aria-label="Primary"><a href="#transports">transports</a><a href="#compare">compare</a><a href="#languages">languages</a><a href="#status">status</a></nav>
+  <nav aria-label="Primary"><a href="#transports">transports</a><a href="#compare">compare</a><a href="#setup">setup</a><a href="#languages">languages</a><a href="#status">status</a></nav>
   <button type="button" id="theme">theme</button>
 </div>
 
 <main>
   <section class="w cmd hero">
-    <div class="in"><span><b>$</b> weft</span></div>
+    <div class="prompt"><b>$</b>weft</div>
     <div class="out">
       <h1>One interface for every way your services talk.<i class="cur" aria-hidden="true"></i></h1>
       <p>Call <code>weft.http</code>, <code>weft.kafka</code> or <code>weft.ws</code>. Weft runs the library you already use underneath, with types from one contract. In development; nothing is published yet.</p>
@@ -115,7 +116,7 @@ tbody tr:hover td { background: var(--raised); }
   </section>
 
   <section class="w cmd" id="transports">
-    <div class="in"><span><b>$</b> weft transports</span></div>
+    <div class="prompt"><b>$</b>weft transports</div>
     <div class="out scroll">
       <table>
         <thead><tr><th>Namespace</th><th>Runs on</th><th>Example</th></tr></thead>
@@ -125,7 +126,7 @@ tbody tr:hover td { background: var(--raised); }
   </section>
 
   <section class="w cmd" id="compare">
-    <div class="in"><span><b>$</b> weft diff --before</span></div>
+    <div class="prompt"><b>$</b>weft diff --before</div>
     <div class="out">
       <p class="lead">Three libraries and an untyped body, or one API with types.</p>
       <div class="two">
@@ -158,16 +159,87 @@ app.post(<span class="s">"/orders"</span>, <span class="k">async</span> (req, re
     </div>
   </section>
 
+  <section class="w cmd" id="setup">
+    <div class="prompt"><b>$</b>weft init<span># planned CLI, output from the design docs</span></div>
+    <div class="out split">
+      <div>
+        <p class="lead">Set up once. Pick a library per transport.</p>
+        <p class="body"><code>weft init</code> asks which transports you use and which library runs each one, installs the adapters and writes <code>weft.yaml</code>. Then you write a contract and run <code>weft gen</code>.</p>
+      </div>
+<pre class="term"><span class="k">$</span> weft init
+Detected: TypeScript (pnpm)
+<span class="k">? Service name</span>               orders
+<span class="k">? Which communication do you use?</span>
+  HTTP, GraphQL, Kafka, WebSockets
+<span class="k">? HTTP library?</span>              Express
+<span class="k">? GraphQL library?</span>           Apollo Server
+<span class="k">? Kafka library?</span>             KafkaJS
+<span class="k">? WebSocket library?</span>         Socket.io
+
+<span class="ok">✓</span> Wrote weft.yaml
+<span class="ok">✓</span> Wrote contracts/orders.weft (example)
+<span class="ok">✓</span> Wrote src/weft.gen.ts
+
+<span class="k">Next: edit contracts/orders.weft, then run `weft gen`.</span></pre>
+    </div>
+  </section>
+
+  <section class="w cmd" id="contract">
+    <div class="prompt"><b>$</b>cat contracts/orders.weft</div>
+    <div class="out split">
+      <div>
+        <p class="lead">Write the type once. Every service gets it.</p>
+        <p class="body">A contract names each event, route and call with its type. <code>weft gen</code> turns it into typed code for every service, in its own language.</p>
+      </div>
+<pre class="term"><span class="k">package</span> orders @version(<span class="s">"1.0.0"</span>)
+
+<span class="k">type</span> Money {
+  amount: int            <span class="k">// minor units</span>
+  currency: Currency
+}
+
+<span class="k">type</span> Order {
+  id: uuid
+  customerId: string
+  items: OrderItem[]
+  total: Money
+  placedAt: timestamp
+}
+
+<span class="k">event</span> <span class="a">order.placed</span>: Order {
+  key: id
+}</pre>
+    </div>
+  </section>
+
   <section class="w cmd" id="languages">
-    <div class="in"><span><b>$</b> weft languages</span></div>
+    <div class="prompt"><b>$</b>weft languages</div>
     <div class="out">
       <p class="lead">One contract, read by every language.</p>
       <div class="langs" id="langs"></div>
     </div>
   </section>
 
+  <section class="w cmd" id="check">
+    <div class="prompt"><b>$</b>weft check</div>
+    <div class="out split">
+      <div>
+        <p class="lead">Breaking changes stop before they ship.</p>
+        <p class="body"><code>weft check</code> compares a contract with its last version and names every service that would break, in CI, before the merge.</p>
+      </div>
+<pre class="term">weft check: 1 breaking change
+
+  orders.order.placed
+  <span class="a">✗</span> field `total` removed
+      used by payments (Go), analytics (Python)
+
+  Suggested: keep `total` with @deprecated,
+  add the new field alongside.</pre>
+    </div>
+  </section>
+
   <section class="w cmd" id="status">
-    <div class="in"><span><b>$</b> weft status</span></div>
+    <div class="prompt"><b>$</b>weft status</div>
     <div class="out">
       <div class="status">
         <div><h3><span>done</span>Design</h3><p>Contract language, API, packages, CLI and architecture.</p></div>

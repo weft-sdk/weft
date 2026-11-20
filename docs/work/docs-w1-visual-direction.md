@@ -56,6 +56,9 @@ The maintainer has approved a visual direction for the website in writing. The d
   - `c2-scroll-story.html`, scroll story: the screen is split for the whole page; the story scrolls on the left, one pinned code window on the right rewrites itself per chapter (before, after, contract, languages, weft.yaml, weft check). https://claude.ai/artifact/KgkF1UigavD5VvU4vDyTa3
   - `c3-terminal.html`, terminal: the page is one terminal session; each section is a command in a left gutter (`$ weft transports`) with its output on the right. Dark-first. https://claude.ai/artifact/NrXADGitbMfn5Ca2DZQGiK
 
+- Round 5 feedback (2026-11-21): **the terminal concept (C3) is the direction.** The specimen (C1) also felt good, but the terminal has the better overall vibe. Remove the left command sidebar entirely.
+- Round 6 answers: no sidebar. Each section opens with its command as a prompt line (`$ weft transports`) and its output runs full width. Built out to a full page: hero, transports table, before/after, `weft init`, contract, languages, `weft check`, status. Setup output is copied from `cli.md` and marked as the planned CLI.
+
 ## Done
 
 - Work file (b2b599e).
@@ -67,11 +70,11 @@ The maintainer has approved a visual direction for the website in writing. The d
 
 ## Next step
 
-Get the maintainer's pick among the three round 5 concepts (or a mix), then build the chosen one out into a full landing page. Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
+Get the maintainer's reaction to the full terminal page (round 6). Once approved: write the direction into `docs/website.md` and ADR 0017, remove Q1 from `open-questions.md`, mark W1 done in the roadmap, and delete the rejected mockups (`a-precise.html`, `b-weave.html`, `c1-specimen.html`, `c2-scroll-story.html`) with the rest of this folder. Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
 
 ## Waiting on
 
-- The maintainer's pick among C1, C2 and C3.
+- The maintainer's verdict on the full terminal page.
 
 ## How to check
 
