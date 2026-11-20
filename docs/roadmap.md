@@ -8,10 +8,10 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | W (website). W1 done |
-| Built | **Nothing.** The repository holds design documents only. No website, compiler, CLI, language package or dashboard exists |
-| Next task | **W2, site skeleton** |
-| Last done | 2026-11-21: W1, website visual direction: the terminal ([ADR 0017](decisions/0017-website-terminal-direction.md)) |
+| Phase | W (website). W1 and W2 done |
+| Built | **The website skeleton only** (`website/`: Astro, design tokens, base layout, themes, CI build). No compiler, CLI, language package or dashboard exists |
+| Next task | **W3, landing page** |
+| Last done | 2026-11-21: W2, site skeleton. `pnpm --dir website check` and `build` pass locally; the CI workflow first runs when the branch is pushed |
 | Waiting on the maintainer | Not blocking: npm org `weft-sdk` (confirm it was created), trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
@@ -25,7 +25,7 @@ The landing page and docs site, built before any product code ([ADR 0016](decisi
 | Task | What | Needs | Done when |
 | --- | --- | --- | --- |
 | **W1** ✓ | Visual direction: references the maintainer likes, palette, type, motion, layout principles. Written into `website.md` and a decision record | Maintainer | Done 2026-11-21. Approved direction in [website.md](website.md#visual-direction-the-terminal) |
-| **W2** | Site skeleton: Astro + TypeScript + pnpm in `website/`, design tokens from W1, base layout, light and dark themes, CI build | W1 | `pnpm --dir website build` passes in CI; an empty styled page renders |
+| **W2** ✓ | Site skeleton: Astro + TypeScript + pnpm in `website/`, design tokens from W1, base layout, light and dark themes, CI build | W1 | `pnpm --dir website build` passes in CI; an empty styled page renders |
 | **W3** | Landing page: hero, the problem, how it works (init → contract → call), transports, languages, dashboard preview, call to action (GitHub, follow updates) | W2 | All sections render with real copy, work at phone width, and pass a Lighthouse check (performance and accessibility ≥ 90) |
 | **W4** | Interactive pieces: transport switcher in the hero, persistent language picker, before/after comparison | W3 | Each works with keyboard and respects reduced motion |
 | **W5** | Docs section: custom layout, navigation, search; first pages ported from the design docs (concepts, contract language, API, languages), clearly marked as design-stage | W2 | Docs pages render in the site's design and every code example has a language tab |
