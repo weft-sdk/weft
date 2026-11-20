@@ -30,11 +30,15 @@ The maintainer has approved a visual direction for the website in writing. The d
 
 ## Done
 
-- Work file (this commit).
+- Work file (b2b599e).
+- Mockups, both full landing pages with real copy from the design docs:
+  - `w1-mockups/a-precise.html`: dark-first, Geist and Geist Mono, a visible hairline 12-column grid, one blue accent. Hero is a transport switcher (13 namespaces; the code line and the library underneath change). Sections: problem table, three steps, transports grid, languages grid, status. Private preview: https://claude.ai/artifact/9DQk27ezbFVvHSe45FXiUt
+  - `w1-mockups/b-weave.html`: light-first, Bricolage Grotesque, Instrument Sans and JetBrains Mono. Hero is a weave: six services as vertical warp lines, six transports as flat coloured threads with over/under crossings and moving messages; choosing a thread shows its call. Sections: before/after code (Express + KafkaJS + Socket.io vs Weft), contract with TypeScript/Go/Python tabs marked "Planned API", transports list, status. Private preview: https://claude.ai/artifact/LBp7oBcKiFhCpVSUeMZDVG
+  - Both: light and dark themes with a toggle, phone width, keyboard focus, reduced motion respected, one call to action.
 
 ## Next step
 
-Build mockup A and mockup B in `docs/work/w1-mockups/`, then show both to the maintainer.
+Get the maintainer's reaction to A and B. Revise the chosen mockup if asked, then write the direction into `docs/website.md` and ADR 0017.
 
 ## Waiting on
 

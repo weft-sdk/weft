@@ -1,0 +1,554 @@
+<title>Weft Direction B</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Direction B, the product as the visual.
+   Layout: full-width open grid. Services are the warp (vertical lines), transports are the weft
+   (horizontal threads), each in one flat colour. The weave is the hero and the legend for the page.
+   Light-first. Colour belongs to transports only; everything else is neutral. */
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --line: #e2e5ea;
+  --warp: #c3c8d0;
+  --fg: #121418;
+  --muted: #5b616b;
+  --faint: #8d939c;
+  --ink: #121418;
+  --on-ink: #f7f8fa;
+  --t-http: #2459d8;
+  --t-gql: #c2255c;
+  --t-grpc: #0b7f92;
+  --t-kafka: #d9480f;
+  --t-mq: #6741d9;
+  --t-ws: #2b8a3e;
+  --code-bg: #ffffff;
+  --code-k: #8d939c;
+  --code-s: #2b8a3e;
+  --code-f: #2459d8;
+  --font-display: "Bricolage Grotesque", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --pad-l: max(clamp(16px, 2vw, 32px), env(safe-area-inset-left, 0px));
+  --pad-r: max(clamp(16px, 2vw, 32px), env(safe-area-inset-right, 0px));
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.1875rem;
+  --step-3: clamp(1.75rem, 3vw, 2.5rem);
+  --step-5: clamp(2.5rem, 6vw, 5.5rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1114; --surface: #15181c; --line: #252930; --warp: #3a3f48;
+    --fg: #eceef1; --muted: #9aa0a9; --faint: #6b717a; --ink: #eceef1; --on-ink: #0f1114;
+    --t-http: #6f9cff; --t-gql: #f06595; --t-grpc: #3bc9db; --t-kafka: #ff8a4c; --t-mq: #9f86ff; --t-ws: #5fd27a;
+    --code-bg: #15181c; --code-k: #6b717a; --code-s: #8fd19e; --code-f: #8fb1ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1114; --surface: #15181c; --line: #252930; --warp: #3a3f48;
+  --fg: #eceef1; --muted: #9aa0a9; --faint: #6b717a; --ink: #eceef1; --on-ink: #0f1114;
+  --t-http: #6f9cff; --t-gql: #f06595; --t-grpc: #3bc9db; --t-kafka: #ff8a4c; --t-mq: #9f86ff; --t-ws: #5fd27a;
+  --code-bg: #15181c; --code-k: #6b717a; --code-s: #8fd19e; --code-f: #8fb1ff;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-sans); font-size: var(--step-0); line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+code, pre { font-family: var(--font-mono); }
+.wrap { padding-left: var(--pad-l); padding-right: var(--pad-r); }
+.eyebrow { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); letter-spacing: 0.02em; }
+
+/* Header */
+header { border-bottom: 1px solid var(--line); }
+.header-row { display: flex; align-items: center; gap: 32px; min-height: 60px; }
+.wordmark { font-family: var(--font-display); font-weight: 600; font-size: 1.375rem; letter-spacing: -0.02em; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+nav.primary { display: flex; gap: 28px; font-size: var(--step--1); }
+nav.primary a { text-decoration: none; color: var(--muted); }
+nav.primary a:hover { color: var(--fg); }
+.header-end { margin-left: auto; display: flex; align-items: center; gap: 24px; font-size: var(--step--1); color: var(--muted); }
+.header-end .state { font-family: var(--font-mono); }
+.theme-btn { appearance: none; background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; cursor: pointer; border-bottom: 1px solid var(--warp); }
+.theme-btn:hover { color: var(--fg); }
+
+/* Hero */
+.hero { padding-block: clamp(36px, 6vw, 88px) clamp(24px, 3vw, 40px); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; row-gap: 28px; align-items: end; }
+.hero h1 {
+  grid-column: 1 / span 8; margin: 0;
+  font-family: var(--font-display); font-weight: 600; font-size: var(--step-5);
+  line-height: 0.98; letter-spacing: -0.035em; text-wrap: balance;
+}
+.hero-side { grid-column: 9 / span 4; display: flex; flex-direction: column; gap: 22px; }
+.hero-side p { margin: 0; color: var(--muted); font-size: var(--step-1); line-height: 1.5; max-width: 40ch; }
+.cta {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 12px;
+  background: var(--ink); color: var(--on-ink); text-decoration: none;
+  padding: 13px 20px; border-radius: 3px; font-weight: 500;
+}
+.cta:hover { opacity: 0.9; }
+.cta svg { display: block; }
+
+/* Weave */
+.weave-band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.weave { display: grid; grid-template-columns: minmax(150px, 15%) minmax(0, 1fr); }
+.threads { list-style: none; margin: 0; padding: 48px 0 16px; border-right: 1px solid var(--line); }
+.threads button {
+  appearance: none; background: none; border: 0; width: 100%; height: 48px; padding: 0 16px 0 0;
+  display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; color: var(--fg);
+}
+.threads .sw { width: 12px; height: 12px; flex: none; }
+.threads .ns { font-family: var(--font-mono); font-size: 0.875rem; }
+.threads .lib { font-size: var(--step--1); color: var(--faint); margin-left: auto; white-space: nowrap; }
+.threads button[aria-pressed="false"].dimmed { opacity: 0.4; }
+.threads button:hover { opacity: 1; }
+.canvas { position: relative; min-width: 0; }
+.canvas svg { display: block; width: 100%; }
+.call {
+  display: grid; grid-template-columns: minmax(150px, 15%) minmax(0, 1fr);
+  border-top: 1px solid var(--line);
+}
+.call .eyebrow { padding: 18px 16px 18px 0; border-right: 1px solid var(--line); }
+.call pre { margin: 0; padding: 16px 24px; overflow-x: auto; font-size: 0.9375rem; line-height: 1.7; }
+.call .route { color: var(--faint); }
+
+/* Sections */
+section.block { padding-block: clamp(48px, 7vw, 104px); border-bottom: 1px solid var(--line); }
+.block-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; margin-bottom: clamp(24px, 3vw, 44px); }
+.block-head .eyebrow { grid-column: span 3; padding-top: 10px; }
+.block-head h2 {
+  grid-column: span 9; margin: 0; max-width: 28ch;
+  font-family: var(--font-display); font-weight: 600; font-size: var(--step-3); line-height: 1.08; letter-spacing: -0.025em; text-wrap: balance;
+}
+.block-head p { grid-column: 4 / span 9; margin: 14px 0 0; color: var(--muted); max-width: 62ch; }
+
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--code-bg); }
+.compare > div { min-width: 0; display: flex; flex-direction: column; }
+.compare > div + div { border-left: 1px solid var(--line); }
+.compare .cap { display: flex; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); }
+.compare .cap strong { color: var(--fg); font-weight: 600; }
+.compare pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.75; flex: 1; }
+.k { color: var(--code-k); }
+.s { color: var(--code-s); }
+.f { color: var(--code-f); }
+.mark-http { box-shadow: inset 3px 0 0 var(--t-http); }
+.mark-kafka { box-shadow: inset 3px 0 0 var(--t-kafka); }
+.mark-ws { box-shadow: inset 3px 0 0 var(--t-ws); }
+.compare pre span.row { display: block; padding-left: 12px; margin-left: -12px; }
+
+.contract { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--code-bg); }
+.contract > div { min-width: 0; }
+.contract .src { grid-column: span 5; border-right: 1px solid var(--line); }
+.contract .out { grid-column: span 7; display: flex; flex-direction: column; }
+.contract .cap { padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: var(--step--1); color: var(--muted); display: flex; gap: 24px; align-items: center; }
+.tabs { display: flex; gap: 24px; }
+.tabs button {
+  appearance: none; background: none; border: 0; padding: 0 0 4px; cursor: pointer;
+  font: inherit; font-family: var(--font-mono); color: var(--muted); border-bottom: 2px solid transparent;
+}
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--ink); }
+.contract pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.75; }
+.contract .note { margin-left: auto; color: var(--faint); }
+
+.tlist { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+.tlist dl { grid-column: 4 / span 9; margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1.4fr); }
+.tlist dt, .tlist dd { margin: 0; padding: 12px 0; border-top: 1px solid var(--line); }
+.tlist dt { font-family: var(--font-mono); font-size: 0.875rem; padding-right: 32px; }
+.tlist dd.p { padding-right: 24px; }
+.tlist dd.l { color: var(--muted); font-size: 0.875rem; }
+
+.status { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+.status .eyebrow { grid-column: span 3; padding-top: 4px; }
+.status p { grid-column: span 6; margin: 0; font-size: var(--step-1); line-height: 1.5; max-width: 52ch; }
+.status p + p { grid-column: 4 / span 6; margin-top: 14px; color: var(--muted); font-size: var(--step-0); }
+
+footer .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 24px; font-size: var(--step--1); color: var(--faint); }
+footer nav { display: flex; gap: 24px; }
+footer a { text-decoration: none; color: var(--muted); }
+
+@media (max-width: 980px) {
+  nav.primary { display: none; }
+  .hero h1, .hero-side { grid-column: 1 / -1; }
+  .block-head .eyebrow, .block-head h2, .block-head p { grid-column: 1 / -1; }
+  .block-head h2 { margin-top: 8px; }
+  .contract .src, .contract .out { grid-column: 1 / -1; border-right: 0; }
+  .contract .src { border-bottom: 1px solid var(--line); }
+  .tlist dl, .status .eyebrow, .status p, .status p + p { grid-column: 1 / -1; }
+  .status p { margin-top: 10px; }
+}
+@media (max-width: 760px) {
+  .compare { grid-template-columns: minmax(0, 1fr); }
+  .compare > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .weave, .call { grid-template-columns: 92px minmax(0, 1fr); }
+  .threads .lib { display: none; }
+  .threads .ns { font-size: 0.75rem; }
+  .threads button { gap: 8px; padding-right: 8px; }
+  .call .eyebrow { padding-right: 8px; font-size: 0.75rem; }
+  .call pre { padding-inline: 14px; font-size: 0.8125rem; }
+  .tlist dl { grid-template-columns: max-content minmax(0, 1fr); }
+  .tlist dd.l { grid-column: 2; border-top: 0; padding-top: 0; }
+  .header-end .state { display: none; }
+}
+</style>
+
+<header>
+  <div class="wrap header-row">
+    <a class="wordmark" href="#top">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <rect x="4" y="0" width="2" height="20" fill="var(--warp)"/>
+        <rect x="14" y="0" width="2" height="20" fill="var(--warp)"/>
+        <rect x="0" y="4" width="20" height="3" fill="var(--t-http)"/>
+        <rect x="0" y="13" width="20" height="3" fill="var(--t-kafka)"/>
+        <rect x="13" y="3" width="4" height="5" fill="var(--bg)"/>
+        <rect x="14" y="3" width="2" height="5" fill="var(--warp)"/>
+        <rect x="3" y="12" width="4" height="5" fill="var(--bg)"/>
+        <rect x="4" y="12" width="2" height="5" fill="var(--warp)"/>
+      </svg>
+      Weft
+    </a>
+    <nav class="primary" aria-label="Primary">
+      <a href="#compare">Before and after</a>
+      <a href="#contract">Contracts</a>
+      <a href="#transports">Transports</a>
+      <a href="#status">Status</a>
+    </nav>
+    <div class="header-end">
+      <span class="state">In development</span>
+      <button class="theme-btn" id="theme-toggle" type="button">Theme</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <h1>One interface for every way your services talk.</h1>
+    <div class="hero-side">
+      <p>Each line below is a transport running between real services. With Weft they share one API, one set of types and one way to fail, while Express, KafkaJS and Socket.io keep doing the work underneath.</p>
+      <a class="cta" href="#status">
+        Read the design
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="weave-band">
+    <div class="wrap">
+      <div class="weave">
+        <ul class="threads" id="threads" aria-label="Transports in the map"></ul>
+        <div class="canvas" id="canvas"></div>
+      </div>
+      <div class="call" aria-live="polite">
+        <div class="eyebrow">The call</div>
+        <pre id="call"></pre>
+      </div>
+    </div>
+  </div>
+
+  <section class="block wrap" id="compare" aria-labelledby="cmp-title">
+    <div class="block-head">
+      <div class="eyebrow">Before and after</div>
+      <h2 id="cmp-title">The same endpoint, written twice.</h2>
+      <p>Take an order over HTTP, publish it to Kafka, tell the customer's browser over a socket. Today that means three libraries, three setups and a request body typed as <code>any</code>.</p>
+    </div>
+    <div class="compare">
+      <div>
+        <div class="cap"><strong>Express, KafkaJS and Socket.io</strong><span>server.ts</span></div>
+<pre><span class="k">import</span> express <span class="k">from</span> <span class="s">"express"</span>
+<span class="k">import</span> { createServer } <span class="k">from</span> <span class="s">"node:http"</span>
+<span class="k">import</span> { Kafka } <span class="k">from</span> <span class="s">"kafkajs"</span>
+<span class="k">import</span> { Server } <span class="k">from</span> <span class="s">"socket.io"</span>
+
+<span class="k">const</span> app = <span class="f">express</span>()
+app.<span class="f">use</span>(express.<span class="f">json</span>())
+<span class="k">const</span> server = <span class="f">createServer</span>(app)
+<span class="k">const</span> io = <span class="k">new</span> <span class="f">Server</span>(server)
+
+<span class="k">const</span> kafka = <span class="k">new</span> <span class="f">Kafka</span>({ clientId: <span class="s">"orders"</span>, brokers: [process.env.KAFKA_BROKER] })
+<span class="k">const</span> producer = kafka.<span class="f">producer</span>()
+<span class="k">await</span> producer.<span class="f">connect</span>()
+
+<span class="row mark-http">app.<span class="f">post</span>(<span class="s">"/orders"</span>, <span class="k">async</span> (req, res) =&gt; {</span><span class="row mark-http">  <span class="k">const</span> order = <span class="k">await</span> orders.<span class="f">create</span>(req.body)   <span class="k">// req.body: any</span></span><span class="row mark-kafka">  <span class="k">await</span> producer.<span class="f">send</span>({</span><span class="row mark-kafka">    topic: <span class="s">"order.placed"</span>,</span><span class="row mark-kafka">    messages: [{ key: order.id, value: JSON.<span class="f">stringify</span>(order) }],</span><span class="row mark-kafka">  })</span><span class="row mark-ws">  io.<span class="f">to</span>(<span class="s">`order:${order.id}`</span>).<span class="f">emit</span>(<span class="s">"order.status"</span>, <span class="s">"placed"</span>)</span><span class="row mark-http">  res.<span class="f">json</span>(order)</span><span class="row mark-http">})</span>
+server.<span class="f">listen</span>(<span class="s">3000</span>)</pre>
+      </div>
+      <div>
+        <div class="cap"><strong>Weft</strong><span>server.ts</span></div>
+<pre><span class="k">import</span> { weft } <span class="k">from</span> <span class="s">"./weft.gen"</span>
+
+<span class="row mark-http">weft.http.<span class="f">post</span>(<span class="s">"/orders"</span>, <span class="k">async</span> ({ body }) =&gt; {   <span class="k">// body: CreateOrder</span></span><span class="row mark-http">  <span class="k">const</span> order = <span class="k">await</span> orders.<span class="f">create</span>(body)</span><span class="row mark-kafka">  <span class="k">await</span> weft.kafka.<span class="f">publish</span>(<span class="s">"order.placed"</span>, order)   <span class="k">// key from the contract</span></span><span class="row mark-ws">  weft.ws.<span class="f">to</span>(<span class="s">`order:${order.id}`</span>).<span class="f">emit</span>(<span class="s">"order.status"</span>, <span class="s">"placed"</span>)</span><span class="row mark-http">  <span class="k">return</span> order                                    <span class="k">// must be Order</span></span><span class="row mark-http">})</span>
+<span class="k">await</span> weft.<span class="f">start</span>()   <span class="k">// port, brokers and socket path come from weft.yaml</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="contract" aria-labelledby="ct-title">
+    <div class="block-head">
+      <div class="eyebrow">Contracts</div>
+      <h2 id="ct-title">Write the type once. Every language gets it.</h2>
+      <p>A <code>.weft</code> file names each event, route and call with its type. <code>weft gen</code> turns it into code for each service, so a Go consumer cannot drift from a TypeScript producer.</p>
+    </div>
+    <div class="contract">
+      <div class="src">
+        <div class="cap">contracts/orders.weft</div>
+<pre><span class="k">package</span> orders <span class="f">@version</span>(<span class="s">"1.0.0"</span>)
+
+<span class="k">type</span> Money {
+  amount: int        <span class="k">// minor units</span>
+  currency: Currency
+}
+
+<span class="k">type</span> Order {
+  id: uuid
+  customerId: string
+  items: OrderItem[]
+  total: Money
+  placedAt: timestamp
+}
+
+<span class="k">event</span> order.placed: Order {
+  key: id
+}</pre>
+      </div>
+      <div class="out">
+        <div class="cap">
+          <div class="tabs" role="tablist" aria-label="Language" id="lang-tabs">
+            <button type="button" role="tab" aria-selected="true" data-l="ts">TypeScript</button>
+            <button type="button" role="tab" aria-selected="false" data-l="go">Go</button>
+            <button type="button" role="tab" aria-selected="false" data-l="py">Python</button>
+          </div>
+          <span class="note">Planned API</span>
+        </div>
+        <pre id="lang-code" role="tabpanel"></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="transports" aria-labelledby="tl-title">
+    <div class="block-head">
+      <div class="eyebrow">Transports</div>
+      <h2 id="tl-title">Thirteen namespaces, each running a library you already know.</h2>
+    </div>
+    <div class="tlist">
+      <dl id="tlist"></dl>
+    </div>
+  </section>
+
+  <section class="block wrap" id="status" aria-labelledby="st-title">
+    <div class="status">
+      <div class="eyebrow" id="st-title">Status</div>
+      <p>Weft is in the design stage. The contract language, the API and the architecture are written. No package is published and no code runs yet.</p>
+      <p>Next comes this website, then the compiler and CLI, then the TypeScript and Go packages.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span>Weft, in development</span>
+    <nav aria-label="Footer"><a href="#compare">Before and after</a><a href="#contract">Contracts</a><a href="#transports">Transports</a></nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var SERVICES = ["web", "api", "orders", "payments", "tracking", "emails"];
+  var THREADS = [
+    { id: "http",  lib: "Express",   from: 0, to: [1],    call: 'weft.http.<f>post</f>(<s>"/orders"</s>, createOrder)',               route: "web to api" },
+    { id: "gql",   lib: "Apollo",    from: 0, to: [1],    call: 'weft.gql.<f>query</f>(<s>"order"</s>, ({ id }) =&gt; orders.<f>find</f>(id))', route: "web to api" },
+    { id: "grpc",  lib: "grpc-js",   from: 1, to: [2],    call: '<k>await</k> weft.grpc.<f>call</f>(<s>"orders.CreateOrder"</s>, req)',  route: "api to orders" },
+    { id: "kafka", lib: "KafkaJS",   from: 2, to: [3, 5], call: '<k>await</k> weft.kafka.<f>publish</f>(<s>"order.placed"</s>, order)', route: "orders to payments and emails" },
+    { id: "mq",    lib: "amqplib",   from: 3, to: [5],    call: 'weft.mq.<f>send</f>(<s>"emails"</s>, receipt)',                      route: "payments to emails" },
+    { id: "ws",    lib: "Socket.io", from: 4, to: [0],    call: 'weft.ws.<f>to</f>(<s>`order:${id}`</s>).<f>emit</f>(<s>"courier.moved"</s>, pos)', route: "tracking to web" }
+  ];
+  var TOP = 48, ROW = 48, BOTTOM = 16;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var canvas = document.getElementById("canvas");
+  var list = document.getElementById("threads");
+  var callEl = document.getElementById("call");
+  var NS = "http://www.w3.org/2000/svg";
+  var selected = null;
+  var movers = [];
+  var width = 0;
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function hl(s) {
+    return s.replace(/<f>/g, '<span class="f">').replace(/<\/f>/g, '</span>')
+            .replace(/<s>/g, '<span class="s">').replace(/<\/s>/g, '</span>')
+            .replace(/<k>/g, '<span class="k">').replace(/<\/k>/g, '</span>');
+  }
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  THREADS.forEach(function (t, i) {
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button"; b.dataset.i = i;
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = '<span class="sw" style="background:var(--t-' + t.id + ')"></span><span class="ns">weft.' + t.id + '</span><span class="lib">' + t.lib + '</span>';
+    b.addEventListener("click", function () { select(selected === i ? null : i); });
+    b.addEventListener("mouseenter", function () { if (selected === null) preview(i); });
+    b.addEventListener("mouseleave", function () { if (selected === null) preview(null); });
+    li.appendChild(b); list.appendChild(li);
+  });
+
+  function colX(c) {
+    var inset = Math.max(36, width * 0.06);
+    return inset + c * (width - inset * 2) / (SERVICES.length - 1);
+  }
+  function rowY(r) { return TOP + r * ROW + ROW / 2; }
+
+  function draw() {
+    width = canvas.clientWidth;
+    var h = TOP + THREADS.length * ROW + BOTTOM;
+    canvas.innerHTML = "";
+    var svg = el("svg", { width: width, height: h, viewBox: "0 0 " + width + " " + h, role: "img",
+      "aria-label": "Six services joined by six transports: HTTP and GraphQL from web to api, gRPC from api to orders, Kafka from orders to payments and emails, RabbitMQ from payments to emails, WebSockets from tracking to web." }, canvas);
+    var bg = css("--surface"), warp = css("--warp"), line = css("--line"), faint = css("--muted");
+    var small = width < 520;
+
+    SERVICES.forEach(function (s, c) {
+      var x = colX(c);
+      var t = el("text", { x: x, y: 26, "text-anchor": "middle", fill: faint, "font-family": css("--font-mono"), "font-size": small ? 9.5 : 12 }, svg);
+      t.textContent = small ? s.slice(0, 5) : s;
+    });
+    THREADS.forEach(function (t, r) {
+      el("line", { x1: 0, x2: width, y1: rowY(r), y2: rowY(r), stroke: line, "stroke-width": 1 }, svg);
+    });
+    SERVICES.forEach(function (s, c) {
+      el("rect", { x: colX(c) - 1, y: TOP - 4, width: 2, height: h - TOP - BOTTOM + 8, fill: warp }, svg);
+    });
+
+    movers = [];
+    THREADS.forEach(function (t, r) {
+      var g = el("g", { "data-i": r, class: "thread" }, svg);
+      var cols = [t.from].concat(t.to);
+      var lo = Math.min.apply(null, cols), hi = Math.max.apply(null, cols);
+      var y = rowY(r), color = css("--t-" + t.id);
+      el("rect", { x: colX(lo), y: y - 2.5, width: colX(hi) - colX(lo), height: 5, fill: color }, g);
+      for (var c = lo + 1; c < hi; c++) {
+        if ((c + r) % 2 === 0) {
+          el("rect", { x: colX(c) - 5, y: y - 4, width: 10, height: 8, fill: bg }, g);
+          el("rect", { x: colX(c) - 1, y: y - 4, width: 2, height: 8, fill: warp }, g);
+        }
+      }
+      cols.forEach(function (c) {
+        el("rect", { x: colX(c) - 6, y: y - 6, width: 12, height: 12, fill: color, stroke: bg, "stroke-width": 2 }, g);
+      });
+      t.to.forEach(function (dst, k) {
+        var m = el("rect", { width: 6, height: 6, y: y - 3, fill: bg, stroke: color, "stroke-width": 2, x: colX(t.from) - 3 }, g);
+        movers.push({ el: m, x0: colX(t.from), x1: colX(dst), offset: (r * 0.37 + k * 0.5) % 1, dur: 2200 + Math.abs(dst - t.from) * 260 });
+      });
+    });
+    applyFocus(selected);
+  }
+
+  function applyFocus(i) {
+    var gs = canvas.querySelectorAll("g.thread");
+    Array.prototype.forEach.call(gs, function (g) {
+      var on = i === null || +g.getAttribute("data-i") === i;
+      g.setAttribute("opacity", on ? "1" : "0.18");
+    });
+    Array.prototype.forEach.call(list.querySelectorAll("button"), function (b) {
+      b.classList.toggle("dimmed", i !== null && +b.dataset.i !== i);
+    });
+    var t = THREADS[i === null ? 3 : i];
+    callEl.innerHTML = hl(t.call) + '\n<span class="route">' + t.route + ", " + t.lib + " underneath</span>";
+  }
+  function preview(i) { applyFocus(i); }
+  function select(i) {
+    selected = i;
+    Array.prototype.forEach.call(list.querySelectorAll("button"), function (b) {
+      b.setAttribute("aria-pressed", +b.dataset.i === i ? "true" : "false");
+    });
+    applyFocus(i);
+  }
+
+  function tick(now) {
+    movers.forEach(function (m) {
+      var p = ((now / m.dur) + m.offset) % 1;
+      var e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      m.el.setAttribute("x", (m.x0 + (m.x1 - m.x0) * e - 3).toFixed(1));
+    });
+    requestAnimationFrame(tick);
+  }
+
+  draw();
+  if (!reduce) requestAnimationFrame(tick);
+  else movers.forEach(function (m) { m.el.setAttribute("x", (m.x0 + (m.x1 - m.x0) * 0.5 - 3).toFixed(1)); });
+  var rt;
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(draw, 80); });
+
+  /* Contract tabs */
+  var LANG = {
+    ts: '<k>import</k> { weft } <k>from</k> <s>"./weft.gen"</s>\n\nweft.kafka.<f>on</f>(<s>"order.placed"</s>, <k>async</k> (order) =&gt; {\n  <k>// order: Order</k>\n  <k>await</k> payments.<f>charge</f>(order.customerId, order.total)\n})\n\n<k>await</k> weft.<f>start</f>()',
+    go: 'weft.Kafka.<f>On</f>(<s>"order.placed"</s>, <k>func</k>(ctx context.Context, order orders.Order) <k>error</k> {\n    <k>// order.Total.Amount is int64</k>\n    <k>return</k> payments.<f>Charge</f>(ctx, order.CustomerID, order.Total)\n})\n\nweft.<f>Start</f>(ctx)',
+    py: '<k>from</k> weft_gen <k>import</k> weft, Order\n\n<f>@weft.kafka.on</f>(<s>"order.placed"</s>)\n<k>async def</k> <f>charge</f>(order: Order) -&gt; <k>None</k>:\n    <k>await</k> payments.<f>charge</f>(order.customer_id, order.total)\n\n<k>await</k> weft.<f>start</f>()'
+  };
+  var tabs = document.getElementById("lang-tabs");
+  var langCode = document.getElementById("lang-code");
+  function showLang(l) {
+    Array.prototype.forEach.call(tabs.children, function (b) {
+      var on = b.dataset.l === l;
+      b.setAttribute("aria-selected", on ? "true" : "false"); b.tabIndex = on ? 0 : -1;
+    });
+    langCode.innerHTML = hl(LANG[l]);
+  }
+  Array.prototype.forEach.call(tabs.children, function (b, i, all) {
+    b.addEventListener("click", function () { showLang(b.dataset.l); });
+    b.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      var n = all[(i + (e.key === "ArrowRight" ? 1 : all.length - 1)) % all.length];
+      showLang(n.dataset.l); n.focus();
+    });
+  });
+  showLang("ts");
+
+  /* Transport list */
+  var TL = [
+    ["weft.http", "HTTP and REST", "Express, Fastify, Hono, NestJS"],
+    ["weft.gql", "GraphQL", "Apollo Server, GraphQL Yoga"],
+    ["weft.grpc", "gRPC", "grpc-js, Connect"],
+    ["weft.rpc", "Typed RPC", "Connect protocol, tRPC in TypeScript"],
+    ["weft.ws", "WebSockets", "Socket.io, ws"],
+    ["weft.sse", "Server-sent events", "Built on the HTTP adapter"],
+    ["weft.kafka", "Kafka", "KafkaJS, confluent-kafka-javascript"],
+    ["weft.mq", "RabbitMQ and AMQP", "amqplib"],
+    ["weft.nats", "NATS", "Official NATS client"],
+    ["weft.redis", "Redis Pub/Sub and Streams", "ioredis, node-redis"],
+    ["weft.cloud", "SQS, SNS, EventBridge, Pub/Sub, Service Bus", "Official cloud SDKs"],
+    ["weft.mqtt", "MQTT", "MQTT.js"],
+    ["weft.pulsar", "Pulsar", "Official Pulsar client"]
+  ];
+  var dl = document.getElementById("tlist");
+  TL.forEach(function (r) {
+    var dt = document.createElement("dt"); dt.textContent = r[0];
+    var d1 = document.createElement("dd"); d1.className = "p"; d1.textContent = r[1];
+    var d2 = document.createElement("dd"); d2.className = "l"; d2.textContent = r[2];
+    dl.appendChild(dt); dl.appendChild(d1); dl.appendChild(d2);
+  });
+
+  /* Theme */
+  var root = document.documentElement, btn = document.getElementById("theme-toggle");
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    if (t) return t === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function label() { btn.textContent = isDark() ? "Light theme" : "Dark theme"; }
+  btn.addEventListener("click", function () { root.setAttribute("data-theme", isDark() ? "light" : "dark"); label(); draw(); });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { label(); draw(); });
+  label();
+})();
+</script>
