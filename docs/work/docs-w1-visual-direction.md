@@ -50,6 +50,12 @@ The maintainer has approved a visual direction for the website in writing. The d
   - The rest: three steps, a tile grid of language logos, the dashboard window, and status as three phases with "Now" in the accent. The footer has columns.
   - Accent switcher removed. Escape hatch now uses `raw`, as in `api.md`.
 
+- Round 4 feedback (2026-11-21): still the same type of design, a plain layout. Wants something entirely different. Skip the "split header + bento + product window" style of layout altogether.
+- Round 5 answers: three concepts with completely different page structures, each a short sketch to judge layout only. All keep the off-black/off-white palette, the blue accent, the fonts and the hard rules.
+  - `c1-specimen.html`, type specimen: every `weft.*` namespace set huge on its own full-width line, library on the right; a solid blue field for the contract; languages as one run of large text. https://claude.ai/artifact/JTLvGtqk6Pw9P3pMvfBz9Y
+  - `c2-scroll-story.html`, scroll story: the screen is split for the whole page; the story scrolls on the left, one pinned code window on the right rewrites itself per chapter (before, after, contract, languages, weft.yaml, weft check). https://claude.ai/artifact/KgkF1UigavD5VvU4vDyTa3
+  - `c3-terminal.html`, terminal: the page is one terminal session; each section is a command in a left gutter (`$ weft transports`) with its output on the right. Dark-first. https://claude.ai/artifact/NrXADGitbMfn5Ca2DZQGiK
+
 ## Done
 
 - Work file (b2b599e).
@@ -61,11 +67,11 @@ The maintainer has approved a visual direction for the website in writing. The d
 
 ## Next step
 
-Get the maintainer's reaction to round 4 (the new structure). Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
+Get the maintainer's pick among the three round 5 concepts (or a mix), then build the chosen one out into a full landing page. Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
 
 ## Waiting on
 
-- The maintainer's verdict on round 4.
+- The maintainer's pick among C1, C2 and C3.
 
 ## How to check
 
