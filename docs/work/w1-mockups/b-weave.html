@@ -4,9 +4,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Direction B, round 2. Monochrome: off-black on off-white, no accent colour.
-   Layout: full-width bands with small gutters. The hero is a real weave: languages are the warp,
-   transports are the weft, every crossing is a language running a transport. Gaps are real gaps. */
+/* Direction B, round 3. Off-black on off-white with one accent colour.
+   Layout: full-width bands with small gutters. The hero visual is one weft.* call set large;
+   the transport row changes the call and the library underneath. Nothing else moves. */
 :root {
   --bg: #f4f4f3;
   --surface: #fafaf9;
@@ -22,6 +22,9 @@
   --code-k: #8f8f8c;
   --code-s: #141414;
   --code-f: #141414;
+  --accent-l: #2447f5; --accent-d: #7d92ff;
+  --accent: var(--accent-l);
+  --on-accent: #ffffff;
   --font-display: "Bricolage Grotesque", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -38,6 +41,7 @@
     --bg: #111111; --surface: #171717; --line: #262626; --line-strong: #363636;
     --fg: #ececea; --muted: #a2a2a0; --faint: #6f6f6d; --thread: #dcdcda; --warp: #4a4a49;
     --ink: #ececea; --on-ink: #111111; --code-k: #6f6f6d; --code-s: #ececea; --code-f: #ececea;
+    --accent: var(--accent-d); --on-accent: #111111;
     color-scheme: dark;
   }
 }
@@ -45,8 +49,12 @@
   --bg: #111111; --surface: #171717; --line: #262626; --line-strong: #363636;
   --fg: #ececea; --muted: #a2a2a0; --faint: #6f6f6d; --thread: #dcdcda; --warp: #4a4a49;
   --ink: #ececea; --on-ink: #111111; --code-k: #6f6f6d; --code-s: #ececea; --code-f: #ececea;
+    --accent: var(--accent-d); --on-accent: #111111;
   color-scheme: dark;
 }
+
+:root[data-accent="orange"] { --accent-l: #e0480c; --accent-d: #ff7c45; }
+:root[data-accent="green"] { --accent-l: #0b7f4f; --accent-d: #3fd28f; }
 
 * { box-sizing: border-box; }
 body {
@@ -71,7 +79,10 @@ nav.primary a { text-decoration: none; color: var(--muted); }
 nav.primary a:hover { color: var(--fg); }
 .header-end { margin-left: auto; display: flex; align-items: center; gap: 24px; font-size: var(--step--1); color: var(--muted); }
 .header-end .state { font-family: var(--font-mono); display: flex; align-items: center; gap: 8px; }
-.header-end .state i { width: 6px; height: 6px; background: var(--fg); display: block; }
+.header-end .state i { width: 6px; height: 6px; background: var(--accent); display: block; }
+.accents { display: flex; align-items: center; gap: 8px; }
+.accents button { appearance: none; width: 14px; height: 14px; border: 0; padding: 0; cursor: pointer; outline-offset: 3px; }
+.accents button[aria-pressed="true"] { outline: 1.5px solid var(--fg); }
 .theme-btn { appearance: none; background: none; border: 0; padding: 4px 0; color: var(--muted); font: inherit; cursor: pointer; border-bottom: 1px solid var(--line-strong); }
 .theme-btn:hover { color: var(--fg); }
 
@@ -86,35 +97,41 @@ nav.primary a:hover { color: var(--fg); }
 .hero-side p { margin: 0; color: var(--muted); font-size: var(--step-1); line-height: 1.5; max-width: 40ch; }
 .cta {
   align-self: flex-start; display: inline-flex; align-items: center; gap: 12px;
-  background: var(--ink); color: var(--on-ink); text-decoration: none;
+  background: var(--accent); color: var(--on-accent); text-decoration: none;
   padding: 13px 20px; border-radius: 3px; font-weight: 500;
 }
 .cta:hover { opacity: 0.88; }
 
-/* Weave */
-.weave-band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
-.weave-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 16px; border-bottom: 1px solid var(--line); }
-.weave { position: relative; padding-block: 8px 12px; }
-.weave > svg { display: block; width: 100%; }
-.weave > svg .dim { opacity: 0.18; }
-.weave > svg * { transition: opacity 180ms ease; }
-.wbtn {
-  position: absolute; appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
-  color: var(--muted); display: flex; align-items: center; gap: 10px; font: inherit;
+/* Stage: one call, many transports */
+.stage-band { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
+.tp { display: grid; grid-template-columns: repeat(13, minmax(64px, 1fr)); overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.tp button {
+  appearance: none; background: none; border: 0; cursor: pointer; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 4px 14px;
+  color: var(--faint); font: inherit; font-size: 0.75rem;
 }
-.wbtn:hover, .wbtn[aria-pressed="true"] { color: var(--fg); }
-.wbtn.row { justify-content: flex-start; }
-.wbtn.row .n { font-family: var(--font-mono); font-size: 0.8125rem; white-space: nowrap; }
-.wbtn.col { flex-direction: column; justify-content: center; gap: 6px; }
-.wbtn.col .n { font-size: 0.75rem; white-space: nowrap; }
-.call {
-  display: grid; grid-template-columns: 196px minmax(0, 1fr) auto; align-items: center;
-  border-top: 1px solid var(--line); min-height: 64px;
+.tp button:hover { color: var(--fg); }
+.tp button[aria-selected="true"] { color: var(--fg); }
+.tp button[aria-selected="true"]::before { content: ""; position: absolute; left: 20%; right: 20%; top: -1px; height: 2px; background: var(--accent); }
+.tp .nm { white-space: nowrap; }
+.stage { display: flex; flex-direction: column; justify-content: center; gap: 28px; min-height: clamp(220px, 26vw, 340px); padding-block: 40px; }
+.line {
+  margin: 0; font-family: var(--font-mono); font-weight: 400;
+  font-size: clamp(1.125rem, 3.1vw, 2.875rem); line-height: 1.25; letter-spacing: -0.02em;
+  white-space: pre-wrap; overflow-wrap: anywhere; transition: opacity 160ms ease;
 }
-.call .pair { font-size: var(--step--1); color: var(--muted); padding-right: 16px; }
-.call pre { margin: 0; padding: 16px 24px 16px 0; overflow-x: auto; font-size: 0.9375rem; line-height: 1.6; }
-.call .runs { display: flex; align-items: center; gap: 10px; font-size: var(--step--1); color: var(--muted); white-space: nowrap; padding-left: 16px; }
-.call .runs strong { color: var(--fg); font-weight: 500; font-family: var(--font-mono); font-size: 0.8125rem; }
+.line.out { opacity: 0; }
+.line .d { color: var(--faint); }
+.line .ns { color: var(--accent); }
+.line .s { color: var(--muted); }
+.stage-meta { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.runs { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.9375rem; }
+.runs strong { color: var(--fg); font-weight: 500; }
+.lp { display: flex; gap: 6px; align-items: center; }
+.lp .lbl { font-size: var(--step--1); color: var(--faint); margin-right: 8px; }
+.lp button { appearance: none; background: none; border: 0; cursor: pointer; padding: 6px; color: var(--faint); border-bottom: 2px solid transparent; }
+.lp button:hover { color: var(--fg); }
+.lp button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--accent); }
 .k { color: var(--code-k); }
 .s { color: var(--code-s); }
 .f { color: var(--code-f); font-weight: 500; }
@@ -152,7 +169,7 @@ section.block { padding-block: clamp(56px, 7vw, 112px); border-bottom: 1px solid
 .steps > div { min-width: 0; display: flex; flex-direction: column; }
 .steps > div + div { border-left: 1px solid var(--line); }
 .steps .sh { padding: 20px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; }
-.steps .n { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); padding-top: 3px; }
+.steps .n { font-family: var(--font-mono); font-size: var(--step--1); color: var(--accent); padding-top: 3px; }
 .steps h3 { margin: 0; font-size: var(--step-1); font-weight: 600; }
 .steps .sh p { grid-column: 2; margin: 0; color: var(--muted); font-size: 0.9375rem; }
 .steps pre { flex: 1; }
@@ -168,13 +185,14 @@ section.block { padding-block: clamp(56px, 7vw, 112px); border-bottom: 1px solid
   display: flex; align-items: center; gap: 8px;
 }
 .tabs button:hover { color: var(--fg); }
-.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--fg); }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
 .contract .note { color: var(--faint); white-space: nowrap; }
 
 .behave { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); }
 .behave > div { padding: 24px 24px 8px 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .behave > div + div { padding-left: 24px; border-left: 1px solid var(--line); }
 .behave .hd { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.behave .hd svg { color: var(--accent); }
 .behave p { margin: 0; color: var(--muted); font-size: 0.9375rem; max-width: 36ch; }
 
 .dash { display: grid; grid-template-columns: minmax(0, 1fr) 320px; }
@@ -223,10 +241,7 @@ footer a:hover { color: var(--fg); }
 @media (max-width: 760px) {
   .compare { grid-template-columns: minmax(0, 1fr); }
   .compare > div + div { border-left: 0; border-top: 1px solid var(--line); }
-  .call { grid-template-columns: minmax(0, 1fr); }
-  .call .pair { padding-top: 12px; }
-  .call pre { padding: 8px 0; font-size: 0.8125rem; }
-  .call .runs { padding: 0 0 12px; }
+  .stage { padding-block: 28px; gap: 20px; }
   .wall { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .wall .fine { grid-column: 1; }
   .logos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -238,7 +253,7 @@ footer a:hover { color: var(--fg); }
   .header-end .state span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .weave > svg * { transition: none; }
+  .line { transition: none; }
 }
 </style>
 
@@ -249,7 +264,7 @@ footer a:hover { color: var(--fg); }
         <rect x="4" y="0" width="3" height="20" fill="var(--warp)"/>
         <rect x="13" y="0" width="3" height="20" fill="var(--warp)"/>
         <rect x="0" y="4" width="20" height="3" fill="var(--fg)"/>
-        <rect x="0" y="13" width="20" height="3" fill="var(--fg)"/>
+        <rect x="0" y="13" width="20" height="3" fill="var(--accent)"/>
         <rect x="12" y="3" width="5" height="5" fill="var(--bg)"/>
         <rect x="13" y="3" width="3" height="5" fill="var(--warp)"/>
         <rect x="3" y="12" width="5" height="5" fill="var(--bg)"/>
@@ -266,6 +281,7 @@ footer a:hover { color: var(--fg); }
     </nav>
     <div class="header-end">
       <span class="state"><i aria-hidden="true"></i><span>In development</span></span>
+      <span class="accents" id="accents" aria-label="Accent colour (mockup only)"></span>
       <button class="theme-btn" id="theme-toggle" type="button">Theme</button>
     </div>
   </div>
@@ -283,17 +299,15 @@ footer a:hover { color: var(--fg); }
     </div>
   </div>
 
-  <div class="weave-band">
+  <div class="stage-band">
     <div class="wrap">
-      <div class="weave-head">
-        <span class="eyebrow">Languages run vertically, transports across. Every crossing is one <code>weft.*</code> call.</span>
-        <span class="eyebrow">A gap is a combination the ecosystem does not support.</span>
-      </div>
-      <div class="weave" id="weave"></div>
-      <div class="call" aria-live="polite">
-        <div class="pair" id="call-pair"></div>
-        <pre id="call-code"></pre>
-        <div class="runs" id="call-runs"></div>
+      <div class="tp" role="tablist" aria-label="Transport" id="tp"></div>
+      <div class="stage" role="tabpanel" id="stage" aria-live="polite">
+        <pre class="line" id="line"></pre>
+        <div class="stage-meta">
+          <div class="runs" id="runs"></div>
+          <div class="lp" id="lp"><span class="lbl">Language</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -573,150 +587,90 @@ weft.kafka.<span class="f">on</span>(<span class="s">"order.placed"</span>, <spa
   function S(x) { return '<span class="s">' + esc(x) + "</span>"; }
   function K(x) { return '<span class="k">' + esc(x) + "</span>"; }
   function F(x) { return '<span class="f">' + esc(x) + "</span>"; }
+  function D(x) { return '<span class="d">' + x + "</span>"; }
+  function N(x) { return '<span class="ns">' + x + "</span>"; }
   function callFor(t, l) {
     var ns = t.ns || t.id, m = t.m, a0 = t.a[0], a1 = t.a[1];
     var sq = "'" + a0.slice(1, -1) + "'";
     switch (l.id) {
-      case "ts": return K("await ") + "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "ts": return K("await ") + D("weft.") + N(ns) + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
       case "go": return "err := weft." + GO_NS[ns] + "." + F(cap(m)) + "(ctx, " + S(a0) + ", " + a1 + ")";
-      case "py": return K("await ") + "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
-      case "jvm": return "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
-      case "net": return K("await ") + "weft." + GO_NS[ns] + "." + F(cap(m)) + "(" + S(a0) + ", " + cap(a1) + ");";
-      case "rs": return "weft." + ns + "." + F(m) + "(" + S(a0) + ", &amp;" + a1 + ")." + K("await") + "?;";
-      case "rb": return "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
-      case "php": return "$weft-&gt;" + ns.replace(".", "-&gt;") + "-&gt;" + F(m) + "(" + S(sq) + ", $" + a1 + ");";
-      case "ex": return "Weft." + GO_NS[ns].replace("GQL", "GraphQL") + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
-      case "swift": return K("try await ") + "weft." + ns + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
-      case "dart": return K("await ") + "weft." + ns + "." + F(m) + "(" + S(sq) + ", " + a1 + ");";
+      case "py": return K("await ") + D("weft.") + N(ns) + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "jvm": return D("weft.") + N(ns) + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "net": return K("await ") + D("weft.") + N(GO_NS[ns]) + "." + F(cap(m)) + "(" + S(a0) + ", " + cap(a1) + ");";
+      case "rs": return D("weft.") + N(ns) + "." + F(m) + "(" + S(a0) + ", &amp;" + a1 + ")." + K("await") + "?;";
+      case "rb": return D("weft.") + N(ns) + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "php": return D("$weft-&gt;") + N(ns.replace(".", "-&gt;")) + "-&gt;" + F(m) + "(" + S(sq) + ", $" + a1 + ");";
+      case "ex": return D("Weft.") + N(GO_NS[ns].replace("GQL", "GraphQL")) + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "swift": return K("try await ") + D("weft.") + N(ns) + "." + F(m) + "(" + S(a0) + ", " + a1 + ")";
+      case "dart": return K("await ") + D("weft.") + N(ns) + "." + F(m) + "(" + S(sq) + ", " + a1 + ");";
     }
   }
 
-  /* ---------- The weave ---------- */
-  var host = document.getElementById("weave");
-  var NS = "http://www.w3.org/2000/svg";
-  var sel = { t: 6, l: 0 };
+  /* ---------- Stage ---------- */
+  var PICK = [0, 1, 2, 3, 4, 6];
+  var cur = { t: 6, l: 0 };
+  var tp = document.getElementById("tp"), line = document.getElementById("line"), runs = document.getElementById("runs"), lp = document.getElementById("lp");
   var auto = null;
-  var tour = [[6, 0], [6, 1], [2, 2], [4, 0], [0, 3], [7, 5], [1, 6], [6, 10], [3, 4], [9, 8], [11, 7], [12, 1]];
-  var tourAt = 0;
+  function stopAuto() { if (auto) { clearInterval(auto); auto = null; } }
 
-  function el(tag, attrs, parent) {
-    var e = document.createElementNS(NS, tag);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    if (parent) parent.appendChild(e);
-    return e;
-  }
-
-  function draw() {
-    var W = host.clientWidth;
-    var wide = W >= 760;
-    var L = wide ? 196 : 40;
-    var H = wide ? 64 : 36;
-    var rowH = wide ? 40 : 28;
-    var band = wide ? 12 : 8;
-    var n = LANGS.length;
-    var s = (W - L) / n;
-    var h = H + TRANSPORTS.length * rowH + 4;
-    host.innerHTML = "";
-    host.style.height = h + "px";
-    var cx = function (c) { return L + s * (c + 0.5); };
-    var ry = function (r) { return H + r * rowH + rowH / 2; };
-    var bg = css("--surface"), thread = css("--thread"), warp = css("--warp"), fg = css("--fg");
-
-    var svg = el("svg", { width: W, height: h, viewBox: "0 0 " + W + " " + h, "aria-hidden": "true" }, host);
-    var rows = [], cols = [];
-
-    TRANSPORTS.forEach(function (t, r) {
-      var g = el("g", { "data-r": r }, svg);
-      el("rect", { x: L - 8, y: ry(r) - band / 2, width: W - L + 8, height: band, fill: thread }, g);
-      t.libs.forEach(function (lib, c) {
-        if (lib === null) el("rect", { x: cx(c) - s / 2 + 4, y: ry(r) - band / 2 - 1, width: s - 8, height: band + 2, fill: bg }, g);
-      });
-      rows.push(g);
-    });
-    LANGS.forEach(function (l, c) {
-      var g = el("g", { "data-c": c }, svg);
-      el("rect", { x: cx(c) - band / 2, y: H - 10, width: band, height: h - H + 10, fill: warp, stroke: bg, "stroke-width": 2, "paint-order": "stroke" }, g);
-      cols.push(g);
-    });
-    TRANSPORTS.forEach(function (t, r) {
-      t.libs.forEach(function (lib, c) {
-        if (lib === null || (r + c) % 2 !== 0) return;
-        var x = cx(c) - band / 2 - 2, y = ry(r) - band / 2;
-        el("rect", { x: x, y: y - 2, width: band + 4, height: 2, fill: bg }, rows[r]);
-        el("rect", { x: x, y: y + band, width: band + 4, height: 2, fill: bg }, rows[r]);
-        el("rect", { x: x, y: y, width: band + 4, height: band, fill: thread }, rows[r]);
-      });
-    });
-    var mark = el("rect", { width: band + 14, height: band + 14, fill: "none", stroke: fg, "stroke-width": 1.5 }, svg);
-
-    /* hit areas for pointer users; keyboard users use the buttons */
-    TRANSPORTS.forEach(function (t, r) {
-      LANGS.forEach(function (l, c) {
-        var hit = el("rect", { x: cx(c) - s / 2, y: ry(r) - rowH / 2, width: s, height: rowH, fill: "transparent" }, svg);
-        hit.style.cursor = "pointer";
-        hit.addEventListener("mouseenter", function () { stopTour(); select(r, c); });
-        hit.addEventListener("click", function () { stopTour(); select(r, c); });
-      });
-    });
-
-    TRANSPORTS.forEach(function (t, r) {
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "wbtn row";
-      b.style.left = "0px"; b.style.top = (ry(r) - rowH / 2) + "px"; b.style.height = rowH + "px"; b.style.width = (L - 16) + "px";
-      b.setAttribute("aria-label", t.name);
-      b.innerHTML = icon(t.icon, wide ? 18 : 16) + (wide ? '<span class="n">weft.' + (t.ns || t.id) + "</span>" : "");
-      b.addEventListener("click", function () { stopTour(); select(r, sel.l); });
-      b.addEventListener("mouseenter", function () { stopTour(); select(r, sel.l); });
-      host.appendChild(b);
-      t._btn = b;
-    });
-    LANGS.forEach(function (l, c) {
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "wbtn col";
-      b.style.left = (cx(c) - s / 2) + "px"; b.style.top = "0px"; b.style.width = s + "px"; b.style.height = (H - 14) + "px";
-      b.setAttribute("aria-label", l.name);
-      b.innerHTML = icon(l.icon, wide ? 20 : 15) + (wide ? '<span class="n">' + l.short + "</span>" : "");
-      b.addEventListener("click", function () { stopTour(); select(sel.t, c); });
-      b.addEventListener("mouseenter", function () { stopTour(); select(sel.t, c); });
-      host.appendChild(b);
-      l._btn = b;
-    });
-
-    host._rows = rows; host._cols = cols; host._mark = mark;
-    host._geo = { cx: cx, ry: ry, band: band };
-    select(sel.t, sel.l);
-  }
-
-  function select(r, c) {
-    sel = { t: r, l: c };
-    host._rows.forEach(function (g, i) { g.classList.toggle("dim", i !== r); });
-    host._cols.forEach(function (g, i) { g.classList.toggle("dim", i !== c); });
-    var geo = host._geo;
-    host._mark.setAttribute("x", geo.cx(c) - geo.band / 2 - 7);
-    host._mark.setAttribute("y", geo.ry(r) - geo.band / 2 - 7);
-    TRANSPORTS.forEach(function (t, i) { t._btn.setAttribute("aria-pressed", i === r ? "true" : "false"); });
-    LANGS.forEach(function (l, i) { l._btn.setAttribute("aria-pressed", i === c ? "true" : "false"); });
-
-    var t = TRANSPORTS[r], l = LANGS[c], lib = t.libs[c];
-    document.getElementById("call-pair").innerHTML = esc(l.name) + " &middot; " + esc(t.name);
-    var runs = document.getElementById("call-runs");
+  function lineFor(t, l) { return callFor(t, l); }
+  function render() {
+    var t = TRANSPORTS[cur.t], l = LANGS[cur.l], lib = t.libs[cur.l];
     if (lib === null) {
-      document.getElementById("call-code").innerHTML = '<span class="k">' + esc(GAP_WHY[l.id] || GAP_WHY.other) + "</span>";
-      runs.innerHTML = "Not supported";
+      line.innerHTML = '<span class="d">' + esc(GAP_WHY[l.id] || GAP_WHY.other) + "</span>";
+      runs.innerHTML = icon(t.icon, 18) + "<span>" + esc(t.name) + " is not planned for " + esc(l.name) + "</span>";
     } else {
-      document.getElementById("call-code").innerHTML = callFor(t, l);
-      runs.innerHTML = "Runs on <strong>" + esc(lib) + "</strong>";
+      line.innerHTML = lineFor(t, l);
+      runs.innerHTML = icon(t.icon, 18) + "<span>Runs on <strong>" + esc(lib) + "</strong> underneath</span>";
     }
+    Array.prototype.forEach.call(tp.children, function (b, i) { b.setAttribute("aria-selected", i === cur.t ? "true" : "false"); b.tabIndex = i === cur.t ? 0 : -1; });
+    Array.prototype.forEach.call(lp.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", +b.dataset.l === cur.l ? "true" : "false"); });
   }
+  function go(t, l) {
+    cur = { t: t, l: l };
+    if (reduce) { render(); return; }
+    line.classList.add("out");
+    setTimeout(function () { render(); line.classList.remove("out"); }, 160);
+  }
+  TRANSPORTS.forEach(function (t, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role", "tab");
+    b.innerHTML = icon(t.icon, 22) + '<span class="nm">' + esc(t.id) + "</span>";
+    b.setAttribute("aria-label", t.name);
+    b.addEventListener("click", function () { stopAuto(); go(i, cur.l); });
+    b.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault(); stopAuto();
+      var n = (i + (e.key === "ArrowRight" ? 1 : TRANSPORTS.length - 1)) % TRANSPORTS.length;
+      go(n, cur.l); tp.children[n].focus();
+    });
+    tp.appendChild(b);
+  });
+  PICK.forEach(function (li) {
+    var l = LANGS[li], b = document.createElement("button");
+    b.type = "button"; b.dataset.l = li; b.setAttribute("aria-label", l.name); b.title = l.name;
+    b.innerHTML = icon(l.icon, 18);
+    b.addEventListener("click", function () { stopAuto(); go(cur.t, li); });
+    lp.appendChild(b);
+  });
+  render();
+  if (!reduce) auto = setInterval(function () { go((cur.t + 1) % TRANSPORTS.length, cur.l); }, 2600);
 
-  function stopTour() { if (auto) { clearInterval(auto); auto = null; } }
-  draw();
-  if (!reduce) {
-    auto = setInterval(function () { tourAt = (tourAt + 1) % tour.length; select(tour[tourAt][0], tour[tourAt][1]); }, 2600);
-  }
-  host.addEventListener("focusin", stopTour);
-  var rt;
-  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(draw, 80); });
+  /* Accent switcher, mockup only */
+  var ACC = [["blue", "#2447f5"], ["orange", "#e0480c"], ["green", "#0b7f4f"]];
+  var accEl = document.getElementById("accents");
+  ACC.forEach(function (a) {
+    var b = document.createElement("button");
+    b.type = "button"; b.style.background = a[1]; b.setAttribute("aria-label", "Accent " + a[0]); b.dataset.a = a[0];
+    b.setAttribute("aria-pressed", a[0] === "blue" ? "true" : "false");
+    b.addEventListener("click", function () {
+      if (a[0] === "blue") document.documentElement.removeAttribute("data-accent"); else document.documentElement.setAttribute("data-accent", a[0]);
+      Array.prototype.forEach.call(accEl.children, function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      drawMap();
+    });
+    accEl.appendChild(b);
+  });
 
   /* ---------- Logo wall ---------- */
   var WALL = [["express", "Express"], ["fastify", "Fastify"], ["hono", "Hono"], ["nestjs", "NestJS"], ["apollographql", "Apollo"], ["spring", "Spring"], ["fastapi", "FastAPI"], ["django", "Django"],
@@ -790,12 +744,12 @@ weft.kafka.<span class="f">on</span>(<span class="s">"order.placed"</span>, <spa
   ];
   function drawMap() {
     var map = document.getElementById("map");
-    var fg = css("--fg"), muted = css("--muted"), line = css("--line-strong"), bgc = css("--bg");
+    var fg = css("--fg"), acc = css("--accent"), muted = css("--muted"), line = css("--line-strong"), bgc = css("--bg");
     var NW = 132, NH = 44;
     var o = '<svg viewBox="0 0 800 350" role="img" aria-label="Six services: web, api, orders, payments, emails and tracking, joined by HTTP, GraphQL, gRPC, Kafka, RabbitMQ and WebSockets.">';
     EDGES.forEach(function (e) {
-      o += '<path d="' + e[0] + '" fill="none" stroke="' + (e[5] ? fg : line) + '" stroke-width="' + (e[5] ? 2 : 1.5) + '"/>';
-      o += '<text x="' + e[1] + '" y="' + e[2] + '" text-anchor="' + e[3] + '" font-family="JetBrains Mono, monospace" font-size="11" fill="' + (e[5] ? fg : muted) + '">' + e[4] + "</text>";
+      o += '<path d="' + e[0] + '" fill="none" stroke="' + (e[5] ? acc : line) + '" stroke-width="' + (e[5] ? 2 : 1.5) + '"/>';
+      o += '<text x="' + e[1] + '" y="' + e[2] + '" text-anchor="' + e[3] + '" font-family="JetBrains Mono, monospace" font-size="11" fill="' + (e[5] ? acc : muted) + '">' + e[4] + "</text>";
     });
     Object.keys(NODES).forEach(function (k) {
       var nd = NODES[k];
@@ -819,7 +773,7 @@ weft.kafka.<span class="f">on</span>(<span class="s">"order.placed"</span>, <spa
   var root = document.documentElement, btn = document.getElementById("theme-toggle");
   function isDark() { var t = root.getAttribute("data-theme"); return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; }
   function label() { btn.textContent = isDark() ? "Light theme" : "Dark theme"; }
-  function redraw() { label(); draw(); drawMap(); }
+  function redraw() { label(); drawMap(); }
   btn.addEventListener("click", function () { root.setAttribute("data-theme", isDark() ? "light" : "dark"); redraw(); });
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
   label();

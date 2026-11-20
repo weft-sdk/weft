@@ -37,6 +37,9 @@ The maintainer has approved a visual direction for the website in writing. The d
   - Don't commit every mockup change.
 - Round 2 answers: the hero is now a true weave of languages (warp) by transports (weft), with real over/under crossings. Gaps show unsupported combinations taken from `languages.md`. Choosing a crossing shows the call in that language and the library that runs it. Added sections: framework logo wall, how it works, contract with six language tabs (examples from `api.md`), shared behaviour, dashboard preview. Direction A is dropped.
 
+- Round 2 feedback (2026-11-21): looked very bad. Wants a little colour (an accent) and a clean, minimal hero visual; the weave visual is rejected outright. Do not go back to busy or diagrammatic hero visuals.
+- Round 3 answers: off-black and off-white stay; one accent colour (blue `#2447f5` light / `#7d92ff` dark; orange and green offered through a mockup-only switcher in the header). The hero visual is one `weft.*` call set large, with the transport name in the accent; a row of transport logos above it and a small language picker below change the call and the library underneath. The rest of the page is unchanged from round 2. The file keeps its name `b-weave.html` so the preview link stays the same.
+
 ## Done
 
 - Work file (b2b599e).
@@ -48,11 +51,11 @@ The maintainer has approved a visual direction for the website in writing. The d
 
 ## Next step
 
-Get the maintainer's reaction to round 2 of B. Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
+Get the maintainer's reaction to round 3 of B, including which accent (blue, orange, green). Revise if asked. Once approved, write the direction into `docs/website.md` (tokens, type, weave, motion, layout and the hard rules) and ADR 0017, then delete `a-precise.html`.
 
 ## Waiting on
 
-- The maintainer's verdict on round 2 of B.
+- The maintainer's verdict on round 3 of B and the accent choice.
 
 ## How to check
 
