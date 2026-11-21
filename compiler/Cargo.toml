@@ -11,6 +11,10 @@ publish = false
 
 [workspace.dependencies]
 clap = { version = "4", features = ["derive"] }
+chumsky = "0.9"
+insta = "1"
+miette = "7"
+thiserror = "2"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

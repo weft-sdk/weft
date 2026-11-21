@@ -1,0 +1,14 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\nmessage A { x: int }\")"
+---
+weft::syntax
+
+  × expected `@`, `enum`, `error`, `event`, `graphql`, `http`, `import`,
+  │ `rpc`, `socket`, `type` or the end of the file, found `message`
+   ╭─[test.weft:2:1]
+ 1 │ package p
+ 2 │ message A { x: int }
+   · ───┬───
+   ·    ╰── not valid here
+   ╰────

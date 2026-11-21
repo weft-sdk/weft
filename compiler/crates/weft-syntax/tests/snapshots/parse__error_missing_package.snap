@@ -1,0 +1,12 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"type A { x: int }\")"
+---
+weft::syntax
+
+  × expected `package`, found `type`
+   ╭─[test.weft:1:1]
+ 1 │ type A { x: int }
+   · ──┬─
+   ·   ╰── expected `package`
+   ╰────

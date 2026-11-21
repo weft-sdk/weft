@@ -1,0 +1,10 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\ntype A {\\n  x: int\\n\")"
+---
+weft::syntax
+
+  × expected `,`, `.`, `<`, `@`, `[` or `}`, found the end of the file
+   ╭─[test.weft:4:1]
+ 3 │   x: int
+   ╰────

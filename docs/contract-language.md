@@ -1,6 +1,6 @@
 # Contract language
 
-Version: **0.1**. Syntax decided on 2026-11-20. Exact grammar is settled while building the parser.
+Version: **0.1**. Syntax decided on 2026-11-20. The formal grammar and lexical rules are in [spec/language.md](../spec/language.md); this page is the guide.
 
 Contracts live in `.weft` files. They describe data and operations once, for every language. The compiler checks them and generates code ([cli.md § weft gen](cli.md#weft-gen)).
 
@@ -269,4 +269,4 @@ Teams with existing schemas don't rewrite them. The compiler reads:
 
 ## Open questions
 
-None blocking. Details such as exact grammar, reserved words and formatter style are settled while building the parser.
+None blocking. The grammar and reserved words are settled in [spec/language.md](../spec/language.md). Formatter style is settled with the formatter (task P1.5).

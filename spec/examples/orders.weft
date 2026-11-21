@@ -1,0 +1,68 @@
+// contracts/orders.weft
+package orders @version("1.0.0")
+
+enum Currency { EUR GBP USD }
+
+type Money {
+  amount: int            // minor units (cents)
+  currency: Currency
+}
+
+type OrderItem {
+  sku: string
+  qty: int
+}
+
+/// An order placed by a customer.
+type Order {
+  id: uuid
+  customerId: string
+  items: OrderItem[]
+  total: Money
+  note?: string          // optional
+  placedAt: timestamp
+}
+
+type CreateOrder {
+  customerId: string
+  items: OrderItem[]
+}
+
+// ---------- events ----------
+event order.placed: Order {
+  key: id                // partition / routing key
+}
+
+event order.cancelled: { id: uuid, reason: string }
+
+// ---------- errors ----------
+error OutOfStock {
+  sku: string
+  available: int
+}
+
+// ---------- HTTP ----------
+http /v1 {
+  POST "/orders"       createOrder(body: CreateOrder) -> Order | OutOfStock | InvalidInput
+  GET  "/orders/{id}"  getOrder(id: uuid) -> Order?
+  GET  "/orders"       listOrders(query: { page?: int }) -> Order[]
+}
+
+// ---------- RPC (gRPC or weft.rpc) ----------
+rpc Orders {
+  createOrder(CreateOrder) -> Order
+  streamUpdates(id: uuid) -> stream Order
+}
+
+// ---------- GraphQL ----------
+graphql {
+  query        order(id: uuid) -> Order?
+  mutation     placeOrder(input: CreateOrder) -> Order
+  subscription orderUpdated(id: uuid) -> Order
+}
+
+// ---------- WebSockets ----------
+socket tracking {
+  server courier.moved: { orderId: uuid, lat: float, lng: float }
+  client track.start:   { orderId: uuid }
+}

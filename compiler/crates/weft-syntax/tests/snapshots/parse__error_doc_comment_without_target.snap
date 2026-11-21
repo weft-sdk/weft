@@ -1,0 +1,11 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\ntype A { x: int }\\n/// dangling\\n\")"
+---
+weft::syntax
+
+  × expected `enum`, `error`, `event`, `graphql`, `http`, `rpc`, `socket` or
+  │ `type`, found the end of the file
+   ╭─[test.weft:4:1]
+ 3 │ /// dangling
+   ╰────

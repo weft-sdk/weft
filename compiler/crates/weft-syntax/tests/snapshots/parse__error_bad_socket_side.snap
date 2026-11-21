@@ -1,0 +1,13 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\nsocket s { both a: X }\")"
+---
+weft::syntax
+
+  × expected `server` or `client`, found `both`
+   ╭─[test.weft:2:12]
+ 1 │ package p
+ 2 │ socket s { both a: X }
+   ·            ──┬─
+   ·              ╰── expected `server` or `client`
+   ╰────

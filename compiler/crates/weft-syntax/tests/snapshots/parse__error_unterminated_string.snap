@@ -1,0 +1,14 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\nhttp {\\n  GET \\\"/a a() -> Order\\n}\")"
+---
+weft::syntax
+
+  × unterminated string
+   ╭─[test.weft:3:7]
+ 2 │ http {
+ 3 │   GET "/a a() -> Order
+   ·       ────────┬───────
+   ·               ╰── this string has no closing `"`
+ 4 │ }
+   ╰────
