@@ -1,0 +1,15 @@
+---
+source: crates/weft-check/tests/check.rs
+expression: "rendered(\"package orders\\ntype O { id: uuid }\\nhttp {\\n  GET \\\"/orders\\\" list(page: int) -> O[]\\n}\")"
+---
+weft::check
+
+  × `page` is not in the path `/orders`
+   ╭─[orders.weft:4:22]
+ 3 │ http {
+ 4 │   GET "/orders" list(page: int) -> O[]
+   ·                      ────┬────
+   ·                          ╰── not in the path
+ 5 │ }
+   ╰────
+  help: query parameters go in `query: { page: ... }`; the body goes in `body: ...`

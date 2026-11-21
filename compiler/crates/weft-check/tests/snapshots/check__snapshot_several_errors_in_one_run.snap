@@ -1,0 +1,35 @@
+---
+source: crates/weft-check/tests/check.rs
+expression: "rendered(\"package orders\\ntype A { x: Nope y: int @min(\\\"a\\\") }\\nevent a: A { key: zzz }\")"
+---
+weft::check
+
+  × unknown type `Nope`
+   ╭─[orders.weft:2:13]
+ 1 │ package orders
+ 2 │ type A { x: Nope y: int @min("a") }
+   ·             ──┬─
+   ·               ╰── not declared
+ 3 │ event a: A { key: zzz }
+   ╰────
+
+weft::check
+
+  × `@min` takes a number: `@min(1)`
+   ╭─[orders.weft:2:25]
+ 1 │ package orders
+ 2 │ type A { x: Nope y: int @min("a") }
+   ·                         ────┬────
+   ·                             ╰── wrong arguments
+ 3 │ event a: A { key: zzz }
+   ╰────
+
+weft::check
+
+  × `A` has no field `zzz`
+   ╭─[orders.weft:3:19]
+ 2 │ type A { x: Nope y: int @min("a") }
+ 3 │ event a: A { key: zzz }
+   ·                   ─┬─
+   ·                    ╰── no such field
+   ╰────

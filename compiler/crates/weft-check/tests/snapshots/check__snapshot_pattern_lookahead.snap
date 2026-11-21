@@ -1,0 +1,15 @@
+---
+source: crates/weft-check/tests/check.rs
+expression: "rendered(\"package orders\\ntype A { x: string @pattern(\\\"^(?=a)\\\") }\")"
+---
+weft::check
+
+  × this pattern is not in the regex subset every language supports
+   ╭─[orders.weft:2:20]
+ 1 │ package orders
+ 2 │ type A { x: string @pattern("^(?=a)") }
+   ·                    ─────────┬────────
+   ·                             ╰── not accepted
+   ╰────
+  help: patterns may not use lookaround or backreferences. look-around, including look-
+        ahead and look-behind, is not supported

@@ -70,4 +70,74 @@ These were open in the guide ("exact grammar, reserved words"). Decided 2026-11-
 
 ## Meaning rules
 
-Enforced by the checker (task P1.4), not the parser. They are added here as the checker is built.
+Enforced by the checker (`weft-check`, task P1.4). Every rule has a failing test. The checker reports every error it finds, not only the first.
+
+**Packages**
+
+- Files with the same `package` name are one package. A package may not be called `weft`, which holds the built-in errors.
+- A package imports only packages that are among the files being checked. Import cycles are errors.
+- `@version` is a semantic version (`MAJOR.MINOR.PATCH`, optionally with `-pre` and `+build`), and at most one value per package.
+
+**Names**
+
+- Types, enums and errors share one namespace per package. The names of the built-in scalars (`string`, `int`, ...), `map`, `stream` and the built-in errors cannot be declared.
+- Declarations can be used before they are declared.
+- Another package's names are written `package.Name` and need `import package` in the same file. A package's own names are written without the package. Built-in errors may also be written `weft.NotFound`.
+- Unknown names get a "did you mean" hint when one is close.
+
+**Types**
+
+- `T<A, B>` needs exactly as many arguments as `T` has parameters, and non-generic types take none. `map<K, V>` takes two, and `K` is `string`, `uuid` or an enum.
+- Errors are not types. They appear only after a result's value.
+- Inline types are not allowed inside a generic type. Elsewhere they get a generated name from where they are written. Generated names that clash with another type are an error.
+
+| Written in | Generated name |
+| --- | --- |
+| A field `placedBy` of type `Order` | `OrderPlacedBy` |
+| `event order.cancelled: {...}` | `OrderCancelled` |
+| Headers of that event | `OrderCancelledHeaders` |
+| `query`, `body`, `headers` of route `listOrders` | `ListOrdersQuery`, `ListOrdersBody`, `ListOrdersHeaders` |
+| A result of operation `x` | `XResult` |
+| Named parameters of `rpc` method `streamUpdates` | `StreamUpdatesRequest` |
+| A GraphQL argument `input` of field `placeOrder` | `PlaceOrderInput` |
+| Socket event `courier.moved` | `CourierMoved` |
+
+**Annotations**
+
+| Annotation | On | Arguments | Rule |
+| --- | --- | --- | --- |
+| `@version` | package | `"1.2.3"` | Semantic version |
+| `@deprecated` | everything but a package | none, or a message | |
+| `@wire` | field | a name | Wire names in one type must differ |
+| `@status` | error | `400`–`599` | Defaults to 422 |
+| `@min`, `@max` | numeric field | a number | Whole numbers for integer types. `@min` must not exceed `@max` |
+| `@length` | string, bytes, list, map | `min, max` | `0 ≤ min ≤ max` |
+| `@pattern` | string | a regex | Must compile in the regex subset every language supports: no lookaround and no backreferences. Go's RE2 has neither lookahead nor lookbehind, so lookahead is out too |
+| `@format` | string | `email`, `url`, `uri`, `hostname`, `ipv4`, `ipv6`, `date`, `time` | |
+
+An unknown annotation, one in the wrong place, or one used twice is an error.
+
+**Results**
+
+- `-> Value | Error | Error`: the first member is the value, every other member must be an error (built-in, declared here or in an imported package). Only the value may end in `?`. An error cannot be listed twice.
+- `stream` results are only for `rpc` methods.
+
+**Events and sockets**
+
+- Event names are unique in a package. The payload, and a socket event's payload, is a record.
+- `key` names a field path into the payload. Each field on the path exists and is required, and the last one is a string, whole number, uuid or enum.
+- `headers` is a record whose fields are all `string`.
+- A socket's event names are unique in that socket.
+
+**HTTP**
+
+- Methods are `GET POST PUT PATCH DELETE HEAD OPTIONS`. Route paths start with `/`, with `{name}` parameters. A base path has no parameters.
+- Every `{name}` in the path has a parameter of that name, which is a required scalar (not bytes or a record). Parameters not in the path must be `query`, `body` or `headers`.
+- `query` and `headers` are records, none of the three can be optional, and `GET` and `HEAD` take no `body`.
+- Route names are unique (they become function names), and so are method and path shapes: `/a/{x}` and `/a/{y}` are the same route.
+
+**RPC and GraphQL**
+
+- Service names are unique. Method names are unique in a service.
+- An `rpc` method takes either one unnamed record type (optionally `stream`), or named parameters, which become the record `<Method>Request`. Mixing the two is an error.
+- GraphQL arguments are named. A query, a mutation and a subscription may share a name; two of the same kind may not.

@@ -1,0 +1,15 @@
+---
+source: crates/weft-check/tests/check.rs
+expression: "rendered(\"package orders\\ntype Order {\\n  total: Mony\\n}\\ntype Money { amount: int }\")"
+---
+weft::check
+
+  × unknown type `Mony`
+   ╭─[orders.weft:3:10]
+ 2 │ type Order {
+ 3 │   total: Mony
+   ·          ──┬─
+   ·            ╰── not declared
+ 4 │ }
+   ╰────
+  help: did you mean `Money`?
