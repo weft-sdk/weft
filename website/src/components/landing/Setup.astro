@@ -1,0 +1,427 @@
+---
+/**
+ * The setup section: `weft init` as four open columns, one per transport. Each column shows the
+ * library you picked as a large logo, a list of the alternatives, and the weft.yaml lines that
+ * choice writes. Questions, libraries and config keys follow docs/cli.md.
+ */
+import Section from "./Section.astro";
+import Icon from "../Icon.astro";
+
+interface Lib {
+  name: string;
+  /** The value written to weft.yaml. */
+  value: string;
+  icon: string;
+}
+
+interface Service {
+  id: string;
+  label: string;
+  question: string;
+  libs: Lib[];
+  /** The other keys written under the transport. */
+  keys: [string, string][];
+}
+
+const services: Service[] = [
+  {
+    id: "http",
+    label: "HTTP",
+    question: "HTTP library?",
+    libs: [
+      { name: "Express", value: "express", icon: "express" },
+      { name: "Fastify", value: "fastify", icon: "fastify" },
+      { name: "Hono", value: "hono", icon: "hono" },
+      { name: "NestJS", value: "nestjs", icon: "nestjs" },
+    ],
+    keys: [["port", "3000"]],
+  },
+  {
+    id: "gql",
+    label: "GraphQL",
+    question: "GraphQL library?",
+    libs: [
+      { name: "Apollo Server", value: "apollo-server", icon: "apollographql" },
+      { name: "GraphQL Yoga", value: "graphql-yoga", icon: "graphql" },
+    ],
+    keys: [["path", "/graphql"]],
+  },
+  {
+    id: "kafka",
+    label: "Kafka",
+    question: "Kafka library?",
+    libs: [
+      { name: "KafkaJS", value: "kafkajs", icon: "apachekafka" },
+      { name: "confluent-kafka-javascript", value: "confluent-kafka-javascript", icon: "apachekafka" },
+    ],
+    keys: [
+      ["brokers", "${KAFKA_BROKERS}"],
+      ["group", "orders"],
+    ],
+  },
+  {
+    id: "ws",
+    label: "WebSockets",
+    question: "WebSocket library?",
+    libs: [
+      { name: "Socket.io", value: "socket.io", icon: "socketdotio" },
+      { name: "ws", value: "ws", icon: "ws" },
+    ],
+    keys: [["path", "/ws"]],
+  },
+];
+---
+
+<Section id="setup" label="Setup">
+  <h2 class="lead">Set up once. Pick a library per transport.</h2>
+  <p class="intro">
+    <code>weft init</code> asks which library runs each transport, installs the adapters and writes <code>weft.yaml</code>.
+    gRPC, RabbitMQ, NATS and the rest are in the same list.
+  </p>
+
+  <div class="cols" data-stack>
+    {
+      services.map((s) => {
+        const first = s.libs[0] as Lib;
+        return (
+          <div class="col" data-col>
+            <div class="who">
+              <code class="ns">
+                <span class="pre">weft.</span>{s.id}
+              </code>
+              <span class="label">{s.label}</span>
+            </div>
+
+            <div class="pick" aria-live="polite">
+              <span class="logos">
+                {s.libs.map((l, i) => (
+                  <span class="logo" data-logo={l.value} hidden={i !== 0}>
+                    <Icon name={l.icon} size={40} brand />
+                  </span>
+                ))}
+              </span>
+              <span class="pname">{first.name}</span>
+            </div>
+
+            <div class="opts" role="radiogroup" aria-labelledby={`q-${s.id}`}>
+              <span class="visually-hidden" id={`q-${s.id}`}>{s.question}</span>
+              {s.libs.map((l, i) => (
+                <label class="opt">
+                  <input type="radio" name={`lib-${s.id}`} value={l.value} data-name={l.name} checked={i === 0} />
+                  <span class="row">
+                    <span class="small"><Icon name={l.icon} size={16} brand /></span>
+                    <span class="oname">{l.name}</span>
+                    <svg class="mark" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" pathLength="1" /></svg>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div class="yaml">
+              <span class="file">weft.yaml</span>
+              <pre><span class="ln"><span class="key">{s.id}:</span></span><span class="ln hl">  <span class="key">library:</span> <span class="yval">{first.value}</span></span>{
+                s.keys.map(([k, v]) => (
+                  <span class="ln">  <span class="key">{k}:</span> {v}</span>
+                ))
+              }</pre>
+            </div>
+          </div>
+        );
+      })
+    }
+  </div>
+
+  <ul class="done">
+    <li><span class="tick" aria-hidden="true">✓</span> Wrote weft.yaml</li>
+    <li><span class="tick" aria-hidden="true">✓</span> Wrote contracts/orders.weft (example)</li>
+    <li><span class="tick" aria-hidden="true">✓</span> Wrote src/weft.gen.ts</li>
+  </ul>
+</Section>
+
+<script>
+  for (const col of document.querySelectorAll<HTMLElement>("[data-stack] [data-col]")) {
+    const nameEl = col.querySelector<HTMLElement>(".pname");
+    const valueEl = col.querySelector<HTMLElement>(".yval");
+    for (const radio of col.querySelectorAll<HTMLInputElement>('input[type="radio"]')) {
+      radio.addEventListener("change", () => {
+        if (!radio.checked) return;
+        for (const logo of col.querySelectorAll<HTMLElement>("[data-logo]")) logo.hidden = logo.dataset.logo !== radio.value;
+        if (nameEl) nameEl.textContent = radio.dataset.name ?? radio.value;
+        if (valueEl) valueEl.textContent = radio.value;
+      });
+    }
+  }
+</script>
+
+<style>
+
+
+  .lead {
+    max-width: none;
+  }
+
+  .intro {
+    max-width: none;
+    margin-bottom: var(--stack-content);
+  }
+
+  /* Four open columns: rules between them, no outer frame. */
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+  }
+
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px 24px 22px;
+    min-width: 0;
+  }
+
+  .col:first-child {
+    padding-left: 0;
+  }
+
+  .col + .col {
+    border-left: 1px solid var(--line);
+  }
+
+  .who {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .ns {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--fg);
+  }
+
+  .ns .pre {
+    color: var(--faint);
+  }
+
+  .label {
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  /* The picked library: a large logo and its name. */
+  .pick {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 88px;
+  }
+
+  .logos {
+    display: flex;
+    height: 40px;
+  }
+
+  .logo[hidden] {
+    display: none;
+  }
+
+  .pname {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .opts {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line);
+  }
+
+  /* A native radio, hidden but focusable, with the row as the visible control. */
+  .opt {
+    position: relative;
+    display: block;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+
+  .opt input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    font-size: var(--text-sm);
+    color: var(--muted);
+    transition: color var(--t-fast) ease;
+  }
+
+  /* A tick at the end of the chosen row. It draws in when the row is selected. */
+  .mark {
+    margin-left: auto;
+    flex: none;
+    color: var(--accent);
+    opacity: 0;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition:
+      opacity var(--t-fast) ease,
+      stroke-dashoffset 260ms ease-out;
+  }
+
+  .small {
+    display: flex;
+    flex: none;
+    opacity: 0.55;
+    transition: opacity var(--t-fast) ease;
+  }
+
+  .oname {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .opt:hover .row {
+    color: var(--fg);
+  }
+
+  .opt input:checked + .row {
+    color: var(--fg);
+  }
+
+  .opt input:checked + .row .mark {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .opt input:checked + .row .small,
+  .opt:hover .small {
+    opacity: 1;
+  }
+
+  .opt input:focus-visible + .row {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .yaml {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .file {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  pre {
+    margin: 0;
+    padding: 10px 0;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    white-space: normal;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.8;
+    /* Room for the longest block (four lines), so the boxes line up across columns. */
+    min-height: calc(4 * 1.8 * var(--text-xs) + 22px);
+  }
+
+  .ln {
+    display: block;
+    padding-inline: 12px;
+    white-space: pre;
+  }
+
+  .key {
+    color: var(--muted);
+  }
+
+  /* The line the choice above writes. */
+  .hl {
+    background: var(--accent-soft);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+
+  .yval {
+    color: var(--accent);
+  }
+
+  .done {
+    list-style: none;
+    margin: 0;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 28px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .tick {
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  @media (max-width: 1100px) {
+    .cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .col,
+    .col:first-child {
+      padding-left: 0;
+      padding-right: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .col + .col {
+      border-left: 0;
+    }
+
+    .col:nth-child(even) {
+      padding-left: 24px;
+      padding-right: 0;
+      border-left: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .cols {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .col,
+    .col:nth-child(even) {
+      padding-inline: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row,
+    .mark,
+    .small {
+      transition: none;
+    }
+  }
+</style>

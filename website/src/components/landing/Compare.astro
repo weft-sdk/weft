@@ -1,38 +1,195 @@
 ---
+/**
+ * The same endpoint written twice, as a side-by-side git diff: what you write today on the left
+ * (removed lines, red) and what you write with Weft on the right (added lines, green).
+ * Line counts come from the code itself, so they cannot drift from what is shown.
+ */
 import Section from "./Section.astro";
-import Term from "./Term.astro";
-import { before, after } from "../../data/code";
+import { beforeLines, afterLines } from "../../data/code";
+
+const sides = [
+  {
+    kind: "del",
+    sign: "-",
+    title: "Without Weft",
+    lines: beforeLines,
+    note: "Three libraries, three setups. The request body is typed as any.",
+  },
+  {
+    kind: "add",
+    sign: "+",
+    title: "With Weft",
+    lines: afterLines,
+    note: "One API. The same libraries run underneath, and the payloads are typed from the contract.",
+  },
+] as const;
 ---
 
-<Section id="compare" command="weft diff --before" label="Before and after">
+<Section id="compare" label="Before and after">
   <h2 class="lead">Three libraries and an untyped body, or one API with types.</h2>
-  <div class="two">
-    <Term label="Express, KafkaJS, Socket.io" file="server.ts" code={before} />
-    <Term label="Weft" file="server.ts" code={after} />
+  <div class="diff">
+    {
+      sides.map((side) => (
+        <div class={`side ${side.kind}`}>
+          <div class="head">
+            <span class="title">{side.title}</span>
+            <span class="file">server.ts</span>
+            <span class="stat">
+              {side.sign}
+              {side.lines.length}
+            </span>
+          </div>
+          <div class="code" role="region" aria-label={`${side.title}: server.ts`} tabindex="0">
+            {side.lines.map((line, i) => (
+              <div class="row">
+                <span class="n" aria-hidden="true">{i + 1}</span>
+                <span class="sign" aria-hidden="true">{side.sign}</span>
+                <span class="c" set:html={line === "" ? " " : line} />
+              </div>
+            ))}
+          </div>
+          <p class="note">{side.note}</p>
+        </div>
+      ))
+    }
   </div>
 </Section>
 
 <style>
+
   .lead {
-    margin: 0 0 28px;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: var(--text-lead);
-    letter-spacing: -0.035em;
-    line-height: 1.04;
-    max-width: 22ch;
-    text-wrap: balance;
+    max-width: none;
+    margin-bottom: var(--stack-content);
   }
 
-  .two {
+  .diff {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 28px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .side {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* The vertical divider between the two columns. */
+  .side + .side {
+    border-left: 1px solid var(--line);
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--raised);
+    font-size: var(--text-sm);
+  }
+
+  .title {
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  .file {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .stat {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+
+  .del .stat {
+    color: var(--del);
+  }
+
+  .add .stat {
+    color: var(--add);
+  }
+
+  /* Dimmed words and line numbers sit on a tint, so they are a little brighter than plain faint text.
+     That keeps them above 4.5:1 contrast in both themes. */
+  .code {
+    --dim: color-mix(in srgb, var(--faint) 55%, var(--muted));
+    flex: 1;
+    overflow-x: auto;
+    padding-block: 10px;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.85;
+  }
+
+  /* Each row is as wide as its longest line, so the tint reaches the edge when the column scrolls. */
+  .row {
+    display: grid;
+    grid-template-columns: 44px 22px 1fr;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .del .row {
+    background: var(--del-soft);
+  }
+
+  .add .row {
+    background: var(--add-soft);
+  }
+
+  .code :global(.tok-k),
+  .n {
+    color: var(--dim);
+  }
+
+  .n {
+    padding-right: 10px;
+    text-align: right;
+    user-select: none;
+  }
+
+  .sign {
+    text-align: center;
+    user-select: none;
+  }
+
+  .del .sign {
+    color: var(--del);
+  }
+
+  .add .sign {
+    color: var(--add);
+  }
+
+  .c {
+    white-space: pre;
+    padding-right: 18px;
+  }
+
+  .note {
+    margin: 0;
+    padding: 14px 18px;
+    border-top: 1px solid var(--line);
+    font-size: var(--text-sm);
+    color: var(--muted);
+    line-height: 1.5;
   }
 
   @media (max-width: 900px) {
-    .two {
+    .diff {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .side + .side {
+      border-left: 0;
+      border-top: 1px solid var(--line);
     }
   }
 </style>

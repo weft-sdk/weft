@@ -33,10 +33,11 @@ const { id, command, note, label, tight = false } = Astro.props;
   }
 
   .tight {
-    padding-top: clamp(20px, 2.5vw, 32px);
+    padding-top: clamp(32px, 4vw, 56px);
   }
 
   .prompt {
+    font-family: var(--font-mono);
     margin: 0 0 clamp(20px, 2.4vw, 32px);
     font-size: var(--text-sm);
     color: var(--muted);

@@ -1,70 +1,194 @@
 ---
+/**
+ * The languages section: a logo and a name for each language, flowing between two thin rules, at
+ * the same scale as the column headers in the setup and contract sections. Pointing at a language
+ * (or tabbing to it) dims the rest and shows its details in the caption below.
+ */
 import Section from "./Section.astro";
 import Icon from "../Icon.astro";
-import { languages } from "../../data/languages";
+import { languages, languagesIntro } from "../../data/languages";
 ---
 
-<Section id="languages" command="weft languages" label="Languages">
+<Section id="languages" label="Languages">
   <h2 class="lead">One contract, read by every language.</h2>
-  <ul class="grid">
+
+  <ul class="run" data-run>
     {
       languages.map((l) => (
-        <li>
-          <Icon name={l.icon} size={22} />
-          <span>{l.name}<small>{l.note}</small></span>
+        <li class="item" tabindex="0" data-name={l.name} data-note={l.detail}>
+          <span class="logo"><Icon name={l.icon} size={40} brand /></span>
+          <span class="word">{l.name}</span>
+          <span class="visually-hidden">. {l.detail}</span>
         </li>
       ))
     }
   </ul>
+
+  <p class="cap" aria-hidden="true">
+    <span class="n" data-cap-name></span>
+    <span class="d" data-cap-note>{languagesIntro}</span>
+  </p>
 </Section>
 
+<script>
+  for (const run of document.querySelectorAll<HTMLElement>("[data-run]")) {
+    const section = run.closest("section");
+    const nameEl = section?.querySelector<HTMLElement>("[data-cap-name]");
+    const noteEl = section?.querySelector<HTMLElement>("[data-cap-note]");
+    const base = noteEl?.textContent ?? "";
+    const items = [...run.querySelectorAll<HTMLElement>(".item")];
+
+    const show = (item: HTMLElement) => {
+      run.classList.add("active");
+      for (const i of items) i.classList.toggle("on", i === item);
+      if (nameEl) nameEl.textContent = item.dataset.name ?? "";
+      if (noteEl) noteEl.textContent = item.dataset.note ?? "";
+    };
+    const clear = () => {
+      run.classList.remove("active");
+      for (const i of items) i.classList.remove("on");
+      if (nameEl) nameEl.textContent = "";
+      if (noteEl) noteEl.textContent = base;
+    };
+
+    for (const item of items) {
+      item.addEventListener("pointerenter", () => show(item));
+      item.addEventListener("focus", () => show(item));
+      item.addEventListener("blur", clear);
+    }
+    run.addEventListener("pointerleave", clear);
+  }
+</script>
+
 <style>
+
   .lead {
-    margin: 0 0 28px;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: var(--text-lead);
-    letter-spacing: -0.035em;
-    line-height: 1.04;
-    max-width: 22ch;
-    text-wrap: balance;
+    margin-bottom: var(--stack-content);
+    max-width: none;
   }
 
-  .grid {
+  /* The languages sit on a six-column grid between two rules, so the names line up in columns. */
+  .run {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 32px 0;
+    border-top: 1px solid var(--line);
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    border-top: 1px solid var(--line);
-    border-left: 1px solid var(--line);
+    gap: 30px 20px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.625rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
-  li {
-    display: flex;
+  .item {
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px;
-    border-right: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    gap: 14px;
     min-width: 0;
+    white-space: nowrap;
+    cursor: default;
+    transition: opacity var(--t-dim) var(--ease-dim);
   }
 
-  small {
-    display: block;
-    color: var(--faint);
-    font-size: var(--text-xs);
+  .item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 6px;
+    border-radius: var(--radius);
   }
 
-  @media (max-width: 1100px) {
-    .grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Pointing at one language softly dims the rest. Colours stay; only brightness changes. */
+  .run.active .item:not(.on) {
+    opacity: 0.45;
+  }
+
+  /* Every logo sits in the same 36px box, so wide and square logos weigh the same and the names align. */
+  .logo {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--fg);
+  }
+
+  .logo :global(.icon) {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo :global(.img),
+  .logo :global(.img img) {
+    width: 36px;
+    height: 36px;
+    max-width: 36px;
+    object-fit: contain;
+  }
+
+  /* One line: the language in mono, then its detail. It keeps its height, so nothing shifts. */
+  .cap {
+    margin: 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    min-height: 1.7em;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 16px;
+    font-size: var(--text-md);
+    color: var(--muted);
+  }
+
+  .n {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent);
+  }
+
+  .n:empty {
+    display: none;
+  }
+
+  .d {
+    max-width: 72ch;
+  }
+
+  @media (max-width: 1200px) {
+    .run {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 
-  @media (max-width: 600px) {
-    .grid {
+  /* On narrower screens the line can wrap, so keep room for two. */
+  @media (max-width: 1000px) {
+    .cap {
+      min-height: 3.4em;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .run {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      font-size: 1.375rem;
+    }
+
+    .cap {
+      min-height: 4.8em;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .run {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .item {
+      transition: none;
     }
   }
 </style>

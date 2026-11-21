@@ -1,0 +1,54 @@
+---
+/**
+ * The Weft mark: a plain weave of two warp threads (vertical) and two weft threads
+ * (horizontal). Each thread goes over one crossing and under the next. The lower weft
+ * thread is the accent. 1px gaps at the crossings are drawn in the page background colour.
+ */
+interface Props {
+  size?: number;
+}
+
+const { size = 20 } = Astro.props;
+---
+
+<svg class="logo" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+  <rect class="warp" x="5" y="1" width="5" height="22" />
+  <rect class="warp" x="14" y="1" width="5" height="22" />
+  <rect class="weft" x="1" y="5" width="22" height="5" />
+  <rect class="weft accent" x="1" y="14" width="22" height="5" />
+  <rect class="gap" x="5" y="4" width="5" height="1" />
+  <rect class="gap" x="5" y="10" width="5" height="1" />
+  <rect class="weft" x="5" y="5" width="5" height="5" />
+  <rect class="gap" x="13" y="5" width="1" height="5" />
+  <rect class="gap" x="19" y="5" width="1" height="5" />
+  <rect class="warp" x="14" y="5" width="5" height="5" />
+  <rect class="gap" x="4" y="14" width="1" height="5" />
+  <rect class="gap" x="10" y="14" width="1" height="5" />
+  <rect class="warp" x="5" y="14" width="5" height="5" />
+  <rect class="gap" x="14" y="13" width="5" height="1" />
+  <rect class="gap" x="14" y="19" width="5" height="1" />
+  <rect class="weft accent" x="14" y="14" width="5" height="5" />
+</svg>
+
+<style>
+  .logo {
+    display: block;
+    flex: none;
+  }
+
+  .warp {
+    fill: var(--muted);
+  }
+
+  .weft {
+    fill: var(--fg);
+  }
+
+  .weft.accent {
+    fill: var(--accent);
+  }
+
+  .gap {
+    fill: var(--bg);
+  }
+</style>

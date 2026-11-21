@@ -1,0 +1,548 @@
+---
+/**
+ * The dashboard section. Three cards beside the heading say how to run it, a full-width trace
+ * follows one order across HTTP, gRPC, Kafka and a WebSocket, and a strip lists what the
+ * dashboard shows. The trace is an example: realistic timings, labelled as such. The rest follows
+ * docs/dashboard.md.
+ */
+import Section from "./Section.astro";
+import Icon from "../Icon.astro";
+import Logo from "../Logo.astro";
+
+interface Span {
+  depth: number;
+  op: string;
+  icon: string;
+  transport: string;
+  role: string;
+  service: string;
+  langIcon: string;
+  lang: string;
+  /** Milliseconds from the start of the trace. */
+  start: number;
+  /** Milliseconds the span ran for. */
+  dur: number;
+}
+
+/** One order, from the request to the last consumer. Times are in milliseconds. */
+const total = 262;
+const traceId = "4bf92f3577b34da6a3ce929d0e0e4736";
+
+const spans: Span[] = [
+  { depth: 0, op: "POST /orders", icon: "http", transport: "HTTP", role: "201 Created", service: "api", langIcon: "typescript", lang: "TypeScript", start: 0, dur: 148 },
+  { depth: 1, op: "orders.CreateOrder", icon: "grpc", transport: "gRPC", role: "server", service: "orders", langIcon: "go", lang: "Go", start: 12, dur: 100 },
+  { depth: 2, op: "publish order.placed", icon: "apachekafka", transport: "Kafka", role: "producer", service: "orders", langIcon: "go", lang: "Go", start: 96, dur: 8 },
+  { depth: 1, op: "emit order.status", icon: "ws", transport: "WebSocket", role: "emit", service: "api", langIcon: "typescript", lang: "TypeScript", start: 120, dur: 12 },
+  { depth: 3, op: "consume order.placed", icon: "apachekafka", transport: "Kafka", role: "consumer", service: "payments", langIcon: "kotlin", lang: "Kotlin", start: 131, dur: 79 },
+  { depth: 3, op: "consume order.placed", icon: "apachekafka", transport: "Kafka", role: "consumer", service: "emails", langIcon: "python", lang: "Python", start: 138, dur: 124 },
+];
+
+const services = new Set(spans.map((s) => s.service)).size;
+const pct = (ms: number) => (ms / total) * 100;
+const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({ f, label: f === 0 ? "0" : `${Math.round(total * f)} ms` }));
+const detail = (s: Span) =>
+  `${s.transport}, ${s.op}. The ${s.service} service, written in ${s.lang}, ran for ${s.dur} ms, starting ${s.start} ms into the trace.`;
+const defaultDetail = "Point at a span to see what ran, where, and for how long.";
+
+const shows = [
+  { title: "Service map", text: "Every service and every operation between them, built from your contracts." },
+  { title: "Live traffic", text: "Throughput, latency, error rate, consumer lag and queue depth." },
+  { title: "Contracts", text: "Browse them, diff versions, and see who still uses a deprecated field." },
+  { title: "Traces", text: "Follow one request across transports and languages, as above." },
+];
+
+const modes = [
+  { icon: "laptop", title: "On your laptop", text: "One developer, with services running locally or in Docker Compose.", how: "weft dashboard" },
+  { icon: "cluster", title: "In your cluster", text: "A shared view for a team, without sending data out.", how: "Docker image or Helm chart" },
+  { icon: "cloud", title: "In Weft Cloud", text: "Nothing to run, with team features on top.", how: "Sign in on the Weft website" },
+];
+---
+
+<Section id="dashboard" label="Dashboard">
+  <div class="top">
+    <div class="text">
+      <h2 class="lead">See which services talk, and over what.</h2>
+      <p class="intro">
+        The dashboard draws a map of your services from your contracts, so it works before any traffic flows. Live
+        traffic, consumer lag and traces follow once services run.
+      </p>
+    </div>
+
+    <div class="src">
+      <div class="who">
+        <span class="logo"><Logo size={44} /></span>
+        <div>
+          <div class="name">weft dashboard</div>
+          <div class="sub">three ways to run it</div>
+        </div>
+      </div>
+      <div class="modes">
+        {
+          modes.map((m) => (
+            <div class="mode">
+              <span class="mi"><Icon name={m.icon} size={26} /></span>
+              <div class="mt">{m.title}</div>
+              <p>{m.text}</p>
+              <code>{m.how}</code>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="trace" data-trace>
+    <div class="tbar">
+      <span>trace {traceId.slice(0, 8)}…{traceId.slice(-4)} &middot; POST /orders</span>
+      <span>{total} ms &middot; {spans.length} spans &middot; {services} services &middot; example trace</span>
+    </div>
+    <div class="row head" aria-hidden="true">
+      <span>Operation</span>
+      <span>Service</span>
+      <span class="r">Duration</span>
+      <span class="axis">
+        {ticks.map((t) => <i class:list={{ first: t.f === 0, last: t.f === 1 }} style={`left:${t.f * 100}%`}>{t.label}</i>)}
+      </span>
+    </div>
+    <div class="spans">
+      {
+        spans.map((s) => (
+          <div class="row span" tabindex="0" data-detail={detail(s)}>
+            <div class="op" style={`padding-left:${s.depth * 18}px`}>
+              <Icon name={s.icon} size={16} />
+              <div>
+                <span class="opn">{s.op}</span>
+                <span class="opr">{s.transport} &middot; {s.role}</span>
+              </div>
+            </div>
+            <div class="svc">
+              <Icon name={s.langIcon} size={20} brand />
+              <div>
+                <span class="svn">{s.service}</span>
+                <span class="svl">{s.lang}</span>
+              </div>
+            </div>
+            <div class="dur r">{s.dur} ms</div>
+            <div class="track" aria-hidden="true">
+              {[25, 50, 75].map((g) => <i class="g" style={`left:${g}%`} />)}
+              <span class="bar" style={`left:${pct(s.start)}%;width:${Math.max(pct(s.dur), 1.2)}%`} />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    <p class="detail" aria-live="polite" data-detail-out>{defaultDetail}</p>
+  </div>
+
+  <div class="shows">
+    {
+      shows.map((s) => (
+        <div class="show">
+          <b>{s.title}</b>
+          <span>{s.text}</span>
+        </div>
+      ))
+    }
+  </div>
+</Section>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>("[data-trace]")) {
+    const rows = [...root.querySelectorAll<HTMLElement>(".span")];
+    const out = root.querySelector<HTMLElement>("[data-detail-out]");
+    const base = out?.textContent ?? "";
+    const show = (row: HTMLElement) => {
+      root.classList.add("active");
+      for (const r of rows) r.classList.toggle("on", r === row);
+      if (out) out.textContent = row.dataset.detail ?? "";
+    };
+    const clear = () => {
+      root.classList.remove("active");
+      for (const r of rows) r.classList.remove("on");
+      if (out) out.textContent = base;
+    };
+    for (const row of rows) {
+      row.addEventListener("pointerenter", () => show(row));
+      row.addEventListener("focus", () => show(row));
+      row.addEventListener("blur", clear);
+    }
+    root.addEventListener("pointerleave", clear);
+  }
+</script>
+
+<style>
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    margin-bottom: var(--stack-row);
+  }
+
+  .text {
+    padding-right: 48px;
+  }
+
+
+
+  .src {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+  }
+
+  .logo {
+    display: flex;
+    flex: none;
+  }
+
+  .name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .sub {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  /* Three cards, one for each way to run it. */
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .mode {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 18px 18px 16px;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    min-width: 0;
+  }
+
+  .mi {
+    display: flex;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+
+  .mt {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+  }
+
+  .mode p {
+    margin: 0 0 14px;
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  .mode code {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--fg);
+    overflow-wrap: anywhere;
+  }
+
+  /* The trace: operation, service, duration and a waterfall, with a detail line underneath. */
+  .trace {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--raised);
+  }
+
+  .tbar {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 30%) minmax(0, 18%) 84px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 16px;
+    padding-inline: 16px;
+  }
+
+  .head {
+    padding-block: 8px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .r {
+    text-align: right;
+  }
+
+  .axis {
+    position: relative;
+    height: 1.2em;
+  }
+
+  .axis i {
+    position: absolute;
+    top: 0;
+    font-style: normal;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .axis i.first {
+    transform: none;
+  }
+
+  .axis i.last {
+    transform: translateX(-100%);
+  }
+
+  .span {
+    border-bottom: 1px solid var(--line);
+    transition: opacity var(--t-dim) var(--ease-dim);
+  }
+
+  .span:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .trace.active .span:not(.on) {
+    opacity: 0.45;
+  }
+
+  .op,
+  .svc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-block: 12px;
+    min-width: 0;
+  }
+
+  .op > div,
+  .svc > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .opn {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+  }
+
+  .opr,
+  .svl {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .svn {
+    font-size: var(--text-sm);
+  }
+
+  .dur {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .track {
+    position: relative;
+    align-self: stretch;
+    min-height: 52px;
+  }
+
+  .g {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 1px dashed var(--line);
+  }
+
+  .bar {
+    position: absolute;
+    top: 50%;
+    height: 14px;
+    margin-top: -7px;
+    background: var(--accent);
+    border-radius: 2px;
+    opacity: 0.9;
+  }
+
+  .span.on .bar {
+    opacity: 1;
+  }
+
+  /* The detail line keeps its height, so nothing shifts while you point at spans. */
+  .detail {
+    margin: 0;
+    padding: 14px 16px;
+    min-height: 3.4em;
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  /* What it shows: a short divider sits in the middle of the gap between columns. */
+  .shows {
+    margin-top: 56px;
+    padding-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+  }
+
+  .show {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 24px;
+  }
+
+  .show:first-child {
+    padding-left: 0;
+  }
+
+  .show:last-child {
+    padding-right: 0;
+  }
+
+  .show + .show::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 64%;
+    transform: translateY(-50%);
+    border-left: 1px solid var(--line);
+  }
+
+  .show b {
+    font-weight: 500;
+  }
+
+  .show span {
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  @media (max-width: 1100px) {
+    .top {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 28px;
+    }
+
+    .text {
+      padding-right: 0;
+    }
+
+    .shows {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: 28px;
+    }
+
+    .show:nth-child(odd) {
+      padding-left: 0;
+    }
+
+    .show:nth-child(odd)::before {
+      display: none;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .modes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .head {
+      display: none;
+    }
+
+    .row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "op op"
+        "svc dur"
+        "track track";
+      row-gap: 0;
+    }
+
+    .op {
+      grid-area: op;
+      padding-bottom: 4px;
+    }
+
+    .svc {
+      grid-area: svc;
+      padding-block: 4px;
+    }
+
+    .dur {
+      grid-area: dur;
+    }
+
+    .track {
+      grid-area: track;
+      min-height: 30px;
+      margin-bottom: 8px;
+    }
+
+    .shows {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 0;
+    }
+
+    .show,
+    .show:nth-child(odd) {
+      padding: 16px 0;
+    }
+
+    .show + .show {
+      border-top: 1px solid var(--line);
+    }
+
+    .show + .show::before {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .span {
+      transition: none;
+    }
+  }
+</style>

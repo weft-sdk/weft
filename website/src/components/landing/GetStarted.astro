@@ -1,0 +1,281 @@
+---
+/**
+ * The closing section. The commands window is on the left, a plain `weft --help` listing that
+ * fades the other rows when you point at one, and the heading, the copyable command and the
+ * licence note are on the right. The mirror image of the hero, with no second Get started button.
+ * The commands and their descriptions are from docs/cli.md.
+ */
+import Section from "./Section.astro";
+
+const commands: [string, string][] = [
+  ["init", "Pick transports and libraries, install packages, write weft.yaml"],
+  ["add", "Add a transport to an existing project"],
+  ["gen", "Generate typed code from contracts"],
+  ["check", "Detect breaking contract changes"],
+  ["fmt", "Format .weft files"],
+  ["import", "Convert OpenAPI, .proto, GraphQL SDL, AsyncAPI, Avro or JSON Schema"],
+  ["publish", "Push contracts to the dashboard or Weft Cloud"],
+  ["pull", "Fetch another service's published contracts"],
+  ["map", "Write a static HTML map of services from contracts"],
+  ["dashboard", "Run the dashboard locally"],
+  ["doctor", "Check config, broker connections and package versions"],
+];
+---
+
+<Section id="get-started" label="Get started">
+  <div class="grid">
+    <div class="win">
+      <div class="bar">
+        <span>weft --help</span>
+        <span>{commands.length} commands</span>
+      </div>
+      <ul>
+        {
+          commands.map(([name, text]) => (
+            <li class="row">
+              <code>weft {name}</code>
+              <span>{text}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="text">
+      <h2 class="lead">Start with one command.</h2>
+      <p class="intro">
+        Run it in any service. It detects the language, asks which transports you use, installs the adapters and writes <code>weft.yaml</code>.
+      </p>
+      <button type="button" class="copy" id="gs-copy" aria-label="Copy the install command">
+        <span class="p" aria-hidden="true">$</span>
+        <span class="cmd">npx @weft-sdk/cli init</span>
+        <span class="icons" aria-hidden="true">
+          <svg class="i-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="8" y="8" width="12" height="12" rx="1.5" /><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" /></svg>
+          <svg class="i-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path class="tick" d="M5 12.5l4.5 4.5L19 7.5" pathLength="1" /></svg>
+        </span>
+        <span class="done visually-hidden" aria-live="polite"></span>
+      </button>
+      <p class="facts">Free and open source under Apache-2.0.</p>
+    </div>
+  </div>
+</Section>
+
+<script>
+  const button = document.getElementById("gs-copy");
+  const done = button?.querySelector(".done");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  button?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("npx @weft-sdk/cli init");
+      button.classList.add("copied");
+      if (done) done.textContent = "Copied";
+    } catch {
+      if (done) done.textContent = "Could not copy. Select the command and copy it.";
+    }
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      button.classList.remove("copied");
+      if (done) done.textContent = "";
+    }, 1600);
+  });
+</script>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 80px);
+    align-items: center;
+  }
+
+  /* The commands window, on the left. */
+  .win {
+    min-width: 0;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 8.5em minmax(0, 1fr);
+    gap: 16px;
+    padding: 8px 18px;
+    font-size: var(--text-sm);
+    transition: opacity var(--t-dim) var(--ease-dim);
+  }
+
+  .row code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent);
+  }
+
+  .row span {
+    color: var(--muted);
+  }
+
+  /* Pointing at one command softly fades the rest. */
+  @media (hover: hover) {
+    .win:has(.row:hover) .row:not(:hover) {
+      opacity: 0.45;
+    }
+  }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    min-width: 0;
+  }
+
+
+
+  .lead {
+    margin: 0;
+  }
+
+  .facts {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .copy {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+    height: 52px;
+    padding-inline: 20px;
+    background: var(--raised);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: border-color var(--t-fast) ease;
+  }
+
+  .copy:hover {
+    border-color: var(--line-hover);
+  }
+
+  .copy .p {
+    color: var(--accent);
+  }
+
+  .copy .cmd {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The copy icon turns into a tick in the same 14px box, so the button never changes width. */
+  .icons {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    margin-left: 4px;
+    flex: none;
+    color: var(--faint);
+    transition: color var(--t-fast) ease;
+  }
+
+  .copy:hover .icons {
+    color: var(--fg);
+  }
+
+  .icons svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transition:
+      opacity var(--t-fast) ease,
+      transform var(--t-fast) ease;
+  }
+
+  .i-check {
+    opacity: 0;
+    transform: scale(0.6);
+    color: var(--accent);
+  }
+
+  .i-check .tick {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .copy.copied .i-copy {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .copy.copied .i-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .copy.copied .i-check .tick {
+    animation: draw 260ms 80ms ease-out forwards;
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* The text comes first on a narrow screen. */
+    .text {
+      order: -1;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row,
+    .copy,
+    .icons,
+    .icons svg {
+      transition: none;
+    }
+
+    .copy.copied .i-check .tick {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+</style>

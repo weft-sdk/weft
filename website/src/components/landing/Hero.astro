@@ -1,51 +1,75 @@
 ---
 import Section from "./Section.astro";
+import HeroTerminal from "./HeroTerminal.astro";
 ---
 
 <Section id="top" label="Introduction" tight>
   <div class="hero">
-    <h1>One interface for every way your services talk.<i class="cursor" aria-hidden="true"></i></h1>
+    <div class="copy">
+    <h1>One interface for every way your services talk.</h1>
     <p>
-      Call <code>weft.http</code>, <code>weft.kafka</code> or <code>weft.ws</code>. Weft runs the library you already
-      use underneath, with types from one contract. In development; nothing is published yet.
+      Call <code>weft.http</code>, <code>weft.kafka</code> or <code>weft.ws</code> from any of twelve languages. Weft
+      runs the library you already use underneath, with types from one contract.
     </p>
     <div class="act">
-      <a class="cta" href="#status">Read the design</a>
-      <span class="planned"><span>planned</span>npx @weft-sdk/cli init</span>
+      <button type="button" class="install" id="install-copy" aria-label="Copy the install command">
+        <span class="p" aria-hidden="true">$</span><span class="cmd-text">npx @weft-sdk/cli init</span><span class="icons" aria-hidden="true"><svg class="i-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="8" y="8" width="12" height="12" rx="1.5" /><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" /></svg><svg class="i-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path class="tick" d="M5 12.5l4.5 4.5L19 7.5" pathLength="1" /></svg></span><span class="done visually-hidden" aria-live="polite"></span>
+      </button>
+      <a class="cta" href="#get-started">Get started<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg></a>
     </div>
+    </div>
+    <div class="visual"><HeroTerminal /></div>
   </div>
 </Section>
+
+<script>
+  const button = document.getElementById("install-copy");
+  const done = button?.querySelector(".done");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  button?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText("npx @weft-sdk/cli init");
+      button.classList.add("copied");
+      if (done) done.textContent = "Copied";
+    } catch {
+      if (done) done.textContent = "Could not copy. Select the command and copy it.";
+    }
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      button.classList.remove("copied");
+      if (done) done.textContent = "";
+    }, 1600);
+  });
+</script>
 
 <style>
   .hero {
     padding-bottom: clamp(8px, 2vw, 24px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(32px, 4vw, 72px);
+    align-items: center;
+  }
+
+  .visual {
+    min-width: 0;
+  }
+
+  @media (max-width: 1000px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   h1 {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: var(--text-hero);
+    font-size: clamp(2.75rem, 5.4vw, 5.75rem);
     line-height: 0.94;
     letter-spacing: -0.045em;
-    max-width: 15ch;
+    max-width: 16ch;
     text-wrap: balance;
-  }
-
-  .cursor {
-    display: inline-block;
-    width: 0.08em;
-    height: 0.8em;
-    margin-left: 0.06em;
-    vertical-align: -0.04em;
-    background: var(--accent);
-    animation: blink 1.1s steps(1) infinite;
-  }
-
-  @keyframes blink {
-    50% {
-      opacity: 0;
-    }
   }
 
   p {
@@ -56,42 +80,129 @@ import Section from "./Section.astro";
     max-width: 52ch;
   }
 
+  /* One joined control: the install command, with Get started attached like its Enter key. */
   .act {
     margin-top: 32px;
-    display: flex;
-    gap: 16px 28px;
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+    height: 46px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--raised);
+    overflow: hidden;
+  }
+
+  .install {
+    appearance: none;
+    background: none;
+    border: 0;
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    padding-inline: 16px;
+    display: inline-flex;
     align-items: center;
-    flex-wrap: wrap;
+    gap: 10px;
+    min-width: 0;
+    cursor: pointer;
+  }
+
+  .install .cmd-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .install .p {
+    color: var(--accent);
+  }
+
+  /* The copy icon turns into a tick in the same 14px box, so the bar never changes width. */
+  .install .icons {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    margin-left: 4px;
+    flex: none;
+    color: var(--faint);
+    transition: color var(--t-fast) ease;
+  }
+
+  .install:hover .icons {
+    color: var(--fg);
+  }
+
+  .install .icons svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transition:
+      opacity var(--t-fast) ease,
+      transform var(--t-fast) ease;
+  }
+
+  .i-check {
+    opacity: 0;
+    transform: scale(0.6);
+    color: var(--accent);
+  }
+
+  .i-check .tick {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .install.copied .i-copy {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .install.copied .i-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .install.copied .i-check .tick {
+    animation: draw 260ms 80ms ease-out forwards;
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .install .icons svg {
+      transition: none;
+    }
+
+    .install.copied .i-check .tick {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
   }
 
   .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding-inline: 18px;
     background: var(--accent);
     color: var(--on-accent);
     text-decoration: none;
-    padding: 12px 18px;
+    font-size: var(--text-base);
     font-weight: 500;
-    border-radius: var(--radius);
+    white-space: nowrap;
+    flex: none;
   }
 
   .cta:hover {
     opacity: 0.9;
   }
 
-  .planned {
-    border: 1px solid var(--line);
-    padding: 11px 16px;
-    display: flex;
-    gap: 14px;
-    border-radius: var(--radius);
-  }
-
-  .planned span {
-    color: var(--faint);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .cursor {
-      animation: none;
-    }
+  .cta svg {
+    display: block;
   }
 </style>

@@ -6,9 +6,9 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const k = (s: string) => `<span class="tok-k">${esc(s)}</span>`;
 const s = (x: string) => `<span class="tok-s">${esc(x)}</span>`;
 const a = (x: string) => `<span class="tok-a">${esc(x)}</span>`;
-const ok = `<span class="tok-ok">✓</span>`;
 
-export const before = [
+/** The same endpoint written with Express, KafkaJS and Socket.io. One entry per line. */
+export const beforeLines = [
   `${k("const")} app = express()`,
   `app.use(express.json())`,
   `${k("const")} io = ${k("new")} Server(createServer(app))`,
@@ -22,9 +22,10 @@ export const before = [
   `  io.to(${s("`order:${order.id}`")}).emit(${s('"order.status"')}, ${s('"placed"')})`,
   `  res.json(order)`,
   `})`,
-].join("\n");
+];
 
-export const after = [
+/** The same endpoint written with Weft. */
+export const afterLines = [
   `weft.${a("http")}.post(${s('"/orders"')}, ${k("async")} ({ body }) =&gt; {  ${k("// CreateOrder")}`,
   `  ${k("const")} order = ${k("await")} orders.create(body)`,
   `  ${k("await")} weft.${a("kafka")}.publish(${s('"order.placed"')}, order)`,
@@ -35,60 +36,4 @@ export const after = [
   `${k("await")} weft.start()`,
   ``,
   `${k("// the same libraries still run underneath")}`,
-].join("\n");
-
-export const init = [
-  `${k("$")} weft init`,
-  `Detected: TypeScript (pnpm)`,
-  `${k("? Service name")}               orders`,
-  `${k("? Which communication do you use?")}`,
-  `  HTTP, GraphQL, Kafka, WebSockets`,
-  `${k("? HTTP library?")}              Express`,
-  `${k("? GraphQL library?")}           Apollo Server`,
-  `${k("? Kafka library?")}             KafkaJS`,
-  `${k("? WebSocket library?")}         Socket.io`,
-  ``,
-  `${ok} Wrote weft.yaml`,
-  `${ok} Wrote contracts/orders.weft (example)`,
-  `${ok} Wrote src/weft.gen.ts`,
-  ``,
-  `${k("Next: edit contracts/orders.weft, then run `weft gen`.")}`,
-].join("\n");
-
-export const contract = [
-  `${k("package")} orders @version(${s('"1.0.0"')})`,
-  ``,
-  `${k("type")} Money {`,
-  `  amount: int            ${k("// minor units")}`,
-  `  currency: Currency`,
-  `}`,
-  ``,
-  `${k("type")} Order {`,
-  `  id: uuid`,
-  `  customerId: string`,
-  `  items: OrderItem[]`,
-  `  total: Money`,
-  `  placedAt: timestamp`,
-  `}`,
-  ``,
-  `${k("event")} ${a("order.placed")}: Order {`,
-  `  key: id`,
-  `}`,
-].join("\n");
-
-export const check = [
-  `weft check: 1 breaking change`,
-  ``,
-  `  orders.order.placed`,
-  `  ${a("✗")} field \`total\` removed`,
-  `      used by payments (Go), analytics (Python)`,
-  ``,
-  `  Suggested: keep \`total\` with @deprecated,`,
-  `  add the new field alongside.`,
-].join("\n");
-
-export const dashboard = [
-  `${k("$")} weft dashboard`,
-  `Weft dashboard running at http://localhost:4747`,
-  `Receiving telemetry on   http://localhost:4318 (OTLP)`,
-].join("\n");
+];

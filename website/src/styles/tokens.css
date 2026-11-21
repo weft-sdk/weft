@@ -5,15 +5,24 @@
   --bg: #111111;
   --raised: #181818;
   --line: #262626;
+  --line-hover: #3d3d3c;
   --fg: #ececea;
   --muted: #a2a2a0;
   --faint: #82827f;
   --accent: #7d92ff;
+  --accent-soft: #1b2142;
   --on-accent: #0d0d14;
 
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-display: "Bricolage Grotesque Variable", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Diff colours: used only by the before/after comparison. */
+  --del: #ff7b72;
+  --del-soft: rgba(248, 81, 73, 0.1);
+  --add: #56d364;
+  --add-soft: rgba(63, 185, 80, 0.1);
+
+  /* Geist for all text, Geist Mono for code, commands and file names. */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --gutter-l: max(clamp(16px, 2vw, 32px), env(safe-area-inset-left, 0px));
   --gutter-r: max(clamp(16px, 2vw, 32px), env(safe-area-inset-right, 0px));
@@ -21,6 +30,17 @@
   --split-gap: clamp(24px, 4vw, 72px);
   --radius: 3px;
 
+  /* Spacing under a section heading: 16px before its intro, 32px before the content, 40px between a top row and what follows. */
+  --stack-lead: 16px;
+  --stack-content: 32px;
+  --stack-row: 40px;
+
+  /* Motion: controls ease over --t-fast, softly dimmed neighbours over --t-dim. */
+  --t-fast: 200ms;
+  --t-dim: 320ms;
+  --ease-dim: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --text-2xs: 0.6875rem;
   --text-xs: 0.75rem;
   --text-sm: 0.8125rem;
   --text-base: 0.9375rem;
@@ -37,11 +57,17 @@
     --bg: #f4f4f3;
     --raised: #ececea;
     --line: #dcdcd9;
+    --line-hover: #bdbdba;
     --fg: #141414;
     --muted: #5e5e5c;
     --faint: #686866;
     --accent: #2447f5;
+    --accent-soft: #e5e9fd;
     --on-accent: #ffffff;
+    --del: #b3202c;
+    --del-soft: rgba(207, 34, 46, 0.08);
+    --add: #116329;
+    --add-soft: rgba(26, 127, 55, 0.1);
     color-scheme: light;
   }
 }
@@ -50,10 +76,16 @@
   --bg: #f4f4f3;
   --raised: #ececea;
   --line: #dcdcd9;
+  --line-hover: #bdbdba;
   --fg: #141414;
   --muted: #5e5e5c;
   --faint: #686866;
   --accent: #2447f5;
+  --accent-soft: #e5e9fd;
   --on-accent: #ffffff;
+  --del: #b3202c;
+  --del-soft: rgba(207, 34, 46, 0.08);
+  --add: #116329;
+  --add-soft: rgba(26, 127, 55, 0.1);
   color-scheme: light;
 }

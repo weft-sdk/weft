@@ -1,0 +1,176 @@
+---
+/**
+ * The hero visual: a terminal session showing the real flow, init, gen, the call, check.
+ * It plays once on load: commands type out, output appears line by line, then it stays.
+ * Every line is in the HTML from the start and keeps its space, so nothing shifts and
+ * screen readers get the full text. With reduced motion it shows complete at once.
+ */
+type Line = { kind: "cmd"; text: string } | { kind: "out"; html: string } | { kind: "sep" };
+
+const k = (x: string) => `<span class="tok-k">${x}</span>`;
+const s = (x: string) => `<span class="tok-s">${x}</span>`;
+const a = (x: string) => `<span class="tok-a">${x}</span>`;
+const ok = a("✓");
+
+const lines: Line[] = [
+  { kind: "cmd", text: "npx @weft-sdk/cli init" },
+  { kind: "out", html: `${k("? Which communication do you use?")}  HTTP, Kafka, WebSockets` },
+  { kind: "out", html: `${k("? Kafka library?")}                    KafkaJS` },
+  { kind: "out", html: `${ok} Wrote weft.yaml` },
+  { kind: "out", html: `${ok} Wrote contracts/orders.weft` },
+  { kind: "sep" },
+  { kind: "cmd", text: "weft gen" },
+  { kind: "out", html: `${ok} Generated src/weft.gen.ts ${k("(TypeScript)")}` },
+  { kind: "sep" },
+  { kind: "cmd", text: "cat src/orders.ts" },
+  { kind: "out", html: `${k("import")} { weft } ${k("from")} ${s('"./weft.gen"')}` },
+  { kind: "out", html: " " },
+  { kind: "out", html: `${k("await")} weft.${a("kafka")}.publish(${s('"order.placed"')}, order)` },
+  { kind: "out", html: k("// runs on KafkaJS, typed as Order") },
+  { kind: "sep" },
+  { kind: "cmd", text: "weft check" },
+  { kind: "out", html: `${ok} No breaking changes in 1 contract` },
+];
+---
+
+<div class="term" data-hero-terminal>
+  <div class="bar">
+    <span>~/orders</span>
+    <span>zsh</span>
+  </div>
+  <pre>{
+    lines.map((l) =>
+      l.kind === "sep" ? (
+        <span class="sep" />
+      ) : l.kind === "cmd" ? (
+        <span class="ln cmd"><span class="p">$</span> <span class="typed" style={`--n:${l.text.length}`}>{l.text}</span></span>
+      ) : (
+        <span class="ln out" set:html={l.html} />
+      ),
+    )
+  }</pre>
+</div>
+<script is:inline>
+  // Runs before first paint: hide the lines now, so the finished session never flashes first.
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.currentScript.previousElementSibling.classList.add("playing");
+  }
+</script>
+
+<script>
+  const CHAR_MS = 38;
+  const OUT_MS = 110;
+  const AFTER_CMD_MS = 260;
+  const AFTER_BLOCK_MS = 380;
+
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  async function play(root: HTMLElement): Promise<void> {
+    const items = [...root.querySelectorAll<HTMLElement>(".ln, .sep")];
+    for (const item of items) {
+      if (item.classList.contains("sep")) {
+        item.classList.add("shown");
+        await wait(AFTER_BLOCK_MS);
+        continue;
+      }
+      item.classList.add("shown");
+      if (item.classList.contains("cmd")) {
+        const typed = item.querySelector<HTMLElement>(".typed");
+        const n = typed?.textContent?.length ?? 0;
+        typed?.style.setProperty("--ms", `${n * CHAR_MS}ms`);
+        typed?.classList.add("go");
+        await wait(n * CHAR_MS);
+        // Settle to the full command whether or not the CSS animation ran (for example in a background tab).
+        typed?.classList.add("done");
+        await wait(AFTER_CMD_MS);
+      } else {
+        await wait(OUT_MS);
+      }
+    }
+    root.classList.remove("playing");
+  }
+
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  for (const root of document.querySelectorAll<HTMLElement>("[data-hero-terminal]")) {
+    if (!reduce && root.classList.contains("playing")) void play(root);
+  }
+</script>
+
+<style>
+  .term {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--raised);
+    min-width: 0;
+  }
+
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  pre {
+    margin: 0;
+    padding: 20px 18px;
+    overflow-x: auto;
+    font-size: var(--text-sm);
+    line-height: 1.85;
+  }
+
+  .ln {
+    display: block;
+    white-space: pre;
+  }
+
+  .p {
+    color: var(--accent);
+  }
+
+  .sep {
+    display: block;
+    border-top: 1px dashed var(--line);
+    margin: 14px 0;
+  }
+
+  /* While playing, lines stay in place but invisible until their turn. */
+  .playing .ln:not(.shown),
+  .playing .sep:not(.shown) {
+    visibility: hidden;
+  }
+
+  /* A command types out: its width grows one character at a time. Mono, so 1ch is one character. */
+  .typed {
+    display: inline-block;
+    vertical-align: bottom;
+    overflow: hidden;
+    white-space: pre;
+  }
+
+  .playing .cmd:not(.shown) .typed,
+  .playing .typed:not(.go) {
+    width: 0;
+  }
+
+  .typed.go {
+    animation: type var(--ms) steps(var(--n)) both;
+  }
+
+  .typed.done {
+    animation: none;
+    width: auto;
+  }
+
+  @keyframes type {
+    from {
+      width: 0;
+    }
+    to {
+      width: calc(var(--n) * 1ch);
+    }
+  }
+</style>

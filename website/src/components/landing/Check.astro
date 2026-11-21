@@ -1,0 +1,355 @@
+---
+/**
+ * The breaking-changes section. The real `weft check` output sits beside the heading, and below it
+ * a ledger sorts the common kinds of change into safe, risky and breaking, each with an example.
+ * The changes follow the "Evolving contracts safely" table in docs/contract-language.md.
+ */
+import Section from "./Section.astro";
+import Logo from "../Logo.astro";
+
+interface Change {
+  name: string;
+  note?: string;
+  example: string;
+}
+
+interface Group {
+  title: string;
+  marker: "safe" | "risky" | "breaking";
+  wide?: boolean;
+  changes: Change[];
+}
+
+const groups: Group[] = [
+  {
+    title: "Safe",
+    marker: "safe",
+    changes: [
+      { name: "Add an optional field", example: "+ note?: string" },
+      { name: "Add a required field to an event or response", note: "Safe for receivers.", example: "+ placedAt: timestamp" },
+      { name: "Loosen validation", note: "Safe for senders.", example: "@max(10) → @max(20)" },
+    ],
+  },
+  {
+    title: "Risky",
+    marker: "risky",
+    changes: [
+      { name: "Widen a type", note: "Reported as risky.", example: "int32 → int" },
+      { name: "Add an enum value", note: "Receivers may not handle it.", example: "Currency: + JPY" },
+      { name: "Loosen validation", note: "Risky for receivers that relied on it.", example: "- @pattern" },
+    ],
+  },
+  {
+    title: "Breaking",
+    marker: "breaking",
+    wide: true,
+    changes: [
+      { name: "Remove or rename a field", example: "- total: Money" },
+      { name: "Change a field's type", example: "total: Money → string" },
+      { name: "Make a required field optional", note: "Breaking for receivers.", example: "total → total?" },
+      { name: "Add a required field to a request or HTTP body", note: "Breaking for callers.", example: "+ couponCode: string" },
+      { name: "Change an event's key", note: "Ordering and partitioning change.", example: "key: id → key: customerId" },
+      { name: "Tighten validation", note: "Breaking for senders.", example: "@max(20) → @max(10)" },
+    ],
+  },
+];
+
+const output = [
+  "weft check: 1 breaking change",
+  " ",
+  "  orders.order.placed",
+  "  <a>✗</a> field `total` removed",
+  "      used by payments (Go), analytics (Python)",
+  " ",
+  "  <k>Suggested: keep `total` with @deprecated,</k>",
+  "  <k>add the new field alongside.</k>",
+];
+const render = (line: string) =>
+  line
+    .replace(/&/g, "&amp;")
+    .replace(/<(\/?)([ak])>/g, "§$1$2§")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/§(\/?)a§/g, (_, c) => (c ? "</span>" : '<span class="tok-a">'))
+    .replace(/§(\/?)k§/g, (_, c) => (c ? "</span>" : '<span class="tok-k">'));
+---
+
+<Section id="check" label="Breaking changes">
+  <div class="top">
+    <div class="text">
+      <h2 class="lead">Breaking changes stop before they ship.</h2>
+      <p class="intro">
+        <code>weft check</code> compares a contract with its last version and names every service that would break, in
+        CI, before the merge.
+      </p>
+    </div>
+
+    <div class="src">
+      <div class="who">
+        <span class="logo"><Logo size={44} /></span>
+        <div>
+          <div class="name">weft check</div>
+          <div class="sub">runs in CI, before the merge</div>
+        </div>
+      </div>
+      <pre class="box code">{output.map((line) => <span class="ln" set:html={render(line)} />)}</pre>
+    </div>
+  </div>
+
+  <div class="ledger">
+    {
+      groups.map((g) => (
+        <div class:list={["group", { wide: g.wide }]}>
+          <div class="gh">
+            {g.marker === "safe" && (
+              <svg class="ic safe" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3l7 3v5.5c0 4.4-2.9 7.6-7 9.5-4.1-1.9-7-5.1-7-9.5V6l7-3z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+            )}
+            {g.marker === "risky" && (
+              <svg class="ic risky" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 4L3 20h18L12 4z" />
+                <path d="M12 10v4M12 17h.01" />
+              </svg>
+            )}
+            {g.marker === "breaking" && (
+              <svg class="ic breaking" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7L8.5 3z" />
+                <path d="M9 9l6 6M15 9l-6 6" />
+              </svg>
+            )}
+            <h3>{g.title}</h3>
+            <span class="count">{g.changes.length} changes</span>
+          </div>
+          <ul>
+            {g.changes.map((c) => (
+              <li>
+                <span class="cn">{c.name}</span>
+                {c.note && <span class="note">{c.note}</span>}
+                <code class="ex">{c.example}</code>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+</Section>
+
+<style>
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    margin-bottom: var(--stack-row);
+  }
+
+  .text {
+    padding-right: 48px;
+  }
+
+
+
+  .src {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+  }
+
+  .logo {
+    display: flex;
+    flex: none;
+  }
+
+  .name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .sub {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .box {
+    margin: 0;
+    padding: 14px 0;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    white-space: normal;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.85;
+  }
+
+  .code :global(.ln) {
+    display: block;
+    padding-inline: 16px;
+    white-space: pre;
+  }
+
+  /* The ledger: safe and risky are narrow columns, breaking is wide and in two columns inside. */
+  .ledger {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+    border-top: 1px solid var(--line);
+  }
+
+  .group {
+    padding: 24px 24px 8px;
+    min-width: 0;
+  }
+
+  .group:first-child {
+    padding-left: 0;
+  }
+
+  .group:last-child {
+    padding-right: 0;
+  }
+
+  .group + .group {
+    border-left: 1px solid var(--line);
+  }
+
+  .gh {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  /* A different icon for each verdict: a shield with a tick, a warning triangle, a stopped octagon. */
+  .ic {
+    display: block;
+    flex: none;
+  }
+
+  .ic.safe {
+    color: var(--muted);
+  }
+
+  .ic.risky {
+    color: var(--fg);
+  }
+
+  .ic.breaking {
+    color: var(--accent);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .wide ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 13px 0 14px;
+    border-top: 1px solid var(--line);
+    min-width: 0;
+  }
+
+  .cn {
+    font-size: var(--text-base);
+    color: var(--fg);
+  }
+
+  .note {
+    font-size: var(--text-sm);
+    color: var(--faint);
+  }
+
+  .ex {
+    margin-top: 6px;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 1100px) {
+    .top {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 28px;
+    }
+
+    .text {
+      padding-right: 0;
+    }
+
+    .ledger {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .group.wide {
+      grid-column: 1 / -1;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+      padding-left: 0;
+    }
+
+    .group:nth-child(2) {
+      padding-right: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ledger {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .group,
+    .group:nth-child(2) {
+      padding-inline: 0;
+      border-left: 0;
+    }
+
+    .group + .group {
+      border-top: 1px solid var(--line);
+    }
+
+    .wide ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

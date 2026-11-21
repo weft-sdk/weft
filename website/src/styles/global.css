@@ -7,14 +7,36 @@
 }
 
 html {
+  --header-h: 64px;
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* The navbar is pinned, so a section reached from a link stops just below it. */
+section[id] {
+  scroll-margin-top: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--bg);
+  z-index: 30;
 }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-base);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
@@ -22,6 +44,17 @@ body {
 
 a {
   color: inherit;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+}
+
+/* Inline code sits a touch smaller than the text around it, because mono letters are wider. */
+:not(pre) > code {
+  font-size: 0.9em;
 }
 
 :focus-visible {
@@ -53,3 +86,23 @@ svg {
 .tok-s { color: var(--muted); }
 .tok-a { color: var(--accent); }
 .tok-ok { color: var(--accent); }
+
+/* Section headings and intros. Every section uses these, so they cannot drift apart.
+   A section only adds the space under them (see the --stack tokens) or lifts the width limit. */
+.lead {
+  margin: 0 0 var(--stack-lead);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lead);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+
+.intro {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--text-md);
+  color: var(--muted);
+}

@@ -1,0 +1,160 @@
+---
+/**
+ * The site footer: the mark and a one-line description, then three columns of links, then the
+ * licence and logo notes. Links to pages that do not exist yet (documentation) are planned for W5.
+ */
+import Logo from "./Logo.astro";
+
+const columns: { title: string; links: { label: string; href: string; external?: boolean }[] }[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Transports", href: "/#transports" },
+      { label: "Compare", href: "/#compare" },
+      { label: "Languages", href: "/#languages" },
+      { label: "Dashboard", href: "/#dashboard" },
+      { label: "Get started", href: "/#get-started" },
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      { label: "Documentation", href: "/docs" },
+      { label: "CLI reference", href: "/docs/cli" },
+      { label: "Contract language", href: "/docs/contracts" },
+      { label: "Migrating existing code", href: "/docs/migrating" },
+    ],
+  },
+  {
+    title: "Project",
+    links: [
+      { label: "GitHub", href: "https://github.com/weft-sdk/weft", external: true },
+      { label: "Issues", href: "https://github.com/weft-sdk/weft/issues", external: true },
+      { label: "npm", href: "https://www.npmjs.com/org/weft-sdk", external: true },
+      { label: "Apache-2.0 licence", href: "https://github.com/weft-sdk/weft/blob/main/LICENSE", external: true },
+    ],
+  },
+];
+---
+
+<footer class="foot">
+  <div class="wrap grid">
+    <div class="brand">
+      <a class="mark" href="/" aria-label="Weft home"><Logo size={22} />weft</a>
+      <p>One interface for every way your services talk.</p>
+    </div>
+    {
+      columns.map((c) => (
+        <nav class="col" aria-label={c.title}>
+          <h2>{c.title}</h2>
+          <ul>
+            {c.links.map((l) => (
+              <li>
+                <a href={l.href} {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                  {l.label}
+                  {l.external && <span class="visually-hidden"> (opens in a new tab)</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))
+    }
+  </div>
+  <div class="wrap legal">
+    <span>Weft is open source under Apache-2.0.</span>
+    <span>Logos belong to their owners. Weft is not affiliated with them.</span>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    border-top: 1px solid var(--line);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+    gap: clamp(28px, 4vw, 64px);
+    padding-block: clamp(36px, 5vw, 72px);
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: var(--text-md);
+    letter-spacing: -0.02em;
+  }
+
+  .brand p {
+    margin: 16px 0 0;
+    max-width: 36ch;
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  h2 {
+    margin: 0 0 16px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .col a {
+    font-size: var(--text-sm);
+    color: var(--muted);
+    transition: color var(--t-fast) ease;
+  }
+
+  .col a:hover {
+    color: var(--fg);
+  }
+
+  .legal {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px 24px;
+    flex-wrap: wrap;
+    padding-block: 20px 28px;
+    border-top: 1px solid var(--line);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .brand {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .col a {
+      transition: none;
+    }
+  }
+</style>
