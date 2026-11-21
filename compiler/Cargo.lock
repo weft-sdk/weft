@@ -2196,6 +2196,16 @@ dependencies = [
 [[package]]
 name = "weft-check"
 version = "0.0.0"
+dependencies = [
+ "insta",
+ "jsonschema",
+ "miette",
+ "regex",
+ "serde_json",
+ "thiserror",
+ "weft-ir",
+ "weft-syntax",
+]
 
 [[package]]
 name = "weft-cli"

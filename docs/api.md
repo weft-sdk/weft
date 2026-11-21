@@ -154,6 +154,7 @@ Every language gets the same error categories, mapped to its idioms:
 | `NotFound` | 404 | NOT_FOUND | not retried |
 | `InvalidInput` | 400 | INVALID_ARGUMENT | sent to dead-letter |
 | `Unauthorized` | 401 | UNAUTHENTICATED | not retried |
+| `Forbidden` | 403 | PERMISSION_DENIED | not retried |
 | `Conflict` | 409 | ALREADY_EXISTS | not retried |
 | `Unavailable` | 503 | UNAVAILABLE | retried |
 | `Timeout` | 504 | DEADLINE_EXCEEDED | retried |
