@@ -1,15 +1,14 @@
 //! `weft gen`
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Args;
-use weft_check::Source;
 use weft_codegen::{Int64, Options};
 
-use crate::config::{self, ContractSource};
-use crate::{exit, files};
+use crate::exit;
+use crate::project::{self, shown_path};
 
 #[derive(Args)]
 pub struct GenArgs {
@@ -42,11 +41,12 @@ pub fn run(args: GenArgs) -> ExitCode {
         Ok(d) => d,
         Err(e) => return usage(e),
     };
-    let loaded = match config::load(&cwd) {
-        Ok(l) => l,
+
+    let project = match project::load(&cwd) {
+        Ok(p) => p,
         Err(e) => return usage(e),
     };
-    let (cfg, dir) = (&loaded.config, &loaded.dir);
+    let (cfg, dir) = (&project.config, &project.dir);
 
     // Language
     let lang = match args.lang.as_deref().or(cfg.language.as_deref()) {
@@ -80,36 +80,10 @@ pub fn run(args: GenArgs) -> ExitCode {
     };
 
     // Contracts
-    let mut roots: Vec<PathBuf> = Vec::new();
-    if cfg.contracts.is_empty() {
-        roots.push(dir.join("contracts"));
-    }
-    for c in &cfg.contracts {
-        match c {
-            ContractSource::Path(p) => roots.push(dir.join(p)),
-            ContractSource::Git { git, .. } => {
-                return usage(format!(
-                    "contracts from git (`{git}`) are not read by this build. Use a local folder for now"
-                ));
-            }
-        }
-    }
-    let found = match files::find_weft_files(&roots) {
-        Ok(f) => f,
-        Err(e) => return usage(format!("contracts: {e}")),
+    let sources = match project.sources(&cwd) {
+        Ok(s) => s,
+        Err(e) => return usage(e),
     };
-    if found.is_empty() {
-        let shown: Vec<String> = roots.iter().map(|r| r.display().to_string()).collect();
-        return usage(format!("no .weft files in {}", shown.join(", ")));
-    }
-    let mut sources = Vec::new();
-    for path in &found {
-        let text = match fs::read_to_string(path) {
-            Ok(t) => t,
-            Err(e) => return usage(format!("{}: {e}", path.display())),
-        };
-        sources.push(Source::new(shown_path(path, &cwd), text));
-    }
 
     // Check, then generate
     let irs = match weft_check::check(&sources) {
@@ -169,24 +143,4 @@ pub fn run(args: GenArgs) -> ExitCode {
     }
     println!("✓ Wrote {shown}");
     exit::code(exit::OK)
-}
-
-/// A path relative to the current folder when it is inside it.
-fn shown_path(path: &Path, cwd: &Path) -> String {
-    let canon = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-    let base = cwd.canonicalize().unwrap_or_else(|_| cwd.to_path_buf());
-    // The output file may not exist yet, so canonicalize its parent instead.
-    let canon = if path.exists() {
-        canon
-    } else {
-        path.parent()
-            .and_then(|p| p.canonicalize().ok())
-            .map_or_else(
-                || path.to_path_buf(),
-                |p| p.join(path.file_name().unwrap_or_default()),
-            )
-    };
-    canon
-        .strip_prefix(&base)
-        .map_or_else(|_| canon.display().to_string(), |p| p.display().to_string())
 }

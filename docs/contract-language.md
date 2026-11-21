@@ -254,6 +254,41 @@ A service owns the contracts it provides. Other services need to read them. Supp
 | Tighten validation (lower `@max`, add `@pattern`) | **breaking** for senders |
 | Loosen validation | safe for senders, risky for receivers that relied on it |
 
+### Who sends and who receives
+
+The same change can be safe in one direction and breaking in the other, so `weft check` looks at where a type is used:
+
+- **Input:** types that callers send: HTTP path, query, body and header parameters, `rpc` requests, GraphQL arguments, and `client` events of a socket.
+- **Output:** types that receivers read: results, errors, events, and `server` events of a socket.
+
+A type used both ways gets the stricter judgement. So does a type no operation of the package uses, since another package may import it. "Safe for receivers" in the table means output; "breaking for callers" means input.
+
+### What else is judged
+
+| Change | Result |
+| --- | --- |
+| Add an optional field | safe |
+| Make an optional field required | **breaking** for callers (input); safe for receivers |
+| Make a required field optional | safe for callers (input); **breaking** for receivers |
+| Change a field's `@wire` name | **breaking** |
+| Remove an enum value | **breaking** |
+| Remove a type, an error, a route, an `rpc` method, a GraphQL field, a socket event or a package | **breaking** (other packages may use a type) |
+| Change an error's HTTP status | **breaking** |
+| Change a result's type, make it optional (`T` → `T?`), or make it a stream | **breaking** |
+| Add an error to a result | risky (callers may not handle it) |
+| Change a route's method or path, or its path parameters | **breaking** |
+| Add a required parameter, `query`, `body` or `headers` to a route, `rpc` method or GraphQL field | **breaking** |
+| Add an optional parameter, or a `query` or `headers` with only optional fields | safe |
+| Change a socket event's side | **breaking** |
+| Deprecate something with `@deprecated` | safe |
+| Change only documentation | patch |
+
+`int` and `int64`, and `float` and `float64`, are the same type. Widening `int32` to `int` or `float32` to `float` is risky; narrowing is breaking.
+
+### Versions
+
+The changes decide the smallest version bump: breaking needs a major bump, anything else that changes meaning needs a minor bump, documentation alone needs a patch. While the major version is 0, a minor bump covers breaking changes too (as in semantic versioning). `weft check` fails only when a **breaking** change is not covered by the version. Other changes the version does not yet cover are shown as a note, since contracts change several times between releases. A breaking change in a package without `@version` fails.
+
 The safe pattern for a rename: add the new field, mark the old one `@deprecated`, remove it later. When the dashboard is connected, it knows which services still use a deprecated field and says when removal is safe.
 
 ## Importing existing schemas
