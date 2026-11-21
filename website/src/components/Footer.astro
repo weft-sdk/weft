@@ -1,44 +1,66 @@
 ---
 /**
- * The site footer: the mark and a one-line description, then three columns of links, then the
- * licence and logo notes. The Documentation and Transports links are built from src/data/docs.ts, so they match the docs pages.
+ * The site footer: the mark and a one-line description, then four columns of grouped links. The
+ * Documentation and Transports links are built from src/data/docs.ts, so they match the docs pages.
  */
 import Logo from "./Logo.astro";
 import Icon from "./Icon.astro";
 import { flat } from "../data/docs";
 
-const transportLinks = flat.filter((p) => p.section.id === "transports").map((p) => ({ label: p.title, href: p.href }));
+interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+  icon?: string;
+}
+interface Group {
+  title: string;
+  links: FooterLink[];
+}
 
-const columns: { title: string; links: { label: string; href: string; external?: boolean; icon?: string }[] }[] = [
-  {
-    title: "Product",
-    links: [
-      { label: "Transports", href: "/#transports" },
-      { label: "Compare", href: "/#compare" },
-      { label: "Languages", href: "/#languages" },
-      { label: "Dashboard", href: "/#dashboard" },
-    ],
-  },
-  {
-    title: "Documentation",
-    links: [
-      { label: "Overview", href: "/docs" },
-      { label: "Install", href: "/docs/guides/install" },
-      { label: "Your first contract", href: "/docs/guides/first-contract" },
-      { label: "Contract language", href: "/docs/contracts" },
-      { label: "Libraries", href: "/docs/libraries" },
-      { label: "CLI reference", href: "/docs/cli" },
-      { label: "Migrating existing code", href: "/docs/guides/from-kafkajs" },
-    ],
-  },
-  { title: "Transports", links: transportLinks },
-  {
-    title: "Project",
-    links: [
-      { label: "GitHub", href: "https://github.com/weft-sdk/weft", external: true, icon: "github" },
-      { label: "npm", href: "https://www.npmjs.com/org/weft-sdk", external: true, icon: "npm" },
-    ],
-  },
+// The transports are grouped the way the docs group them.
+const folderTitles: Record<string, string> = { "request-response": "Request and response", realtime: "Realtime", messaging: "Messaging" };
+const transportGroup = (folder: string): Group => ({
+  title: folderTitles[folder] ?? folder,
+  links: flat.filter((p) => p.section.id === "transports" && p.folder === folder).map((p) => ({ label: p.title, href: p.href })),
+});
+
+// Groups are stacked into columns so every column ends at about the same height.
+const columns: Group[][] = [
+  [transportGroup("request-response"), transportGroup("realtime")],
+  [transportGroup("messaging")],
+  [
+    {
+      title: "Documentation",
+      links: [
+        { label: "Overview", href: "/docs" },
+        { label: "Install", href: "/docs/guides/install" },
+        { label: "Your first contract", href: "/docs/guides/first-contract" },
+        { label: "Contract language", href: "/docs/contracts" },
+        { label: "Libraries", href: "/docs/libraries" },
+        { label: "CLI reference", href: "/docs/cli" },
+        { label: "Migrating existing code", href: "/docs/guides/from-kafkajs" },
+      ],
+    },
+  ],
+  [
+    {
+      title: "Product",
+      links: [
+        { label: "Transports", href: "/#transports" },
+        { label: "Compare", href: "/#compare" },
+        { label: "Languages", href: "/#languages" },
+        { label: "Dashboard", href: "/#dashboard" },
+      ],
+    },
+    {
+      title: "Project",
+      links: [
+        { label: "GitHub", href: "https://github.com/weft-sdk/weft", external: true, icon: "github" },
+        { label: "npm", href: "https://www.npmjs.com/org/weft-sdk", external: true, icon: "npm" },
+      ],
+    },
+  ],
 ];
 ---
 
@@ -49,21 +71,25 @@ const columns: { title: string; links: { label: string; href: string; external?:
       <p>One interface for every way your services talk.</p>
     </div>
     {
-      columns.map((c) => (
-        <nav class="col" aria-label={c.title}>
-          <h2>{c.title}</h2>
-          <ul>
-            {c.links.map((l) => (
-              <li>
-                <a href={l.href} {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-                  {l.icon && <Icon name={l.icon} size={16} />}
-                  {l.label}
-                  {l.external && <span class="visually-hidden"> (opens in a new tab)</span>}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+      columns.map((groups) => (
+        <div class="col">
+          {groups.map((g) => (
+            <nav class="group" aria-label={g.title}>
+              <h2>{g.title}</h2>
+              <ul>
+                {g.links.map((l) => (
+                  <li>
+                    <a href={l.href} {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                      {l.icon && <Icon name={l.icon} size={16} />}
+                      {l.label}
+                      {l.external && <span class="visually-hidden"> (opens in a new tab)</span>}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
       ))
     }
   </div>
@@ -95,6 +121,10 @@ const columns: { title: string; links: { label: string; href: string; external?:
 
   .col {
     border-left: 1px solid var(--line);
+  }
+
+  .group + .group {
+    margin-top: 36px;
   }
 
   .mark {
@@ -156,7 +186,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
       border-top: 1px solid var(--line);
     }
 
-    .col:nth-of-type(odd) {
+    .col:nth-child(even) {
       padding-left: 0;
       border-left: 0;
     }
@@ -168,7 +198,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
     }
 
     .col,
-    .col:nth-of-type(1) {
+    .col:nth-child(even) {
       padding: 24px 0;
       border-left: 0;
       border-top: 1px solid var(--line);
