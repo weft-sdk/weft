@@ -8,10 +8,10 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | W (website) paused until the backend exists. W1–W5 done |
-| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). No docs content, compiler, CLI, language package or dashboard exists |
-| Next task | **P1.1, Rust workspace skeleton** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
-| Last done | 2026-11-21: W5, docs layout. `pnpm --dir website check` and `build` pass locally; the CI workflow has not run yet |
+| Phase | P1 (compiler and CLI), in progress: P1.1 done. W (website) paused until the backend exists |
+| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A Rust workspace skeleton** (`compiler/`: four empty crates and a `weft --version` binary, no features). No docs content, working compiler, language package or dashboard exists |
+| Next task | **P1.2, parser**, with **P1.3, IR** beside it ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
+| Last done | 2026-11-21: P1.1, workspace skeleton. `cargo fmt --check`, `clippy`, `test` and `build` pass locally; neither CI workflow has run yet |
 | Waiting on the maintainer | Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
@@ -38,7 +38,7 @@ Rust workspace in `compiler/` ([architecture](architecture.md#repo-layout), [tec
 
 | Task | What | Needs | Done when |
 | --- | --- | --- | --- |
-| **P1.1** | Rust workspace skeleton: `weft-syntax`, `weft-ir`, `weft-check` and `weft-cli` as near-empty crates, a `weft --version` binary, rustfmt and clippy config, a CI job. Rust commands added to CLAUDE.md | none | `cargo build`, `test` and `clippy` pass in CI |
+| **P1.1** ✓ | Rust workspace skeleton: `weft-syntax`, `weft-ir`, `weft-check` and `weft-cli` as near-empty crates, a `weft --version` binary, rustfmt and clippy config, a CI job. Rust commands added to CLAUDE.md | none | Done 2026-11-21. `cargo build`, `test`, `clippy` and `fmt --check` pass locally; the CI workflow (Linux, macOS, Windows) has not run yet |
 | **P1.2** | Parser: lexer, grammar and AST for the whole contract language, `miette` errors. The language spec moves to `spec/language.md` | P1.1 | Every construct in the complete example parses; bad input gives located errors (snapshot tests) |
 | **P1.3** | IR: versioned JSON types and `spec/ir.schema.json` | P1.1 | The schema validates the IR the checker emits |
 | **P1.4** | Checker: name resolution, type checking, operation rules, errors, generics, validation rules, imports; produces the IR | P1.2, P1.3 | The complete example compiles to IR, and every rule has a failing case |
