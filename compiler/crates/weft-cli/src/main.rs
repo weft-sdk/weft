@@ -1,8 +1,10 @@
 //! The `weft` binary. Commands are added by the tasks in phase P1.
 
+mod config;
 mod exit;
 mod files;
 mod fmt;
+mod generate;
 
 use std::process::ExitCode;
 
@@ -20,11 +22,14 @@ struct Cli {
 enum Command {
     /// Format .weft files
     Fmt(fmt::FmtArgs),
+    /// Generate typed code from contracts
+    Gen(generate::GenArgs),
 }
 
 fn main() -> ExitCode {
     match Cli::parse().command {
         Command::Fmt(args) => fmt::run(args),
+        Command::Gen(args) => generate::run(args),
     }
 }
 

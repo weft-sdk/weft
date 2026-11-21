@@ -3,9 +3,9 @@ name: compiler
 on:
   push:
     branches: [main]
-    paths: ["compiler/**", ".github/workflows/compiler.yml"]
+    paths: ["compiler/**", "spec/**", ".github/workflows/compiler.yml"]
   pull_request:
-    paths: ["compiler/**", ".github/workflows/compiler.yml"]
+    paths: ["compiler/**", "spec/**", ".github/workflows/compiler.yml"]
 
 permissions:
   contents: read
@@ -28,5 +28,15 @@ jobs:
           workspaces: compiler
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --locked -- -D warnings
+      # The code generator tests type-check its output with tsc, so TypeScript must be installed. On Linux a missing
+      # tsc fails the tests; on the other systems those tests skip, to keep the matrix quick.
+      - uses: actions/setup-node@v4
+        if: runner.os == 'Linux'
+        with:
+          node-version: 24
+      - run: npm install --global typescript@5.9
+        if: runner.os == 'Linux'
       - run: cargo test --locked
+        env:
+          WEFT_REQUIRE_TSC: ${{ runner.os == 'Linux' && '1' || '' }}
       - run: cargo build --locked
