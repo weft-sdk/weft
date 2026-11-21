@@ -1,0 +1,20 @@
+[package]
+name = "weft-codegen"
+description = "Weft compiler: code generators"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+weft-ir = { path = "../weft-ir" }
+
+[dev-dependencies]
+insta.workspace = true
+weft-check = { path = "../weft-check" }
+weft-syntax = { path = "../weft-syntax" }
+
+[lints]
+workspace = true

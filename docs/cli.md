@@ -50,24 +50,16 @@ Detects the language and package manager: npm, pnpm, yarn, bun, deno, go modules
 weft gen [--lang LANG] [--out PATH] [--check] [--watch]
 ```
 
-Reads contracts, writes typed code. `--watch` regenerates on save. `--check` exits non-zero if generated code is out of date (for CI).
+Reads the contracts named in `weft.yaml`, checks them, and writes the typed code for one language.
 
-### `weft check`
+- **Finding the config.** `weft.yaml` is looked for in the current folder and then each folder above it. Relative paths in it are relative to the file.
+- **Language.** `--lang`, or `language:` in `weft.yaml`.
+- **Contracts.** The `contracts:` entries (a folder, default `./contracts`). Every `.weft` file in them is checked together, so packages can import each other. A failing contract writes nothing and exits with 3.
+- **Output.** `--out`, or `codegen.out` (default `src/weft.gen.ts`). The file is deterministic, and is left alone when it would not change.
+- `--check` writes nothing and exits with 1 if the file is missing or out of date (for CI).
+- `--watch` regenerates on save.
 
-```
-weft check [--against REF|published] [--format text|json|markdown|github|sarif]
-```
-
-Compares contracts with a baseline using the rules in [contract-language.md § Evolving contracts](contract-language.md#evolving-contracts-safely). With the dashboard connected, it also lists which services use each affected operation.
-
-```
-weft check: 1 breaking change
-
-  orders.order.placed
-  ✗ field `total` removed
-      used by payments (Go), analytics (Python)
-  Suggested: keep `total` with @deprecated, add the new field alongside.
-```
+For TypeScript the file holds the types of every package (one `namespace` per package, so `orders.Order`), a per-package map from event name to payload type, and the checked contracts as a constant for the runtime to read ([ADR 0021](decisions/0021-generated-code-embeds-the-ir.md)).
 
 ### `weft fmt`
 

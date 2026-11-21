@@ -8,11 +8,11 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | P1 (compiler and CLI), in progress: P1.1 to P1.5 done. W (website) paused until the backend exists |
-| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A parser and checker** (`weft-syntax`, `weft-ir`, `weft-check`: they turn contracts into a checked IR, or into located errors) inside a Rust workspace (`compiler/`) whose CLI has one command, `weft fmt`. No docs content, working compiler, language package or dashboard exists |
-| Next task | **P1.6, `weft gen` for TypeScript** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
-| Last done | 2026-11-21: P1.5, the formatter and `weft fmt`. `cargo fmt --check`, `clippy` and `test` pass locally; neither CI workflow has run yet |
-| Waiting on the maintainer | Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
+| Phase | P1 (compiler and CLI), in progress: P1.1 to P1.6 done. W (website) paused until the backend exists |
+| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A parser and checker** (`weft-syntax`, `weft-ir`, `weft-check`: they turn contracts into a checked IR, or into located errors) inside a Rust workspace (`compiler/`) whose CLI has two commands, `weft fmt` and `weft gen` (TypeScript only). No docs content, working compiler, language package or dashboard exists |
+| Next task | **P1.7, `weft check`** (breaking changes), then **P1.8, `weft init`** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
+| Last done | 2026-11-21: P1.6, `weft gen` for TypeScript. `cargo fmt --check`, `clippy` and `test` pass locally; neither CI workflow has run yet |
+| Waiting on the maintainer | [ADR 0021](decisions/0021-generated-code-embeds-the-ir.md) (generated code embeds the IR) to accept or change; P2 builds on it. Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
 
@@ -43,7 +43,7 @@ Rust workspace in `compiler/` ([architecture](architecture.md#repo-layout), [tec
 | **P1.3** ✓ | IR: versioned JSON types and `spec/ir.schema.json` | P1.1 | Done 2026-11-21. `weft-ir` types, `spec/ir.schema.json` generated from them (a test keeps it current), and a sample using every part validates. The checker's output is validated from P1.4 on |
 | **P1.4** ✓ | Checker: name resolution, type checking, operation rules, errors, generics, validation rules, imports; produces the IR | P1.2, P1.3 | Done 2026-11-21. The complete example compiles to IR that validates against the schema, packages import each other, and every rule has a failing test (about 100 tests, a few snapshots of the messages). Rules are in [spec/language.md](../spec/language.md#meaning-rules) |
 | **P1.5** ✓ | Formatter and `weft fmt` | P1.2 | Done 2026-11-21. Formatting is idempotent, keeps every comment, and leaves the IR unchanged. `weft fmt [PATH...] [--check]` works. Style is in [spec/language.md](../spec/language.md#style) |
-| **P1.6** | `weft gen` for TypeScript: type mapping and naming from the docs, reads `weft.yaml` | P1.4 | The generated `weft.gen.ts` type-checks with `tsc` for the example contract |
+| **P1.6** ✓ | `weft gen` for TypeScript: type mapping and naming from the docs, reads `weft.yaml` | P1.4 | Done 2026-11-21. The generated `weft.gen.ts` type-checks with `tsc --strict` (also with `erasableSyntaxOnly`, and with `int64: bigint`) for the examples, and tests prove the types reject wrong values. The typed facade waits for the TypeScript package (P2). Not built: `--watch`, `--lang js`, contract sources other than local folders. [ADR 0021](decisions/0021-generated-code-embeds-the-ir.md) is proposed |
 | **P1.7** | `weft check` (`weft-compat`): diff two IRs into safe, risky and breaking, with the documented exit codes | P1.4 | Every row of the evolving-contracts table has a test |
 | **P1.8** | `weft init`, non-interactive and interactive | P1.6 | In an empty folder it writes a working `weft.yaml` and a first contract |
 

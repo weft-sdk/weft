@@ -91,11 +91,29 @@ The API shape is shared. The style is native:
 `weft gen` writes, per language:
 
 - types for every contract type
+- the checked contracts (the [IR](../spec/ir.md)) as a constant, so the runtime has the validation rules, wire names and operation metadata for the dashboard and tracing
 - a typed `weft` facade that only accepts names and payloads defined in the contracts
-- runtime validators
-- operation metadata (for the dashboard and tracing)
 
-Generated files carry a header comment, are deterministic, and are safe to commit. `weft gen --check` fails CI if they're out of date.
+Validation, encoding and routing run in the language's core package, reading the embedded contracts, so every language behaves the same by construction ([ADR 0021](decisions/0021-generated-code-embeds-the-ir.md)). Generated files carry a header comment, are deterministic, and are safe to commit. `weft gen --check` fails CI if they're out of date.
+
+### TypeScript
+
+One file, `weft.gen.ts`:
+
+```ts
+export type Uuid = string & { readonly __weft: "uuid" }       // uuids are branded
+
+export namespace orders {                                      // types only, so the file works with type stripping
+  export type Currency = "EUR" | "GBP" | "USD"
+  export interface Money { amount: number; currency: Currency }
+  export interface Order { id: Uuid; total: Money; note?: string | null; placedAt: Date; /* ... */ }
+  export interface Events { "order.placed": Order; "order.cancelled": OrderCancelled }
+}
+
+export const contracts = { orders: { /* the IR of the orders package */ } } as const
+```
+
+Optional fields accept `null` as well as a missing value, as the contract language says. `int` is `number`, or `bigint` with `codegen.int64: bigint`. Names that TypeScript cannot hold (`Record`, `Date`, keywords) are errors that say which name to change. The typed facade is added by the TypeScript package (phase P2).
 
 ## Quality bar
 
