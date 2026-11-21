@@ -8,9 +8,9 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | W (website). W1, W2, W3 and W5 done |
+| Phase | W (website) paused until the backend exists. W1–W5 done |
 | Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). No docs content, compiler, CLI, language package or dashboard exists |
-| Next task | **W4, interactive pieces** (the hero's transport switcher; the site-wide language picker waits until the docs content is written). Writing the docs content waits for the backend |
+| Next task | **P1, compiler and CLI**, to be broken into tasks ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
 | Last done | 2026-11-21: W5, docs layout. `pnpm --dir website check` and `build` pass locally; the CI workflow has not run yet |
 | Waiting on the maintainer | Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
@@ -27,14 +27,14 @@ The landing page and docs site, built before any product code ([ADR 0016](decisi
 | **W1** ✓ | Visual direction: references the maintainer likes, palette, type, motion, layout principles. Written into `website.md` and a decision record | Maintainer | Done 2026-11-21. Approved direction in [website.md](website.md#visual-direction-the-terminal) |
 | **W2** ✓ | Site skeleton: Astro + TypeScript + pnpm in `website/`, design tokens from W1, base layout, light and dark themes, CI build | W1 | `pnpm --dir website build` passes in CI; an empty styled page renders |
 | **W3** ✓ | Landing page: hero, the problem, how it works (init → contract → call), transports, languages, dashboard preview, call to action (GitHub, follow updates) | W2 | All sections render with real copy, work at phone width, and pass a Lighthouse check (performance and accessibility ≥ 90) | Done 2026-11-21. Lighthouse is 100 in all four categories, in both themes |
-| **W4** | Interactive pieces: transport switcher in the hero, persistent language picker, before/after comparison. The before/after comparison is built (W3). The docs language tabs already remember the chosen language; a site-wide picker is deferred until the docs content is written (maintainer, 2026-11-21) | W3 | Each works with keyboard and respects reduced motion |
+| **W4** ✓ | Interactive pieces: transport switcher in the hero, persistent language picker, before/after comparison. The before/after comparison is built (W3). The docs language tabs already remember the chosen language. The transport switcher and the site-wide picker are deferred until the docs content is written (maintainer, 2026-11-21) | W3 | Done 2026-11-21 for what is built; the two deferred pieces are not scheduled |
 | **W5** ✓ | Docs section: custom layout, navigation, search, language tabs, and a page for every planned entry. Page content is written later, once the backend exists | W2 | Done 2026-11-21. Layout chosen by the maintainer ([website.md](website.md#docs-layout-w5)); Lighthouse 100 on both docs pages |
 | **W6** | Playground preview: a contract editor showing pre-generated output for a few example contracts in several languages | W4 | Switching examples and languages works without a server |
 | **W7** | Launch prep: social images, metadata, sitemap, analytics decision, hosting, domain. Check every claim on the site against shipped code first ([ADR 0019](decisions/0019-site-written-as-launch-page.md)) | W3–W6, Q3, and the product claims being true | The maintainer has deployed it to the chosen domain |
 
-## Product phases — proposed, order open
+## Product phases
 
-Not broken into tasks until [Q2](open-questions.md) is answered. Default proposal:
+Order accepted in [ADR 0020](decisions/0020-product-build-order.md): P1, then P2, then P3. P4 onward are proposed. Not yet broken into tasks:
 
 | Phase | What | Docs |
 | --- | --- | --- |
