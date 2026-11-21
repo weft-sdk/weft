@@ -1,0 +1,854 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Weft IR",
+  "description": "One package's contracts, checked and resolved.",
+  "type": "object",
+  "properties": {
+    "errors": {
+      "description": "Errors declared with `error`. Built-in errors are implicit.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ErrorDef"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EventDef"
+      }
+    },
+    "graphql": {
+      "description": "GraphQL root fields of every `graphql` block, flattened.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GraphqlFieldDef"
+      }
+    },
+    "imports": {
+      "description": "Packages this one imports, in source order.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "irVersion": {
+      "description": "The IR format version this document uses ([`IR_VERSION`]).",
+      "type": "string"
+    },
+    "package": {
+      "description": "The package name.",
+      "type": "string"
+    },
+    "routes": {
+      "description": "HTTP routes of every `http` block, flattened.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RouteDef"
+      }
+    },
+    "rpcServices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RpcServiceDef"
+      }
+    },
+    "sockets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SocketDef"
+      }
+    },
+    "types": {
+      "description": "Records and enums, including types generated for inline types.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TypeDef"
+      }
+    },
+    "version": {
+      "description": "The package's semantic version, from `@version`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "irVersion",
+    "package"
+  ],
+  "$defs": {
+    "ErrorDef": {
+      "description": "An error declared with `error`.",
+      "type": "object",
+      "properties": {
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldDef"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "description": "HTTP status. 422 unless `@status` says otherwise.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "name",
+        "status",
+        "fields"
+      ]
+    },
+    "ErrorRef": {
+      "description": "A reference to an error: a declared one, or a built-in one in the package `weft`.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "package",
+        "name"
+      ]
+    },
+    "EventDef": {
+      "type": "object",
+      "properties": {
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "headers": {
+          "description": "Message headers, a record type with string fields.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "description": "The routing key as a field path into the payload (`key: id` is `[\"id\"]`).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "The event name, which is the topic, queue or subject unless `weft.yaml` remaps it.",
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/TypeRef"
+        }
+      },
+      "required": [
+        "name",
+        "payload"
+      ]
+    },
+    "FieldDef": {
+      "type": "object",
+      "properties": {
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "optional": {
+          "description": "`name?: T`: the value may be missing or null.",
+          "type": "boolean"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Rule"
+          }
+        },
+        "type": {
+          "$ref": "#/$defs/TypeRef"
+        },
+        "wireName": {
+          "description": "The name on the wire. Equal to `name` unless `@wire` says otherwise.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "wireName",
+        "type"
+      ]
+    },
+    "Format": {
+      "type": "string",
+      "enum": [
+        "email",
+        "url",
+        "uri",
+        "hostname",
+        "ipv4",
+        "ipv6",
+        "date",
+        "time"
+      ]
+    },
+    "GraphqlFieldDef": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParamDef"
+          }
+        },
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "$ref": "#/$defs/GraphqlKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/ResultDef"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "result"
+      ]
+    },
+    "GraphqlKind": {
+      "type": "string",
+      "enum": [
+        "query",
+        "mutation",
+        "subscription"
+      ]
+    },
+    "HttpMethod": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    "ParamDef": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "type": {
+          "$ref": "#/$defs/TypeRef"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "Primitive": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "string",
+            "bool",
+            "int32",
+            "int64",
+            "float32",
+            "float64",
+            "decimal",
+            "uuid",
+            "timestamp",
+            "bytes"
+          ]
+        },
+        {
+          "description": "64-bit.",
+          "type": "string",
+          "const": "int"
+        },
+        {
+          "description": "64-bit.",
+          "type": "string",
+          "const": "float"
+        }
+      ]
+    },
+    "ResultDef": {
+      "description": "What an operation gives back: a value, or one of the listed errors.",
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ErrorRef"
+          }
+        },
+        "optional": {
+          "description": "`-> T?`: the result may be empty (HTTP 404, GraphQL null, gRPC NOT_FOUND).",
+          "type": "boolean"
+        },
+        "stream": {
+          "description": "`-> stream T`: a stream of values.",
+          "type": "boolean"
+        },
+        "value": {
+          "$ref": "#/$defs/TypeRef"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "RouteDef": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base path of the enclosing `http` block, such as `/v1`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "body": {
+          "description": "The `body` parameter.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "headers": {
+          "description": "The `headers` parameter: a record type.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "$ref": "#/$defs/HttpMethod"
+        },
+        "name": {
+          "description": "The function name in generated clients.",
+          "type": "string"
+        },
+        "path": {
+          "description": "The route's own path, such as `/orders/{id}`.",
+          "type": "string"
+        },
+        "pathParams": {
+          "description": "Parameters that appear in the path, in path order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ParamDef"
+          }
+        },
+        "query": {
+          "description": "The `query` parameter: a record type.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "$ref": "#/$defs/ResultDef"
+        }
+      },
+      "required": [
+        "name",
+        "method",
+        "path",
+        "result"
+      ]
+    },
+    "RpcMethodDef": {
+      "type": "object",
+      "properties": {
+        "clientStreaming": {
+          "description": "`(stream Req)`: the client streams requests.",
+          "type": "boolean"
+        },
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "request": {
+          "description": "The request message. Named parameters become a generated record type.",
+          "$ref": "#/$defs/TypeRef"
+        },
+        "result": {
+          "description": "`result.stream` says whether the server streams responses.",
+          "$ref": "#/$defs/ResultDef"
+        }
+      },
+      "required": [
+        "name",
+        "request",
+        "result"
+      ]
+    },
+    "RpcServiceDef": {
+      "type": "object",
+      "properties": {
+        "methods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RpcMethodDef"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "methods"
+      ]
+    },
+    "Rule": {
+      "description": "A validation rule. Numbers are kept as written.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "rule": {
+              "type": "string",
+              "const": "min"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "rule",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "rule": {
+              "type": "string",
+              "const": "max"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "rule",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "max": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "min": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            },
+            "rule": {
+              "type": "string",
+              "const": "length"
+            }
+          },
+          "required": [
+            "rule",
+            "min",
+            "max"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "string"
+            },
+            "rule": {
+              "type": "string",
+              "const": "pattern"
+            }
+          },
+          "required": [
+            "rule",
+            "regex"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "format": {
+              "$ref": "#/$defs/Format"
+            },
+            "rule": {
+              "type": "string",
+              "const": "format"
+            }
+          },
+          "required": [
+            "rule",
+            "format"
+          ]
+        }
+      ]
+    },
+    "Side": {
+      "type": "string",
+      "enum": [
+        "server",
+        "client"
+      ]
+    },
+    "SocketDef": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SocketEventDef"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "events"
+      ]
+    },
+    "SocketEventDef": {
+      "type": "object",
+      "properties": {
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/$defs/TypeRef"
+        },
+        "side": {
+          "description": "Which side sends the event.",
+          "$ref": "#/$defs/Side"
+        }
+      },
+      "required": [
+        "name",
+        "side",
+        "payload"
+      ]
+    },
+    "TypeDef": {
+      "description": "A record or an enum.",
+      "type": "object",
+      "properties": {
+        "deprecated": {
+          "description": "`@deprecated`: the message, or an empty string.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inline": {
+          "description": "Set when the type was written inline and given a generated name.",
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "params": {
+          "description": "Type parameters, as in `Page<T>`.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FieldDef"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "record"
+            }
+          },
+          "required": [
+            "kind",
+            "fields"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "variants": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/VariantDef"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "variants"
+          ]
+        }
+      ],
+      "required": [
+        "name"
+      ]
+    },
+    "TypeRef": {
+      "description": "A reference to a type.",
+      "oneOf": [
+        {
+          "description": "A built-in scalar.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "primitive"
+            },
+            "name": {
+              "$ref": "#/$defs/Primitive"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        },
+        {
+          "description": "A record or enum, by package and name, with type arguments for generic types.",
+          "type": "object",
+          "properties": {
+            "args": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TypeRef"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            },
+            "package": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "package",
+            "name"
+          ]
+        },
+        {
+          "description": "A type parameter of the enclosing generic type, such as `T`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "param"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ]
+        },
+        {
+          "description": "`T[]`",
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/TypeRef"
+            },
+            "kind": {
+              "type": "string",
+              "const": "list"
+            }
+          },
+          "required": [
+            "kind",
+            "item"
+          ]
+        },
+        {
+          "description": "`map<K, V>`",
+          "type": "object",
+          "properties": {
+            "key": {
+              "$ref": "#/$defs/TypeRef"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "value": {
+              "$ref": "#/$defs/TypeRef"
+            }
+          },
+          "required": [
+            "kind",
+            "key",
+            "value"
+          ]
+        }
+      ]
+    },
+    "VariantDef": {
+      "type": "object",
+      "properties": {
+        "deprecated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  }
+}
