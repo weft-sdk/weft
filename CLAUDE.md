@@ -2,7 +2,7 @@
 
 Weft is **one interface for every way services talk**. Developers call `weft.http`, `weft.gql`, `weft.grpc`, `weft.rpc`, `weft.ws`, `weft.sse`, `weft.kafka`, `weft.mq`, `weft.nats`, `weft.redis`, `weft.cloud`, `weft.mqtt` and `weft.pulsar`, and Weft runs the real library underneath (Express, Apollo, KafkaJS, Socket.io, Spring Kafka, FastAPI, ...). Contracts are written once in language-neutral `.weft` files, and a Rust compiler generates typed code for 13 languages. Overview: [README](README.md). Design: [docs/](docs/README.md).
 
-**Status: design stage.** Only the website exists (`website/`); the product is not built. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
+**Status: design stage.** Only the website exists (`website/`) and an empty Rust workspace (`compiler/`, no features yet); the product is not built. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
 
 **Weft is not a code scanner.** An outdated README once described the project (then called Splice) as one. That idea was dropped completely ([ADR 0001](docs/decisions/0001-library-not-scanner.md), [history](docs/history.md)). Do not reintroduce it. Do not reopen decisions in [history](docs/history.md) or [decisions/](docs/decisions/) unless the maintainer asks.
 
@@ -44,7 +44,8 @@ Work is handed off through the repository, never through a conversation. Full pr
 - New dependencies need a reason in the commit message or a decision record.
 - Writing docs: plain words, short sentences, active voice. Name things the way a user would. Tables for comparisons. No marketing filler in design docs.
 - Website: Astro + TypeScript (strict), pnpm only, design tokens for every colour and size (`website/src/styles/tokens.css`, from [website.md › Visual direction](docs/website.md#visual-direction-the-terminal)), light and dark themes, works at phone width, keyboard accessible, respects reduced motion. Logos come from the `simple-icons` package through `src/components/Icon.astro`.
-- Rust, language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [tech-stack.md](docs/tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
+- Rust (`compiler/`): one workspace, crates in `compiler/crates/` named as in [architecture](docs/architecture.md#repo-layout). `unsafe` is forbidden. Commit `Cargo.lock`. A new crate dependency needs a reason in the commit message, and goes in `[workspace.dependencies]`.
+- Language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [tech-stack.md](docs/tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
 
 ## Commands
 
@@ -56,8 +57,13 @@ Add each command here in the same pull request that makes it work.
 | `pnpm --dir website dev` | Run the website locally at `http://localhost:4321` |
 | `pnpm --dir website check` | Type-check the website (`astro check`, TypeScript strict) |
 | `pnpm --dir website build` | Build the static site into `website/dist/` |
+| `cargo build --manifest-path compiler/Cargo.toml` | Build the compiler workspace (Rust 1.95, pinned in `compiler/rust-toolchain.toml`) |
+| `cargo test --manifest-path compiler/Cargo.toml` | Run the compiler's tests |
+| `cargo clippy --manifest-path compiler/Cargo.toml --all-targets -- -D warnings` | Lint the compiler; CI denies warnings |
+| `cargo fmt --manifest-path compiler/Cargo.toml --check` | Check formatting |
+| `cargo run --manifest-path compiler/Cargo.toml -p weft-cli -- <args>` | Run the `weft` CLI from source |
 
 ## Repository
 
 - GitHub: `github.com/weft-sdk/weft` (private). Default branch `main`.
-- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/`, `website/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/architecture.md#repo-layout).
+- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/`, `website/`, `compiler/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/architecture.md#repo-layout).
