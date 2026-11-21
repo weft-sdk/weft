@@ -23,7 +23,13 @@ macro_rules! transport_flags {
         #[derive(Args)]
         struct TransportFlags {
             $(
-                #[arg(long, num_args = 0..=1, default_missing_value = "", value_name = "LIBRARY")]
+                #[arg(
+                    long,
+                    num_args = 0..=1,
+                    default_missing_value = "",
+                    value_name = "LIBRARY",
+                    help = concat!("Use the `", stringify!($field), "` transport, with this library (default: the first)")
+                )]
                 $field: Option<String>,
             )*
         }
