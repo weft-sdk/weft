@@ -10,7 +10,7 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 | --- | --- |
 | Phase | W (website) paused until the backend exists. W1–W5 done |
 | Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). No docs content, compiler, CLI, language package or dashboard exists |
-| Next task | **P1, compiler and CLI**, to be broken into tasks ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
+| Next task | **P1.1, Rust workspace skeleton** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
 | Last done | 2026-11-21: W5, docs layout. `pnpm --dir website check` and `build` pass locally; the CI workflow has not run yet |
 | Waiting on the maintainer | Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
@@ -32,13 +32,27 @@ The landing page and docs site, built before any product code ([ADR 0016](decisi
 | **W6** | Playground preview: a contract editor showing pre-generated output for a few example contracts in several languages | W4 | Switching examples and languages works without a server |
 | **W7** | Launch prep: social images, metadata, sitemap, analytics decision, hosting, domain. Check every claim on the site against shipped code first ([ADR 0019](decisions/0019-site-written-as-launch-page.md)) | W3–W6, Q3, and the product claims being true | The maintainer has deployed it to the chosen domain |
 
-## Product phases
+## P1: Compiler and CLI
+
+Rust workspace in `compiler/` ([architecture](architecture.md#repo-layout), [tech-stack](tech-stack.md#compiler-and-cli-rust)). The chain that decides the length is P1.1, P1.2, P1.4, P1.6. P1.3 and P1.5 can run beside it. `weft dashboard` waits for P5; importers, the language server and the WebAssembly build wait for later phases.
+
+| Task | What | Needs | Done when |
+| --- | --- | --- | --- |
+| **P1.1** | Rust workspace skeleton: `weft-syntax`, `weft-ir`, `weft-check` and `weft-cli` as near-empty crates, a `weft --version` binary, rustfmt and clippy config, a CI job. Rust commands added to CLAUDE.md | none | `cargo build`, `test` and `clippy` pass in CI |
+| **P1.2** | Parser: lexer, grammar and AST for the whole contract language, `miette` errors. The language spec moves to `spec/language.md` | P1.1 | Every construct in the complete example parses; bad input gives located errors (snapshot tests) |
+| **P1.3** | IR: versioned JSON types and `spec/ir.schema.json` | P1.1 | The schema validates the IR the checker emits |
+| **P1.4** | Checker: name resolution, type checking, operation rules, errors, generics, validation rules, imports; produces the IR | P1.2, P1.3 | The complete example compiles to IR, and every rule has a failing case |
+| **P1.5** | Formatter and `weft fmt` | P1.2 | Formatting is idempotent on the example contracts |
+| **P1.6** | `weft gen` for TypeScript: type mapping and naming from the docs, reads `weft.yaml` | P1.4 | The generated `weft.gen.ts` type-checks with `tsc` for the example contract |
+| **P1.7** | `weft check` (`weft-compat`): diff two IRs into safe, risky and breaking, with the documented exit codes | P1.4 | Every row of the evolving-contracts table has a test |
+| **P1.8** | `weft init`, non-interactive and interactive | P1.6 | In an empty folder it writes a working `weft.yaml` and a first contract |
+
+## Product phases after P1
 
 Order accepted in [ADR 0020](decisions/0020-product-build-order.md): P1, then P2, then P3. P4 onward are proposed. Not yet broken into tasks:
 
 | Phase | What | Docs |
 | --- | --- | --- |
-| P1 | Compiler and CLI: parser, checker, IR, formatter, `weft gen` for TypeScript, `weft check`, `weft init` | [contract-language.md](contract-language.md), [cli.md](cli.md), [architecture.md](architecture.md) |
 | P2 | TypeScript package: core, Express and KafkaJS adapters, generated facade | [sdk-design.md](sdk-design.md), [api.md](api.md) |
 | P3 | Conformance suite harness, and the Go package (net/http, franz-go). Done when a TypeScript service and a Go service talk through one contract and pass the cross-language cases | [conformance.md](conformance.md) |
 | P4 | More transports in TS and Go (GraphQL, gRPC, WebSockets, RabbitMQ, NATS) | [languages.md](languages.md) |
