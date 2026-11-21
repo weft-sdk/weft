@@ -6,7 +6,7 @@
 import Logo from "./Logo.astro";
 import Icon from "./Icon.astro";
 
-const columns: { title: string; links: { label: string; href: string; external?: boolean }[] }[] = [
+const columns: { title: string; links: { label: string; href: string; external?: boolean; icon?: string }[] }[] = [
   {
     title: "Product",
     links: [
@@ -14,7 +14,6 @@ const columns: { title: string; links: { label: string; href: string; external?:
       { label: "Compare", href: "/#compare" },
       { label: "Languages", href: "/#languages" },
       { label: "Dashboard", href: "/#dashboard" },
-      { label: "Get started", href: "/#get-started" },
     ],
   },
   {
@@ -29,10 +28,8 @@ const columns: { title: string; links: { label: string; href: string; external?:
   {
     title: "Project",
     links: [
-      { label: "GitHub", href: "https://github.com/weft-sdk/weft", external: true },
-      { label: "Issues", href: "https://github.com/weft-sdk/weft/issues", external: true },
-      { label: "npm", href: "https://www.npmjs.com/org/weft-sdk", external: true },
-      { label: "Apache-2.0 licence", href: "https://github.com/weft-sdk/weft/blob/main/LICENSE", external: true },
+      { label: "GitHub", href: "https://github.com/weft-sdk/weft", external: true, icon: "github" },
+      { label: "npm", href: "https://www.npmjs.com/org/weft-sdk", external: true, icon: "npm" },
     ],
   },
 ];
@@ -43,10 +40,6 @@ const columns: { title: string; links: { label: string; href: string; external?:
     <div class="brand">
       <a class="mark" href="/" aria-label="Weft home"><Logo size={22} />weft</a>
       <p>One interface for every way your services talk.</p>
-      <div class="social">
-        <a href="https://github.com/weft-sdk/weft" target="_blank" rel="noopener noreferrer" aria-label="Weft on GitHub (opens in a new tab)"><Icon name="github" size={20} /></a>
-        <a href="https://www.npmjs.com/org/weft-sdk" target="_blank" rel="noopener noreferrer" aria-label="Weft on npm (opens in a new tab)"><Icon name="npm" size={20} /></a>
-      </div>
     </div>
     {
       columns.map((c) => (
@@ -56,6 +49,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
             {c.links.map((l) => (
               <li>
                 <a href={l.href} {...(l.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                  {l.icon && <Icon name={l.icon} size={16} />}
                   {l.label}
                   {l.external && <span class="visually-hidden"> (opens in a new tab)</span>}
                 </a>
@@ -67,7 +61,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
     }
   </div>
   <div class="wrap legal">
-    <span>Weft is open source under Apache-2.0.</span>
+    <span>Weft is open source under <a href="https://github.com/weft-sdk/weft/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache-2.0<span class="visually-hidden"> (opens in a new tab)</span></a>.</span>
     <span>Logos belong to their owners. Weft is not affiliated with them.</span>
   </div>
 </footer>
@@ -77,15 +71,27 @@ const columns: { title: string; links: { label: string; href: string; external?:
     border-top: 1px solid var(--line);
   }
 
+  /* Open columns, with a thin rule between them. The rules run the full height of the footer. */
   .grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
-    gap: clamp(28px, 4vw, 64px);
-    padding-block: clamp(36px, 5vw, 72px);
   }
 
   a {
     text-decoration: none;
+  }
+
+  .brand,
+  .col {
+    padding: var(--section-pad) clamp(20px, 2.5vw, 40px);
+  }
+
+  .brand {
+    padding-left: 0;
+  }
+
+  .col {
+    border-left: 1px solid var(--line);
   }
 
   .mark {
@@ -102,22 +108,6 @@ const columns: { title: string; links: { label: string; href: string; external?:
     max-width: 36ch;
     font-size: var(--text-sm);
     color: var(--muted);
-  }
-
-  .social {
-    display: flex;
-    gap: 16px;
-    margin-top: 20px;
-  }
-
-  .social a {
-    display: flex;
-    color: var(--muted);
-    transition: color var(--t-fast) ease;
-  }
-
-  .social a:hover {
-    color: var(--fg);
   }
 
   h2 {
@@ -137,12 +127,25 @@ const columns: { title: string; links: { label: string; href: string; external?:
   }
 
   .col a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-size: var(--text-sm);
     color: var(--muted);
     transition: color var(--t-fast) ease;
   }
 
   .col a:hover {
+    color: var(--fg);
+  }
+
+  .legal a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color var(--t-fast) ease;
+  }
+
+  .legal a:hover {
     color: var(--fg);
   }
 
@@ -164,18 +167,35 @@ const columns: { title: string; links: { label: string; href: string; external?:
 
     .brand {
       grid-column: 1 / -1;
+      padding-bottom: 0;
+    }
+
+    .col:nth-of-type(1) {
+      padding-left: 0;
+      border-left: 0;
     }
   }
 
   @media (max-width: 520px) {
     .grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .col,
+    .col:nth-of-type(1) {
+      padding: 24px 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .brand {
+      padding-bottom: 24px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .col a,
-    .social a {
+    .legal a {
       transition: none;
     }
   }
