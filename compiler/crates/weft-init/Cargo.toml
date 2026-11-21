@@ -1,0 +1,19 @@
+[package]
+name = "weft-init"
+description = "Weft compiler: project setup"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+weft-syntax = { path = "../weft-syntax" }
+
+[dev-dependencies]
+weft-check = { path = "../weft-check" }
+weft-codegen = { path = "../weft-codegen" }
+serde_yaml_ng.workspace = true
+
+[lints]
+workspace = true

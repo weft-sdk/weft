@@ -8,10 +8,10 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | P1 (compiler and CLI), in progress: P1.1 to P1.7 done. W (website) paused until the backend exists |
-| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A parser, checker and compatibility checker** (`weft-syntax`, `weft-ir`, `weft-check`, `weft-compat`: they turn contracts into a checked IR, or into located errors, and judge changes between two versions) inside a Rust workspace (`compiler/`) whose CLI has three commands: `weft fmt`, `weft gen` (TypeScript only) and `weft check`. No docs content, working compiler, language package or dashboard exists |
-| Next task | **P1.8, `weft init`** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
-| Last done | 2026-11-21: P1.7, `weft check`. `cargo fmt --check`, `clippy` and `test` pass locally; neither CI workflow has run yet |
+| Phase | P1 (compiler and CLI) done. P2 (TypeScript package) is next. W (website) paused until the backend exists |
+| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A parser, checker and compatibility checker** (`weft-syntax`, `weft-ir`, `weft-check`, `weft-compat`: they turn contracts into a checked IR, or into located errors, and judge changes between two versions) inside a Rust workspace (`compiler/`) whose CLI has four commands: `weft init`, `weft fmt`, `weft check` and `weft gen` (TypeScript only). No docs content, working compiler, language package or dashboard exists |
+| Next task | **P2, the TypeScript package**, to be broken into tasks first ([ADR 0020](decisions/0020-product-build-order.md)). It builds on [ADR 0021](decisions/0021-generated-code-embeds-the-ir.md), which the maintainer has not accepted yet. W6, W7 and the docs content wait for the backend |
+| Last done | 2026-11-21: P1.8, `weft init`, which finishes phase P1. `cargo fmt --check`, `clippy` and `test` pass locally; neither CI workflow has run yet |
 | Waiting on the maintainer | [ADR 0021](decisions/0021-generated-code-embeds-the-ir.md) (generated code embeds the IR) to accept or change; P2 builds on it. Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
@@ -32,7 +32,7 @@ The landing page and docs site, built before any product code ([ADR 0016](decisi
 | **W6** | Playground preview: a contract editor showing pre-generated output for a few example contracts in several languages | W4 | Switching examples and languages works without a server |
 | **W7** | Launch prep: social images, metadata, sitemap, analytics decision, hosting, domain. Check every claim on the site against shipped code first ([ADR 0019](decisions/0019-site-written-as-launch-page.md)) | W3–W6, Q3, and the product claims being true | The maintainer has deployed it to the chosen domain |
 
-## P1: Compiler and CLI
+## P1: Compiler and CLI — done
 
 Rust workspace in `compiler/` ([architecture](architecture.md#repo-layout), [tech-stack](tech-stack.md#compiler-and-cli-rust)). The chain that decides the length is P1.1, P1.2, P1.4, P1.6. P1.3 and P1.5 can run beside it. `weft dashboard` waits for P5; importers, the language server and the WebAssembly build wait for later phases.
 
@@ -45,7 +45,7 @@ Rust workspace in `compiler/` ([architecture](architecture.md#repo-layout), [tec
 | **P1.5** ✓ | Formatter and `weft fmt` | P1.2 | Done 2026-11-21. Formatting is idempotent, keeps every comment, and leaves the IR unchanged. `weft fmt [PATH...] [--check]` works. Style is in [spec/language.md](../spec/language.md#style) |
 | **P1.6** ✓ | `weft gen` for TypeScript: type mapping and naming from the docs, reads `weft.yaml` | P1.4 | Done 2026-11-21. The generated `weft.gen.ts` type-checks with `tsc --strict` (also with `erasableSyntaxOnly`, and with `int64: bigint`) for the examples, and tests prove the types reject wrong values. The typed facade waits for the TypeScript package (P2). Not built: `--watch`, `--lang js`, contract sources other than local folders. [ADR 0021](decisions/0021-generated-code-embeds-the-ir.md) is proposed |
 | **P1.7** ✓ | `weft check` (`weft-compat`): diff two IRs into safe, risky and breaking, with the documented exit codes | P1.4 | Done 2026-11-21. Every row of the evolving-contracts table has a test, plus the cases the table does not list (about 40 tests in `weft-compat`, 13 through the CLI against real git repositories). Direction-aware rules and the version rule are written into [contract-language.md](contract-language.md#evolving-contracts-safely). Not built: `--json` output, comparing with a published version |
-| **P1.8** | `weft init`, non-interactive and interactive | P1.6 | In an empty folder it writes a working `weft.yaml` and a first contract |
+| **P1.8** ✓ | `weft init`, non-interactive and interactive | P1.6 | Done 2026-11-21. In an empty folder it writes a working `weft.yaml`, a first contract matched to the chosen transports, and the generated code; every transport alone and all together are tested, and the result passes `gen --check`, `fmt --check` and `check`. The interactive prompts were driven by hand through a pseudo-terminal, with no automated test. Package installation waits for P2 |
 
 ## Product phases after P1
 

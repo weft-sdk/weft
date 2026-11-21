@@ -7,6 +7,7 @@ mod exit;
 mod files;
 mod fmt;
 mod generate;
+mod init;
 mod project;
 
 use std::process::ExitCode;
@@ -23,6 +24,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Set up Weft in a project
+    Init(Box<init::InitArgs>),
     /// Detect breaking contract changes
     Check(check::CheckArgs),
     /// Format .weft files
@@ -33,6 +36,7 @@ enum Command {
 
 fn main() -> ExitCode {
     match Cli::parse().command {
+        Command::Init(args) => init::run(*args),
         Command::Check(args) => check::run(args),
         Command::Fmt(args) => fmt::run(args),
         Command::Gen(args) => generate::run(args),

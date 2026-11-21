@@ -13,6 +13,7 @@ publish = false
 clap = { version = "4", features = ["derive"] }
 chumsky = "0.9"
 insta = "1"
+inquire = "0.9.5"
 jsonschema = "0.62"
 miette = "7"
 regex = "1"
