@@ -122,7 +122,10 @@ pub enum TypeRef {
     /// `T[]`
     List { item: Box<TypeRef> },
     /// `map<K, V>`
-    Map { key: Box<TypeRef>, value: Box<TypeRef> },
+    Map {
+        key: Box<TypeRef>,
+        value: Box<TypeRef>,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]

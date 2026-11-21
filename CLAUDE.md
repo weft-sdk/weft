@@ -60,7 +60,7 @@ Add each command here in the same pull request that makes it work.
 | `cargo build --manifest-path compiler/Cargo.toml` | Build the compiler workspace (Rust 1.95, pinned in `compiler/rust-toolchain.toml`) |
 | `cargo test --manifest-path compiler/Cargo.toml` | Run the compiler's tests |
 | `cargo clippy --manifest-path compiler/Cargo.toml --all-targets -- -D warnings` | Lint the compiler; CI denies warnings |
-| `cargo fmt --manifest-path compiler/Cargo.toml --check` | Check formatting |
+| `cargo fmt --manifest-path compiler/Cargo.toml --all --check` | Check formatting |
 | `cargo run --manifest-path compiler/Cargo.toml -p weft-cli -- <args>` | Run the `weft` CLI from source |
 
 ## Repository
