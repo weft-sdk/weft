@@ -38,7 +38,7 @@ fn fmt_rewrites_files_in_place() {
     let o = weft(&["fmt"], &dir);
     assert_eq!(code(&o), 0);
     assert_eq!(fs::read_to_string(dir.join("a.weft")).unwrap(), CLEAN);
-    assert!(String::from_utf8_lossy(&o.stdout).contains("formatted ./a.weft"));
+    assert!(text(&o).contains("formatted ./a.weft"), "{}", text(&o));
     // A second run changes nothing.
     let o = weft(&["fmt"], &dir);
     assert_eq!(code(&o), 0);
@@ -130,12 +130,14 @@ fn project(name: &str, yaml: &str) -> PathBuf {
 
 const YAML: &str = "service: orders\nlanguage: typescript\ncontracts:\n  - ./contracts\ncodegen:\n  out: src/weft.gen.ts\n\ntransports:\n  http:\n    library: express\n    port: 3000\n";
 
+/// Everything the command printed, with `\` in paths turned into `/` so tests read the same on every system.
 fn text(o: &Output) -> String {
     format!(
         "{}{}",
         String::from_utf8_lossy(&o.stdout),
         String::from_utf8_lossy(&o.stderr)
     )
+    .replace('\\', "/")
 }
 
 #[test]
