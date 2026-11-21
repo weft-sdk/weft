@@ -1,4 +1,4 @@
-//! Exit codes, as listed in docs/cli.md.
+//! Exit codes, as listed in docs/06-cli.md.
 
 use std::process::ExitCode;
 

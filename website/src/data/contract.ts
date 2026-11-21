@@ -1,6 +1,6 @@
 /**
  * The contract section: one contract and the types `weft gen` writes from it, in five languages.
- * The contract is the one in docs/contract-language.md. The generated types follow its type
+ * The contract is the one in docs/02-contract-language.md. The generated types follow its type
  * mapping table (uuid, timestamp, optional fields, arrays) and the naming per language:
  * camelCase in TypeScript, PascalCase fields in Go, snake_case in Python and Rust. Java is a
  * record, and its optional field uses a @Nullable annotation. Each block is one entry per line.

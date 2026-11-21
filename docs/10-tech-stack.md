@@ -89,7 +89,7 @@ Rust for everything shared. Native code for each language package. One conforman
 | Docs | Custom design on Astro (Starlight heavily restyled, or a custom layout) |
 | Playground | The compiler built to WebAssembly |
 
-See [website.md](website.md).
+See [11-website.md](11-website.md).
 
 ## Repo, CI and releases
 

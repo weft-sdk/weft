@@ -1,6 +1,6 @@
 /**
  * Supported languages, as twelve names (the JVM and .NET families count once each). The detail
- * line for each comes from docs/languages.md.
+ * line for each comes from docs/05-languages.md.
  */
 export interface Language {
   name: string;

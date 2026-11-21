@@ -10,7 +10,7 @@
 2. **P2:** TypeScript package (core, Express and KafkaJS adapters, generated facade).
 3. **P3:** conformance suite harness and the Go package (net/http, franz-go).
 
-P4 onward keep the order in the [roadmap](../roadmap.md#product-phases).
+P4 onward keep the order in the [roadmap](../12-roadmap.md#product-phases).
 
 **Consequences.**
 - Phase P1 is broken into tasks next, each sized for one pull request.

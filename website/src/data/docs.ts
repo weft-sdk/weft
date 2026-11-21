@@ -2,7 +2,7 @@
  * The docs structure: sections along the top, folders inside each section, pages inside folders.
  * It drives the section bar, the directory tree, search, previous/next links and the page routes.
  * Page content is added to the pages as it is written; until then a page shows its title and summary.
- * The pages follow "Docs structure" in docs/website.md.
+ * The pages follow "Docs structure" in docs/11-website.md.
  */
 export interface DocPage {
   slug: string;

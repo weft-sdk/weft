@@ -32,7 +32,7 @@ A project installs one adapter per transport it uses. `weft init` picks them.
 
 ## Contract
 
-A **contract** describes what is sent and received, independent of language. It is written in a `.weft` file ([contract-language.md](contract-language.md)) and contains:
+A **contract** describes what is sent and received, independent of language. It is written in a `.weft` file ([02-contract-language.md](02-contract-language.md)) and contains:
 
 - **types**: the shape of data (`Order`, `Money`)
 - **operations**: the named things you can call or listen to (an event, an HTTP route, an RPC method, a GraphQL field, a socket event)
@@ -65,7 +65,7 @@ In languages without static types (JavaScript, Ruby, Python without type checkin
 
 ## Package
 
-A **package** is Weft for one language: the core plus its adapters, published to that language's registry (npm, PyPI, Maven Central, ...). See [sdk-design.md](sdk-design.md).
+A **package** is Weft for one language: the core plus its adapters, published to that language's registry (npm, PyPI, Maven Central, ...). See [04-sdk-design.md](04-sdk-design.md).
 
 ## Service
 
@@ -83,4 +83,4 @@ If Weft doesn't support a feature yet, users drop down to the library for that o
 
 ## Dashboard
 
-The **dashboard** shows the service map built from contracts and live traffic reported by Weft packages. It runs locally on a port, self-hosted, or in Weft Cloud. See [dashboard.md](dashboard.md).
+The **dashboard** shows the service map built from contracts and live traffic reported by Weft packages. It runs locally on a port, self-hosted, or in Weft Cloud. See [08-dashboard.md](08-dashboard.md).

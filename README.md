@@ -74,7 +74,7 @@ event order.placed: Order
 
 **Communication:** HTTP/REST, GraphQL, gRPC, typed RPC (tRPC-style), WebSockets, server-sent events, Kafka, RabbitMQ/AMQP, NATS, Redis Pub/Sub and Streams, AWS SQS/SNS/EventBridge, Google Pub/Sub, Azure Service Bus, MQTT, Pulsar.
 
-Full matrix of languages and the libraries Weft runs underneath: [docs/languages.md](docs/languages.md).
+Full matrix of languages and the libraries Weft runs underneath: [docs/05-languages.md](docs/05-languages.md).
 
 ## Documentation
 
@@ -82,4 +82,4 @@ Design docs live in [docs/](docs/README.md).
 
 ## Status
 
-Design stage. The compiler and CLI (phase P1) are built: `weft init`, `weft fmt`, `weft check` and `weft gen` for TypeScript, from a Rust workspace in `compiler/`. The language packages that run `weft.http`, `weft.kafka` and the rest, the conformance suite and the dashboard are not built yet. The website exists in `website/` and is not deployed. See the [roadmap](docs/roadmap.md).
+Design stage. The compiler and CLI (phase P1) are built: `weft init`, `weft fmt`, `weft check` and `weft gen` for TypeScript, from a Rust workspace in `compiler/`. The language packages that run `weft.http`, `weft.kafka` and the rest, the conformance suite and the dashboard are not built yet. The website exists in `website/` and is not deployed. See the [roadmap](docs/12-roadmap.md).

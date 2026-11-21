@@ -42,7 +42,7 @@ Detected: TypeScript (pnpm)
 Next: edit contracts/orders.weft, then run `weft gen`.
 ```
 
-Detects the language and package manager: npm, pnpm, yarn, bun, deno, go modules, pip, uv, poetry, Maven, Gradle, dotnet, cargo, bundler, composer, mix, SwiftPM, pub. Only offers libraries that exist for that language ([languages.md](languages.md)).
+Detects the language and package manager: npm, pnpm, yarn, bun, deno, go modules, pip, uv, poetry, Maven, Gradle, dotnet, cargo, bundler, composer, mix, SwiftPM, pub. Only offers libraries that exist for that language ([05-languages.md](05-languages.md)).
 
 ```
 weft init [--yes] [--name NAME] [--lang LANG] [--contracts PATH] [--http [LIBRARY]] [--kafka [LIBRARY]] ...
@@ -77,7 +77,7 @@ For TypeScript the file holds the types of every package (one `namespace` per pa
 weft check [--baseline REF | --baseline-dir PATH]
 ```
 
-Compares the current contracts with a baseline and lists every change as **safe**, **risky** or **breaking** ([the rules](contract-language.md#evolving-contracts-safely)). Each breaking change comes with what to do instead (usually: deprecate first, remove in the next major version).
+Compares the current contracts with a baseline and lists every change as **safe**, **risky** or **breaking** ([the rules](02-contract-language.md#evolving-contracts-safely)). Each breaking change comes with what to do instead (usually: deprecate first, remove in the next major version).
 
 ```
 $ weft check
@@ -110,7 +110,7 @@ Weft dashboard running at http://localhost:4747
 Receiving telemetry on   http://localhost:4318 (OTLP)
 ```
 
-Options: `--port`, `--contracts PATH`, `--data-dir`, `--open`. See [dashboard.md](dashboard.md).
+Options: `--port`, `--contracts PATH`, `--data-dir`, `--open`. See [08-dashboard.md](08-dashboard.md).
 
 ## Config file: `weft.yaml`
 

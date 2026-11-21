@@ -1,4 +1,4 @@
-//! The comparison itself. See the table in `docs/contract-language.md#evolving-contracts-safely`.
+//! The comparison itself. See the table in `docs/02-contract-language.md#evolving-contracts-safely`.
 
 use std::collections::HashMap;
 

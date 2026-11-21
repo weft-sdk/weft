@@ -30,7 +30,7 @@ The maintainer required support for every common language. Options considered:
 - **Contracts written as TypeScript types.** Rejected: a Go or Python service can't read them ([ADR 0002](decisions/0002-contracts-with-codegen.md)).
 - **Chosen:** language-neutral `.weft` contracts, one Rust compiler generating code for each language, and a small native package per language with adapters over its existing libraries.
 
-13 languages are in scope: TypeScript/JavaScript, Go, Python, JVM (Java, Kotlin, Scala, Clojure), .NET (C#, F#), Rust, Ruby, PHP, Elixir/Erlang, Swift, Dart, plus browser and mobile clients for the client-side transports. Full matrix: [languages.md](languages.md). The maintainer asked explicitly that plain JavaScript be supported, not only TypeScript.
+13 languages are in scope: TypeScript/JavaScript, Go, Python, JVM (Java, Kotlin, Scala, Clojure), .NET (C#, F#), Rust, Ruby, PHP, Elixir/Erlang, Swift, Dart, plus browser and mobile clients for the client-side transports. Full matrix: [05-languages.md](05-languages.md). The maintainer asked explicitly that plain JavaScript be supported, not only TypeScript.
 
 TypeSpec was considered as the contract language and rejected as too HTTP-centred ([ADR 0005](decisions/0005-own-contract-language.md)).
 
@@ -57,9 +57,9 @@ For the GitHub and npm organisation, `weftdev`, `weftio`, `weftloom`, `weftwire`
 
 ## 7. Contract language
 
-The syntax was decided on 2026-11-20 by choosing between alternatives, recommended option each time: `name: type` fields; a single "optional" concept (`name?: T`, absent or null); `int`/`float` as 64-bit defaults plus sized types; `T[]` and `map<K, V>`; `->` for every result; event names as topic names (remappable in `weft.yaml`); built-in plus custom errors; one line per HTTP route; simple generics; a fixed set of validation annotations; imports by package name only; package semver enforced by `weft check`. See [contract-language.md](contract-language.md).
+The syntax was decided on 2026-11-20 by choosing between alternatives, recommended option each time: `name: type` fields; a single "optional" concept (`name?: T`, absent or null); `int`/`float` as 64-bit defaults plus sized types; `T[]` and `map<K, V>`; `->` for every result; event names as topic names (remappable in `weft.yaml`); built-in plus custom errors; one line per HTTP route; simple generics; a fixed set of validation annotations; imports by package name only; package semver enforced by `weft check`. See [02-contract-language.md](02-contract-language.md).
 
 ## Advice given along the way that still stands
 
 - **The biggest risk is not technical.** Developers are often wary of abstraction layers over their libraries ("it will hide features" or "only the lowest common denominator"). The `raw` escape hatch and adapter `capabilities()` exist for this. Showing the idea to 5–10 backend developers early is the cheapest way to test it.
-- **Not every language on day one.** The architecture makes each new language a code generator, a core package and adapters. Build order is still an [open question](open-questions.md).
+- **Not every language on day one.** The architecture makes each new language a code generator, a core package and adapters. Build order is still an [open question](13-open-questions.md).

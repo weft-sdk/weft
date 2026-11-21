@@ -1,6 +1,6 @@
 # The IR
 
-Version 0.1. The checked, resolved form of one package's contracts, as JSON. Code generators, `weft check`, the dashboard and third-party tools read the IR and never the `.weft` syntax ([architecture](../docs/architecture.md#compiler-internals)). The machine-readable description is [ir.schema.json](ir.schema.json), generated from the Rust types in `compiler/crates/weft-ir`. Regenerate it with:
+Version 0.1. The checked, resolved form of one package's contracts, as JSON. Code generators, `weft check`, the dashboard and third-party tools read the IR and never the `.weft` syntax ([architecture](../docs/09-architecture.md#compiler-internals)). The machine-readable description is [ir.schema.json](ir.schema.json), generated from the Rust types in `compiler/crates/weft-ir`. Regenerate it with:
 
 ```bash
 UPDATE_SCHEMA=1 cargo test --manifest-path compiler/Cargo.toml -p weft-ir --test schema

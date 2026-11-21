@@ -6,11 +6,11 @@ How any session (a person or a coding agent) picks up Weft, works on it and hand
 
 | What | Where | Describes |
 | --- | --- | --- |
-| What is built, what is next | [Roadmap › Current status](roadmap.md#current-status) and the phase tables | `main` only |
+| What is built, what is next | [Roadmap › Current status](12-roadmap.md#current-status) and the phase tables | `main` only |
 | The work on one branch | `docs/work/<branch>.md` on that branch ([template](work/README.md)) | That branch only |
 | Why things are as they are | [Decision records](decisions/) | Accepted decisions |
-| What is undecided | [Open questions](open-questions.md) | Decisions waiting on the maintainer |
-| How we got here, what was rejected | [History](history.md) | The path so far |
+| What is undecided | [Open questions](13-open-questions.md) | Decisions waiting on the maintainer |
+| How we got here, what was rejected | [History](15-history.md) | The path so far |
 
 Two rules keep parallel work from colliding:
 
@@ -21,7 +21,7 @@ A conversation, a session's private memory, or anything said only in a chat is n
 
 ## Tasks and branches
 
-Tasks have ids (`W3`, `P1.2`) and dependencies in the [roadmap](roadmap.md). A task whose dependencies are all on `main` can be started.
+Tasks have ids (`W3`, `P1.2`) and dependencies in the [roadmap](12-roadmap.md). A task whose dependencies are all on `main` can be started.
 
 Branch names: `<type>/<task id>-<short-name>`, lowercase, for example `feat/w2-site-skeleton`, `docs/w1-visual-direction`. `<type>` is one of `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
 
@@ -32,9 +32,9 @@ Small changes that belong to no task (a typo, a broken link) can go on a `chore/
 1. `git status`, `git branch --list`, `git worktree list`, and `git fetch` to see remote branches.
 2. **On a task branch:** read `docs/work/<branch with / replaced by ->.md` and continue from its **Next step**. Do not re-plan what it already decided.
 3. **On `main`:**
-   - Read [Roadmap › Current status](roadmap.md#current-status), then the active phase's tasks.
+   - Read [Roadmap › Current status](12-roadmap.md#current-status), then the active phase's tasks.
    - Take the first task whose dependencies are done and that nobody has taken: no local branch or worktree with its id (`git branch --list '*w3*'`, `git worktree list`) and none on the remote (`git branch -r`).
-   - If it depends on an [open question](open-questions.md), stop and ask the maintainer.
+   - If it depends on an [open question](13-open-questions.md), stop and ask the maintainer.
    - Create the branch (in its own worktree if another session may be running), and its work file from the [template](work/README.md) with the goal and a plan. Commit the work file first.
 4. Read the documents [CLAUDE.md](../CLAUDE.md) lists, as far as the task needs.
 
@@ -75,7 +75,7 @@ Ready when:
 
 - The task's "done when" in the roadmap holds, and its checks pass.
 - The docs describe what now exists: the roadmap task marked done, design docs accurate, decision records for new decisions, open questions removed when answered.
-- [Current status](roadmap.md#current-status) is updated for what `main` will be after the merge.
+- [Current status](12-roadmap.md#current-status) is updated for what `main` will be after the merge.
 - The work file's lasting content has moved into those documents, and the work file is **deleted** in the same pull request. On `main`, `docs/work/` holds only its README.
 - The pull request description says what changed, why, how it was checked, and what was not done.
 

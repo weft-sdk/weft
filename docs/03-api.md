@@ -2,7 +2,7 @@
 
 This is what developers write. Every language exposes the same shape, adapted to its own conventions (camelCase in TypeScript, PascalCase in Go and C#, snake_case in Python and Ruby).
 
-All examples use Larder's contracts from [contract-language.md](contract-language.md).
+All examples use Larder's contracts from [02-contract-language.md](02-contract-language.md).
 
 ## Lifecycle
 
@@ -20,7 +20,7 @@ await weft.start()
 process.on("SIGTERM", () => weft.stop())
 ```
 
-Connection settings (brokers, ports, URLs) come from `weft.yaml` and environment variables. See [cli.md § Config](cli.md#config-file-weftyaml).
+Connection settings (brokers, ports, URLs) come from `weft.yaml` and environment variables. See [06-cli.md § Config](06-cli.md#config-file-weftyaml).
 
 ## HTTP — `weft.http`
 

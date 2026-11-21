@@ -1,6 +1,6 @@
 # Contract language specification
 
-Version 0.1. The normative grammar of `.weft` files, as implemented by `weft-syntax`. The guide with examples, the type mapping and the design reasons is [docs/contract-language.md](../docs/contract-language.md). The meaning rules (names, types, operations) that the checker enforces are in the last section.
+Version 0.1. The normative grammar of `.weft` files, as implemented by `weft-syntax`. The guide with examples, the type mapping and the design reasons is [docs/02-contract-language.md](../docs/02-contract-language.md). The meaning rules (names, types, operations) that the checker enforces are in the last section.
 
 ## Lexical rules
 

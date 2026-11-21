@@ -1,4 +1,4 @@
-/** The 13 transport namespaces and what runs them in TypeScript. Source: docs/languages.md. */
+/** The 13 transport namespaces and what runs them in TypeScript. Source: docs/05-languages.md. */
 export interface Transport {
   /** Namespace after `weft.`. */
   ns: string;
