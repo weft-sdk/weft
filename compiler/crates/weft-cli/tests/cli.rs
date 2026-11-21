@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn weft(args: &[&str], dir: &PathBuf) -> Output {
@@ -314,4 +314,234 @@ fn gen_with_two_packages_in_one_folder() {
     assert!(
         out.contains("export namespace orders {") && out.contains("export namespace payments {")
     );
+}
+
+// ---- weft check ----
+
+fn git(dir: &PathBuf, args: &[&str]) {
+    let o = Command::new("git")
+        .current_dir(dir)
+        .args([
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@example.com",
+            "-c",
+            "commit.gpgsign=false",
+            "-c",
+            "tag.gpgsign=false",
+        ])
+        .args(args)
+        .output()
+        .unwrap();
+    assert!(
+        o.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&o.stderr)
+    );
+}
+
+const V1: &str = "package orders @version(\"1.0.0\")\ntype Order { id: uuid note: string }\nevent order.placed: Order\n";
+
+/// A project with one contract, committed and tagged `v1`.
+fn tagged_project(name: &str, contract: &str) -> PathBuf {
+    let dir = scratch(name);
+    fs::write(dir.join("weft.yaml"), "language: typescript\n").unwrap();
+    fs::create_dir_all(dir.join("contracts")).unwrap();
+    fs::write(dir.join("contracts/orders.weft"), contract).unwrap();
+    git(&dir, &["init", "-q", "-b", "main"]);
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-q", "-m", "first"]);
+    git(&dir, &["tag", "v1"]);
+    dir
+}
+
+fn write_contract(dir: &Path, text: &str) {
+    fs::write(dir.join("contracts/orders.weft"), text).unwrap();
+}
+
+#[test]
+fn check_with_no_changes_passes() {
+    let dir = tagged_project("check_same", V1);
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains("no changes") && text(&o).contains("git v1"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn check_fails_on_a_breaking_change_without_a_major_bump() {
+    let dir = tagged_project("check_breaking", V1);
+    write_contract(&dir, &V1.replace(" note: string", ""));
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 1, "{}", text(&o));
+    let t = text(&o);
+    assert!(t.contains("removed field `note`"), "{t}");
+    assert!(t.contains("hint: mark it `@deprecated` first"), "{t}");
+    assert!(t.contains("need a major version bump"), "{t}");
+}
+
+#[test]
+fn check_passes_when_a_major_bump_covers_the_breaking_change() {
+    let dir = tagged_project("check_major", V1);
+    write_contract(
+        &dir,
+        &V1.replace(" note: string", "").replace("1.0.0", "2.0.0"),
+    );
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains("covers the breaking changes"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn check_with_only_safe_changes_passes_and_notes_the_missing_bump() {
+    let dir = tagged_project("check_safe", V1);
+    write_contract(
+        &dir,
+        &V1.replace("note: string", "note: string extra?: int"),
+    );
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let t = text(&o);
+    assert!(
+        t.contains("added optional field `extra`") && t.contains("a minor version bump"),
+        "{t}"
+    );
+}
+
+#[test]
+fn check_baseline_flag_picks_the_ref() {
+    let dir = tagged_project("check_ref", V1);
+    // A second commit with the breaking change, which becomes the new baseline.
+    write_contract(
+        &dir,
+        &V1.replace(" note: string", "").replace("1.0.0", "2.0.0"),
+    );
+    git(&dir, &["commit", "-q", "-am", "second"]);
+    // Against the latest tag (v1) the working tree is a covered breaking change; against HEAD it is unchanged.
+    assert_eq!(code(&weft(&["check"], &dir)), 0);
+    let o = weft(&["check", "--baseline", "HEAD"], &dir);
+    assert_eq!(code(&o), 0);
+    assert!(text(&o).contains("no changes"));
+    // Break it further, still at 2.0.0: now HEAD as the baseline fails.
+    write_contract(&dir, "package orders @version(\"2.0.0\")\ntype Order { id: string }\nevent order.placed: Order\n");
+    assert_eq!(code(&weft(&["check", "--baseline", "HEAD"], &dir)), 1);
+}
+
+#[test]
+fn check_reads_the_baseline_without_touching_the_working_tree() {
+    let dir = tagged_project("check_untouched", V1);
+    write_contract(&dir, &V1.replace(" note: string", ""));
+    weft(&["check"], &dir);
+    assert!(!fs::read_to_string(dir.join("contracts/orders.weft"))
+        .unwrap()
+        .contains("note"));
+}
+
+#[test]
+fn check_without_a_tag_says_how_to_choose_a_baseline() {
+    let dir = scratch("check_no_tag");
+    fs::write(dir.join("weft.yaml"), "language: typescript\n").unwrap();
+    fs::create_dir_all(dir.join("contracts")).unwrap();
+    fs::write(dir.join("contracts/orders.weft"), V1).unwrap();
+    git(&dir, &["init", "-q", "-b", "main"]);
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-q", "-m", "first"]);
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 2);
+    assert!(
+        text(&o).contains("no git tag") && text(&o).contains("--baseline"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn check_with_an_unknown_ref_is_a_usage_error() {
+    let dir = tagged_project("check_bad_ref", V1);
+    let o = weft(&["check", "--baseline", "nope"], &dir);
+    assert_eq!(code(&o), 2);
+    assert!(text(&o).contains("unknown git ref `nope`"));
+}
+
+#[test]
+fn check_treats_contracts_that_did_not_exist_at_the_baseline_as_new() {
+    let dir = scratch("check_new_folder");
+    fs::write(dir.join("weft.yaml"), "language: typescript\n").unwrap();
+    git(&dir, &["init", "-q", "-b", "main"]);
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-q", "-m", "first"]);
+    git(&dir, &["tag", "v1"]);
+    fs::create_dir_all(dir.join("contracts")).unwrap();
+    write_contract(&dir, V1);
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(text(&o).contains("package `orders` is new"), "{}", text(&o));
+}
+
+#[test]
+fn check_baseline_dir_compares_with_a_folder() {
+    let dir = project("check_dir", "language: typescript\n");
+    let older = dir.join("old");
+    fs::create_dir_all(&older).unwrap();
+    fs::write(older.join("orders.weft"), V1).unwrap();
+    write_contract(&dir, &V1.replace(" note: string", ""));
+    let o = weft(&["check", "--baseline-dir", "old"], &dir);
+    assert_eq!(code(&o), 1, "{}", text(&o));
+    assert!(text(&o).contains("removed field `note`"));
+    write_contract(
+        &dir,
+        &V1.replace(" note: string", "").replace("1.0.0", "2.0.0"),
+    );
+    assert_eq!(code(&weft(&["check", "--baseline-dir", "old"], &dir)), 0);
+}
+
+#[test]
+fn check_reports_contract_errors_in_the_current_contracts_with_exit_3() {
+    let dir = tagged_project("check_contract_error", V1);
+    write_contract(&dir, "package orders\ntype Order { id: Nope }\n");
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 3);
+    assert!(text(&o).contains("unknown type `Nope`"));
+}
+
+#[test]
+fn check_reports_a_broken_baseline_with_exit_3() {
+    let dir = tagged_project(
+        "check_bad_baseline",
+        "package orders\ntype Order { id: Nope }\n",
+    );
+    write_contract(&dir, V1);
+    let o = weft(&["check"], &dir);
+    assert_eq!(code(&o), 3);
+    assert!(
+        text(&o).contains("the baseline (git v1) has contract errors"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn check_conflicting_baseline_flags_are_a_usage_error() {
+    let dir = tagged_project("check_both", V1);
+    assert_eq!(
+        code(&weft(
+            &["check", "--baseline", "v1", "--baseline-dir", "x"],
+            &dir
+        )),
+        2
+    );
+}
+
+#[test]
+fn check_works_from_a_subfolder() {
+    let dir = tagged_project("check_sub", V1);
+    assert_eq!(code(&weft(&["check"], &dir.join("contracts"))), 0);
 }

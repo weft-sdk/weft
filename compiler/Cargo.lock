@@ -2242,6 +2242,7 @@ dependencies = [
  "serde_yaml_ng",
  "weft-check",
  "weft-codegen",
+ "weft-compat",
  "weft-syntax",
 ]
 
@@ -2254,6 +2255,14 @@ dependencies = [
  "weft-check",
  "weft-ir",
  "weft-syntax",
+]
+
+[[package]]
+name = "weft-compat"
+version = "0.0.0"
+dependencies = [
+ "weft-check",
+ "weft-ir",
 ]
 
 [[package]]

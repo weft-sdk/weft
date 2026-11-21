@@ -18,6 +18,7 @@ serde.workspace = true
 serde_yaml_ng.workspace = true
 weft-check = { path = "../weft-check" }
 weft-codegen = { path = "../weft-codegen" }
+weft-compat = { path = "../weft-compat" }
 weft-syntax = { path = "../weft-syntax" }
 
 [lints]

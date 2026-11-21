@@ -1,0 +1,17 @@
+[package]
+name = "weft-compat"
+description = "Weft compiler: breaking-change detection"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+weft-ir = { path = "../weft-ir" }
+
+[dev-dependencies]
+weft-check = { path = "../weft-check" }
+
+[lints]
+workspace = true

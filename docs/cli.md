@@ -61,6 +61,29 @@ Reads the contracts named in `weft.yaml`, checks them, and writes the typed code
 
 For TypeScript the file holds the types of every package (one `namespace` per package, so `orders.Order`), a per-package map from event name to payload type, and the checked contracts as a constant for the runtime to read ([ADR 0021](decisions/0021-generated-code-embeds-the-ir.md)).
 
+### `weft check`
+
+```
+weft check [--baseline REF | --baseline-dir PATH]
+```
+
+Compares the current contracts with a baseline and lists every change as **safe**, **risky** or **breaking** ([the rules](contract-language.md#evolving-contracts-safely)). Each breaking change comes with what to do instead (usually: deprecate first, remove in the next major version).
+
+```
+$ weft check
+Comparing with git v1
+
+orders (version 1.0.0)
+  breaking  Order.note  removed field `note` from `Order`
+                        hint: mark it `@deprecated` first, and remove it in the next major version
+  1 breaking, 0 risky, 0 safe
+  ✗ breaking changes need a major version bump; the version is 1.0.0
+```
+
+- **Baseline.** `--baseline` takes a git ref (a tag, branch or commit). The default is the latest tag. The baseline's contract files are read with `git show`, so the working tree is never touched. `--baseline-dir` compares with a folder of older contracts instead. A contracts folder that did not exist at the baseline counts as all new.
+- **Exit codes.** 0 when no breaking change is left uncovered by the version, 1 when one is, 3 if the current or the baseline contracts have errors, 2 for usage errors (no tag, unknown ref).
+- Comparing with a published version (`weft pull`, the dashboard) is added with those commands.
+
 ### `weft fmt`
 
 ```
