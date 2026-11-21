@@ -12,7 +12,7 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 | Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). No docs content, compiler, CLI, language package or dashboard exists |
 | Next task | **W4, interactive pieces** (the hero's transport switcher; the site-wide language picker waits until the docs content is written). Writing the docs content waits for the backend |
 | Last done | 2026-11-21: W5, docs layout. `pnpm --dir website check` and `build` pass locally; the CI workflow has not run yet |
-| Waiting on the maintainer | Not blocking: npm org `weft-sdk` (confirm it was created), trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
+| Waiting on the maintainer | Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
 
