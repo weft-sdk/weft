@@ -32,6 +32,7 @@ Why Weft is the way it is. One file per decision, numbered in the order they wer
 | [0017](0017-website-terminal-direction.md) | Website visual direction: the terminal | Accepted, amended by 0018 |
 | [0018](0018-website-fonts-geist.md) | Website fonts: Geist and Geist Mono | Accepted |
 | [0019](0019-site-written-as-launch-page.md) | The website is written as the launch page | Accepted |
+| [0020](0020-product-build-order.md) | Product build order after the website | Accepted |
 
 ## Template
 
