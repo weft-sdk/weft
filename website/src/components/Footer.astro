@@ -1,10 +1,13 @@
 ---
 /**
  * The site footer: the mark and a one-line description, then three columns of links, then the
- * licence and logo notes. Links to pages that do not exist yet (documentation) are planned for W5.
+ * licence and logo notes. The Documentation and Transports links are built from src/data/docs.ts, so they match the docs pages.
  */
 import Logo from "./Logo.astro";
 import Icon from "./Icon.astro";
+import { flat } from "../data/docs";
+
+const transportLinks = flat.filter((p) => p.section.id === "transports").map((p) => ({ label: p.title, href: p.href }));
 
 const columns: { title: string; links: { label: string; href: string; external?: boolean; icon?: string }[] }[] = [
   {
@@ -17,14 +20,18 @@ const columns: { title: string; links: { label: string; href: string; external?:
     ],
   },
   {
-    title: "Developers",
+    title: "Documentation",
     links: [
-      { label: "Documentation", href: "/docs" },
-      { label: "CLI reference", href: "/docs/cli" },
+      { label: "Overview", href: "/docs" },
+      { label: "Install", href: "/docs/guides/install" },
+      { label: "Your first contract", href: "/docs/guides/first-contract" },
       { label: "Contract language", href: "/docs/contracts" },
+      { label: "Libraries", href: "/docs/libraries" },
+      { label: "CLI reference", href: "/docs/cli" },
       { label: "Migrating existing code", href: "/docs/guides/from-kafkajs" },
     ],
   },
+  { title: "Transports", links: transportLinks },
   {
     title: "Project",
     links: [
@@ -60,10 +67,6 @@ const columns: { title: string; links: { label: string; href: string; external?:
       ))
     }
   </div>
-  <div class="wrap legal">
-    <span>Weft is open source under <a href="https://github.com/weft-sdk/weft/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache-2.0<span class="visually-hidden"> (opens in a new tab)</span></a>.</span>
-    <span>Logos belong to their owners. Weft is not affiliated with them.</span>
-  </div>
 </footer>
 
 <style>
@@ -74,7 +77,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
   /* Open columns, with a thin rule between them. The rules run the full height of the footer. */
   .grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.3fr) repeat(4, minmax(0, 1fr));
   }
 
   a {
@@ -123,7 +126,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 9px;
   }
 
   .col a {
@@ -139,30 +142,9 @@ const columns: { title: string; links: { label: string; href: string; external?:
     color: var(--fg);
   }
 
-  .legal a {
-    color: var(--muted);
-    text-decoration: none;
-    transition: color var(--t-fast) ease;
-  }
-
-  .legal a:hover {
-    color: var(--fg);
-  }
-
-  .legal {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px 24px;
-    flex-wrap: wrap;
-    padding-block: 20px 28px;
-    border-top: 1px solid var(--line);
-    font-size: var(--text-xs);
-    color: var(--faint);
-  }
-
   @media (max-width: 900px) {
     .grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .brand {
@@ -170,7 +152,11 @@ const columns: { title: string; links: { label: string; href: string; external?:
       padding-bottom: 0;
     }
 
-    .col:nth-of-type(1) {
+    .col {
+      border-top: 1px solid var(--line);
+    }
+
+    .col:nth-of-type(odd) {
       padding-left: 0;
       border-left: 0;
     }
@@ -194,8 +180,7 @@ const columns: { title: string; links: { label: string; href: string; external?:
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .col a,
-    .legal a {
+    .col a {
       transition: none;
     }
   }
