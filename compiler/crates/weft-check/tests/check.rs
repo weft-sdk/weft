@@ -637,7 +637,7 @@ rejects_http!(
 #[test]
 fn error_http_base_path_with_params() {
     let m = messages(&[("t.weft", "package p\nhttp /v1/{x} { }")]);
-    assert!(m[0].contains("base path"));
+    assert!(m[0].contains("expected"), "{m:?}");
 }
 
 // ---- rpc, graphql, sockets ----
@@ -741,4 +741,35 @@ fn nothing_is_returned_when_any_file_has_errors() {
         ("b.weft", "package b\ntype B { x: Nope }"),
     ]);
     assert!(r.is_err());
+}
+
+// ---- the formatter must not change meaning ----
+
+const SINK: &str = include_str!("../../../../spec/examples/kitchen-sink.weft");
+
+#[test]
+fn the_kitchen_sink_compiles() {
+    let ir = ok(SINK);
+    validates(&ir);
+    assert!(ir.types.len() > 10);
+    assert_eq!(ir.routes.len(), 5);
+}
+
+#[test]
+fn formatting_does_not_change_the_ir() {
+    let messy = [
+        ORDERS.to_string(),
+        SINK.to_string(),
+        // The same contracts without comments or line breaks. (No string in them contains `//`.)
+        SINK.lines()
+            .map(|l| l.split("//").next().unwrap())
+            .collect::<Vec<_>>()
+            .join(" "),
+    ];
+    for src in messy {
+        let before = ok(&src);
+        let formatted = weft_syntax::format("t.weft", &src).unwrap();
+        let after = ok(&formatted);
+        assert_eq!(before, after, "formatting changed the meaning of:\n{src}");
+    }
 }

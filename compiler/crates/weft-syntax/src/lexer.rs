@@ -24,7 +24,7 @@ fn is_ident_continue(c: char) -> bool {
 }
 
 fn is_path_char(c: char) -> bool {
-    c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.' | '/' | '{' | '}' | '~' | '%')
+    c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.' | '/' | '~' | '%')
 }
 
 pub fn lex(source: &str) -> Result<Lexed, Vec<LexError>> {
