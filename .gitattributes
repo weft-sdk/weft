@@ -1,0 +1,3 @@
+# Check out every text file with LF, on every platform. Tests compare files
+# byte for byte (spec/ir.schema.json, generated code), so CRLF breaks them on Windows.
+* text=auto eol=lf
