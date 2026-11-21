@@ -29,7 +29,9 @@ Why Weft is the way it is. One file per decision, numbered in the order they wer
 | [0014](0014-name-weft.md) | Product name is Weft, published under `weft-sdk` | Accepted |
 | [0015](0015-rpc-uses-connect.md) | `weft.rpc` uses the Connect protocol | Accepted |
 | [0016](0016-website-first.md) | Build the website first | Accepted |
-| [0017](0017-website-terminal-direction.md) | Website visual direction: the terminal | Accepted |
+| [0017](0017-website-terminal-direction.md) | Website visual direction: the terminal | Accepted, amended by 0018 |
+| [0018](0018-website-fonts-geist.md) | Website fonts: Geist and Geist Mono | Accepted |
+| [0019](0019-site-written-as-launch-page.md) | The website is written as the launch page | Accepted |
 
 ## Template
 

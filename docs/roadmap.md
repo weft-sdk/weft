@@ -20,7 +20,7 @@ The product, contract language, API, language package design, supported language
 
 ## W: Website — in progress
 
-The landing page and docs site, built before any product code ([ADR 0016](decisions/0016-website-first.md)). Plan: [website.md](website.md). The product does not exist yet, so the site must never claim a feature ships: it presents Weft as in development.
+The landing page and docs site, built before any product code ([ADR 0016](decisions/0016-website-first.md)). Plan: [website.md](website.md). The site is written as the launch page of the finished product, and is not deployed publicly until its claims are true ([ADR 0019](decisions/0019-site-written-as-launch-page.md)).
 
 | Task | What | Needs | Done when |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ The landing page and docs site, built before any product code ([ADR 0016](decisi
 | **W4** | Interactive pieces: transport switcher in the hero, persistent language picker, before/after comparison | W3 | Each works with keyboard and respects reduced motion |
 | **W5** | Docs section: custom layout, navigation, search; first pages ported from the design docs (concepts, contract language, API, languages), clearly marked as design-stage | W2 | Docs pages render in the site's design and every code example has a language tab |
 | **W6** | Playground preview: a contract editor showing pre-generated output for a few example contracts in several languages | W4 | Switching examples and languages works without a server |
-| **W7** | Launch prep: social images, metadata, sitemap, analytics decision, hosting, domain | W3–W6, Q3 | The maintainer has deployed it to the chosen domain |
+| **W7** | Launch prep: social images, metadata, sitemap, analytics decision, hosting, domain. Check every claim on the site against shipped code first ([ADR 0019](decisions/0019-site-written-as-launch-page.md)) | W3–W6, Q3, and the product claims being true | The maintainer has deployed it to the chosen domain |
 
 ## Product phases — proposed, order open
 

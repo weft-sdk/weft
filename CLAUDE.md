@@ -2,7 +2,7 @@
 
 Weft is **one interface for every way services talk**. Developers call `weft.http`, `weft.gql`, `weft.grpc`, `weft.rpc`, `weft.ws`, `weft.sse`, `weft.kafka`, `weft.mq`, `weft.nats`, `weft.redis`, `weft.cloud`, `weft.mqtt` and `weft.pulsar`, and Weft runs the real library underneath (Express, Apollo, KafkaJS, Socket.io, Spring Kafka, FastAPI, ...). Contracts are written once in language-neutral `.weft` files, and a Rust compiler generates typed code for 13 languages. Overview: [README](README.md). Design: [docs/](docs/README.md).
 
-**Status: design stage. Nothing is built.** The repository holds design documents only. Never describe a planned feature as existing, in docs, in the README or on the website.
+**Status: design stage.** Only the website exists (`website/`); the product is not built. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
 
 **Weft is not a code scanner.** An outdated README once described the project (then called Splice) as one. That idea was dropped completely ([ADR 0001](docs/decisions/0001-library-not-scanner.md), [history](docs/history.md)). Do not reintroduce it. Do not reopen decisions in [history](docs/history.md) or [decisions/](docs/decisions/) unless the maintainer asks.
 
@@ -30,7 +30,7 @@ Work is handed off through the repository, never through a conversation. Full pr
 
 ## Hard rules
 
-- **Docs describe reality.** Planned is never written as built. The README and website only claim what exists. Until code ships, the website presents Weft as in development.
+- **Docs describe reality.** Planned is never written as built in the docs or the README. The website is written as the launch page of the finished product ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)): every claim must match the design docs, no made-up numbers, and it is never deployed publicly until its claims are true of shipped code.
 - **Decisions are recorded.** A new or changed decision gets a record in `docs/decisions/` and the affected docs change in the same pull request. Old records are marked superseded or amended, never deleted or rewritten.
 - **Open questions are the maintainer's.** Answers go into a decision record or doc, and the question is removed from `open-questions.md` in the same change.
 - **The design is the maintainer's to approve.** The website's visual direction is not decided ([Q1](docs/open-questions.md)). Propose options; don't settle it alone.

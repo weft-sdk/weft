@@ -1,6 +1,6 @@
 # ADR 0017: Website visual direction: the terminal
 
-- Status: Accepted (2026-11-21)
+- Status: Accepted (2026-11-21). Amended by [0018](0018-website-fonts-geist.md): the fonts are now Geist and Geist Mono.
 
 **Context.** [ADR 0010](0010-website-on-astro.md) left the website's look open ([Q1](../open-questions.md)), and [ADR 0016](0016-website-first.md) made the website the first thing built. Task W1 settled the look with the maintainer through six rounds of mockups.
 

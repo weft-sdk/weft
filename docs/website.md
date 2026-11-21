@@ -56,19 +56,27 @@ Dark is the default theme; light is the alternative. Both are near-neutral.
 | `--bg` | `#111111` | `#f4f4f3` | Page background |
 | `--raised` | `#181818` | `#ececea` | Code blocks, hovered rows |
 | `--line` | `#262626` | `#dcdcd9` | Rules between sections, table rows, borders |
+| `--line-hover` | `#3d3d3c` | `#bdbdba` | Border of a control on hover, eased in over about 200ms, a step up from `--line` and softer than `--faint` |
 | `--fg` | `#ececea` | `#141414` | Text |
 | `--muted` | `#a2a2a0` | `#5e5e5c` | Secondary text |
 | `--faint` | `#82827f` | `#686866` | Labels, comments, keywords. Meets 4.5:1 contrast on `--bg` and `--raised` |
-| `--accent` | `#7d92ff` | `#2447f5` | Prompt `$`, namespace names, the cursor, the call to action, "now" in status |
+| `--accent` | `#7d92ff` | `#2447f5` | Prompt `$`, namespace names, the lower thread of the logo, the call to action, "now" in status |
+| `--accent-soft` | `#1b2142` | `#e5e9fd` | Background of highlighted code lines |
 | `--on-accent` | `#0d0d14` | `#ffffff` | Text on the accent |
+| `--del`, `--del-soft` | `#ff7b72`, red at 10% | `#b3202c`, red at 8% | Removed lines, in the before/after comparison only |
+| `--add`, `--add-soft` | `#56d364`, green at 10% | `#116329`, green at 10% | Added lines, in the before/after comparison only |
+
+Section headings (`.lead`), intros (`.intro`), the spacing under them (`--stack-lead` 16px, `--stack-content` 32px, `--stack-row` 40px) and motion (`--t-fast` 200ms for controls, `--t-dim` 320ms with `--ease-dim` for dimmed neighbours) are defined once, in `tokens.css` and `global.css`. A section never restyles its own heading; it only sets the space under it or lifts the width limit. This keeps the sections from drifting apart.
 
 ### Type
 
+One family, Geist ([ADR 0018](decisions/0018-website-fonts-geist.md)).
+
 | Role | Face | Where |
 | --- | --- | --- |
-| Base | JetBrains Mono | Navigation, prompts, tables, code, labels. The page's default |
-| Display | Bricolage Grotesque, weight 600, tight tracking | Only where the output is a statement: the headline and section leads |
-| Reading | Instrument Sans | Paragraphs longer than a line |
+| Text | Geist | All text: navigation, paragraphs, labels, table text. The page's default |
+| Statements | Geist, weight 600, tracking -0.045em | The headline and section leads |
+| Code | Geist Mono | Code, commands, prompt lines, file names, namespaces |
 
 Fonts are self-hosted from Fontsource packages, not loaded from Google Fonts.
 
@@ -78,6 +86,16 @@ Fonts are self-hosted from Fontsource packages, not loaded from Google Fonts.
 - Sections are separated by a 1px rule, not by cards or background bands.
 - Explanatory sections use a two-part split: a statement and a short paragraph on the left, the output (code or terminal) on the right. Below 900px everything is one column.
 - Code and terminal output sit on `--raised` with a 1px border and a 3px radius. Nothing else has a radius above 3px.
+- The setup section is four open columns, one per transport, separated by thin vertical rules with no outer frame. Each column shows the picked library as a large logo, a list of the alternatives (a native radio group), and the `weft.yaml` lines that choice writes, with the library line tinted. Picking a library swaps the logo and rewrites the line. Questions, libraries and keys come from [cli.md](cli.md).
+- The contract section has two parts. At the top, the heading and intro sit on the left and the contract on the right (a strip in two halves under the Weft mark: the `Order` type, then `Money` and the event). A line labelled `weft gen` runs down from the contract to five equal open columns, like the setup section: the same type as `weft gen` writes it in TypeScript, Go, Python, Rust and Java, each under its large logo, in boxes of equal height. Generated code follows the type-mapping table in [contract-language.md](contract-language.md) and the naming of each language; the Java record uses a `@Nullable` annotation for the optional field. Hovering one language column softly dims the others. Below 1100px the heading, then the contract, stack, and the languages sit in two columns; below 640px everything is one column.
+- The languages section is the twelve languages (TypeScript and JavaScript are listed separately; the JVM and .NET families count once each) on a six-column grid, two even rows of six, between two thin rules, each a 36px colour logo in a fixed square box (so wide and square logos weigh the same and the names line up) and a name at 1.625rem. Pointing at one, or tabbing to it, fades the rest to 45% and shows that language's details from [languages.md](languages.md) on a single caption line underneath, which keeps its height so nothing shifts. Its heading stays on one line while it fits. The grid drops to four columns below 1200px, three below 760px and two below 520px. There is no frame and no section prompt line.
+- The shared-behaviour section is a defaults sheet in three open columns (Messaging, Calls, Everywhere) on one grid so the rows line up. Each default is a big value, a line of text and a small picture: five squares then a dashed `dlq` box for five attempts, a path of mono boxes for acknowledgement, deadlines and shutdown, and chips for the key, the CloudEvents attributes and the trace carriers. Values come from the defaults in [sdk-design.md](sdk-design.md).
+- The breaking-changes section has the real `weft check` output beside the heading, and under it a ledger sorting the common changes into safe, risky and breaking, each with a one-line example and its own icon (a shield with a tick, a warning triangle, an octagon with a cross). Safe and risky are narrow columns, breaking is wide and runs in two columns. Changes follow the table in [contract-language.md](contract-language.md).
+- The dashboard section has three cards beside the heading (on your laptop, in your cluster, in Weft Cloud, each with an icon, one line and how you run it, from [dashboard.md](dashboard.md)). Under it is a full-width trace of one order across HTTP, gRPC, Kafka and a WebSocket, in four languages: each span has its operation and transport, its service with the language logo, its duration, and a waterfall with a time axis, and the header carries the trace id (the example id from the W3C Trace Context spec), the total time and the span and service counts. The timings are sample values, so the trace is labelled "example trace". Pointing at a span fades the others and shows what ran, where and for how long on a fixed-height line. A strip of what the dashboard shows closes the section, set a little below the trace with short dividers centred between its four columns.
+- The closing section mirrors the hero without copying it. The commands window is on the left: a plain `weft --help` listing of every CLI command from [cli.md](cli.md), each with its one-line description, in a raised window with a mono title bar ("weft --help", with the count computed from the list); pointing at a row fades the others to 45%. On the right are the heading (section-sized, not hero-sized), the intro, the copyable install command (the copy icon turns into a tick) and the Apache-2.0 note. There is no second Get started button, since it would point at this section. Below 900px the text comes first and the window follows.
+- The navbar is sticky. It has the mark, four section links (transports, compare, languages, dashboard), the theme toggle and one accent Get started button. Below 900px the links collapse into a menu button that opens a panel under the bar (it closes on a link, Escape or a wider screen). A Docs link joins it when W5 lands, and a GitHub link when the repository is public.
+- The footer is the mark with a one-line description, then three link columns (Product: the page sections; Developers: documentation, CLI reference, contract language, migrating; Project: GitHub, issues, npm, licence), then a bottom row with the Apache-2.0 note and the logo-ownership note. The Developers links point at the docs pages planned in W5 and the Project links at the public repository and npm scope, so none of them work until those exist.
+- The before/after comparison is a side-by-side git diff: two columns split by a 1px vertical rule, removed lines in red with `-` on the left, added lines in green with `+` on the right, each with line numbers. The `-13` and `+10` counts are computed from the code shown. Red and green appear nowhere else on the site.
 
 ### Logos
 
@@ -85,11 +103,11 @@ Language and transport logos come from Simple Icons, drawn in one colour. Transp
 
 ### Motion
 
-Only the blinking cursor after the headline moves. Hover states change colour or background, never position. With reduced motion, the cursor stops blinking.
+One thing moves on its own: the hero terminal plays its session once on load (commands type out, output appears line by line), then stays still. Every line keeps its space while it plays, so nothing shifts. With reduced motion it shows complete at once. Hover states change colour or background, never position.
 
 ### Honesty
 
-Every command the product does not have yet is labelled as planned. Nothing invites the reader to install or run anything until it is published.
+The site is written as the launch page of the finished product ([ADR 0019](decisions/0019-site-written-as-launch-page.md)). Every claim must match the design docs, and there are no made-up numbers. The site is not deployed publicly until every claim on it is true of shipped code.
 
 ## Ideas to explore
 
