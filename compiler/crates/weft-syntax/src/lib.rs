@@ -6,6 +6,7 @@
 //! ```
 
 pub mod ast;
+mod format;
 mod lexer;
 mod parser;
 pub mod token;
@@ -15,6 +16,7 @@ use miette::{Diagnostic, NamedSource, SourceSpan};
 use thiserror::Error;
 
 pub use ast::File;
+pub use format::{format, format_file};
 pub use token::Span;
 
 /// A syntax error with the source it points into, ready for miette to print.

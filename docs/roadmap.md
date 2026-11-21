@@ -8,10 +8,10 @@ _Describes `main`. Updated in the pull request that finishes a task, for what `m
 
 | Field | Value |
 | --- | --- |
-| Phase | P1 (compiler and CLI), in progress: P1.1 to P1.4 done. W (website) paused until the backend exists |
-| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A parser and checker** (`weft-syntax`, `weft-ir`, `weft-check`: they turn contracts into a checked IR, or into located errors) inside a Rust workspace (`compiler/`) whose CLI only prints its version. No docs content, working compiler, language package or dashboard exists |
-| Next task | **P1.5, formatter**, then **P1.6, `weft gen` for TypeScript** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
-| Last done | 2026-11-21: P1.4, the checker. `cargo fmt --check`, `clippy` and `test` pass locally; neither CI workflow has run yet |
+| Phase | P1 (compiler and CLI), in progress: P1.1 to P1.5 done. W (website) paused until the backend exists |
+| Built | **The website** (`website/`: the landing page and the docs layout with placeholder pages, light and dark themes, Lighthouse 100). **A parser and checker** (`weft-syntax`, `weft-ir`, `weft-check`: they turn contracts into a checked IR, or into located errors) inside a Rust workspace (`compiler/`) whose CLI has one command, `weft fmt`. No docs content, working compiler, language package or dashboard exists |
+| Next task | **P1.6, `weft gen` for TypeScript** ([ADR 0020](decisions/0020-product-build-order.md)). W6, W7 and the docs content wait for the backend |
+| Last done | 2026-11-21: P1.5, the formatter and `weft fmt`. `cargo fmt --check`, `clippy` and `test` pass locally; neither CI workflow has run yet |
 | Waiting on the maintainer | Not blocking: trademark search for "Weft", domain (Q3), talking to 5–10 developers about the idea |
 
 ## P0: Design documents — done
@@ -42,7 +42,7 @@ Rust workspace in `compiler/` ([architecture](architecture.md#repo-layout), [tec
 | **P1.2** ✓ | Parser: lexer, grammar and AST for the whole contract language, `miette` errors. The language spec moves to `spec/language.md` | P1.1 | Done 2026-11-21. The complete example parses (`spec/examples/orders.weft`), and bad input gives located errors (snapshot tests) |
 | **P1.3** ✓ | IR: versioned JSON types and `spec/ir.schema.json` | P1.1 | Done 2026-11-21. `weft-ir` types, `spec/ir.schema.json` generated from them (a test keeps it current), and a sample using every part validates. The checker's output is validated from P1.4 on |
 | **P1.4** ✓ | Checker: name resolution, type checking, operation rules, errors, generics, validation rules, imports; produces the IR | P1.2, P1.3 | Done 2026-11-21. The complete example compiles to IR that validates against the schema, packages import each other, and every rule has a failing test (about 100 tests, a few snapshots of the messages). Rules are in [spec/language.md](../spec/language.md#meaning-rules) |
-| **P1.5** | Formatter and `weft fmt` | P1.2 | Formatting is idempotent on the example contracts |
+| **P1.5** ✓ | Formatter and `weft fmt` | P1.2 | Done 2026-11-21. Formatting is idempotent, keeps every comment, and leaves the IR unchanged. `weft fmt [PATH...] [--check]` works. Style is in [spec/language.md](../spec/language.md#style) |
 | **P1.6** | `weft gen` for TypeScript: type mapping and naming from the docs, reads `weft.yaml` | P1.4 | The generated `weft.gen.ts` type-checks with `tsc` for the example contract |
 | **P1.7** | `weft check` (`weft-compat`): diff two IRs into safe, risky and breaking, with the documented exit codes | P1.4 | Every row of the evolving-contracts table has a test |
 | **P1.8** | `weft init`, non-interactive and interactive | P1.6 | In an empty folder it writes a working `weft.yaml` and a first contract |

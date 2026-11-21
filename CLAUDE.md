@@ -62,6 +62,8 @@ Add each command here in the same pull request that makes it work.
 | `cargo clippy --manifest-path compiler/Cargo.toml --all-targets -- -D warnings` | Lint the compiler; CI denies warnings |
 | `cargo fmt --manifest-path compiler/Cargo.toml --all --check` | Check formatting |
 | `cargo run --manifest-path compiler/Cargo.toml -p weft-cli -- <args>` | Run the `weft` CLI from source |
+| `UPDATE_SCHEMA=1 cargo test --manifest-path compiler/Cargo.toml -p weft-ir --test schema` | Regenerate `spec/ir.schema.json` after changing the IR types |
+| `INSTA_UPDATE=always cargo test --manifest-path compiler/Cargo.toml` | Accept changed snapshot tests. Read the `.snap` diffs before committing |
 
 ## Repository
 

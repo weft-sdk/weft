@@ -1,0 +1,35 @@
+---
+source: crates/weft-syntax/tests/format.rs
+expression: fmt(MESSY)
+---
+// header
+package p @version("1.0.0")
+import other
+
+/// Money.
+type Money {
+  amount: int
+  currency: Currency  // the unit
+  note?: string @deprecated
+}
+
+enum Currency { EUR GBP }
+
+// before event
+event a.b: Money {
+  headers: { x: string }
+  key: amount
+}  // after event
+
+http /v1 {
+  GET  "/x/{id}"                        get(id: uuid) -> Money | NotFound
+  POST "/long-route-name-for-wrapping"  createSomethingWithAVeryLongName(body: Money, headers: { a: string, b: string })
+    -> Money | InvalidInput | Conflict
+}
+
+rpc S {
+  m(Money) -> stream Money
+  n(stream Money) -> Money
+}
+
+// dangling at the end

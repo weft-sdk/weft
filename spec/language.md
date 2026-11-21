@@ -10,7 +10,7 @@ Version 0.1. The normative grammar of `.weft` files, as implemented by `weft-syn
 - **Keywords are contextual.** `package`, `import`, `enum`, `type`, `event`, `error`, `http`, `rpc`, `graphql`, `socket`, `query`, `mutation`, `subscription`, `server`, `client`, `stream`, `key` and `headers` only mean something where the grammar expects them. Everywhere else they are ordinary names, so `error?: E` and `query: { page?: int }` are valid. The one place a type may not be called `stream` is directly after `->` or in a parameter list.
 - **String:** `"..."` on one line. Escapes: `\"`, `\\`, `\n`, `\t`. Any other escape is an error, so a regex digit is written `"\\d"`.
 - **Number:** an optional `-`, digits, and an optional `.` followed by digits.
-- **Path:** `/` followed by letters, digits and `_ - . / { } ~ %`, used only for a base path (`http /v1 {`). Route paths are strings.
+- **Path:** `/` followed by letters, digits and `_ - . / ~ %`, used only for a base path (`http /v1 {`). Route paths are strings, and only they can have `{name}` parameters.
 - **Punctuation:** `{ } ( ) [ ] < > : , ? | @ . ->`. A comma between fields, variants, arguments or options is optional.
 
 ## Grammar
@@ -67,6 +67,20 @@ These were open in the guide ("exact grammar, reserved words"). Decided 2026-11-
 | HTTP methods | Written as an identifier in the route. The checker accepts `GET POST PUT PATCH DELETE HEAD OPTIONS` |
 | Base path | A bare path after `http`, not a string |
 | Statement separators | None. Newlines mean nothing |
+
+## Style
+
+`weft fmt` writes one canonical style, and keeps every comment. The formatter is the reference for style.
+
+- Two-space indent. One field, variant, route or method per line. Newlines and commas between items are written as newlines.
+- One blank line between top-level declarations. Blank lines elsewhere are kept, at most one in a row, and not at the start or end of a block.
+- A `//` comment on its own line stays above the item that follows it. A comment after an item on the same line stays after it, and trailing comments in one block line up two spaces after the longest line.
+- `enum` values stay on one line (`enum Currency { EUR GBP USD }`) unless an enum holds comments or docs, or is over 80 characters.
+- Inline types are one line (`{ id: uuid, reason: string }`) unless they hold comments or docs.
+- In an `http` block the method and path columns line up. A route over 100 characters moves `->` and the result to the next line.
+- In a `graphql` block the kind column lines up, and in a `socket` block the event names do.
+- Strings are written with the escapes `\"`, `\\`, `\n` and `\t`.
+- Formatting never changes what a contract means: the IR before and after is the same.
 
 ## Meaning rules
 
@@ -131,7 +145,7 @@ An unknown annotation, one in the wrong place, or one used twice is an error.
 
 **HTTP**
 
-- Methods are `GET POST PUT PATCH DELETE HEAD OPTIONS`. Route paths start with `/`, with `{name}` parameters. A base path has no parameters.
+- Methods are `GET POST PUT PATCH DELETE HEAD OPTIONS`. Route paths start with `/`, with `{name}` parameters.
 - Every `{name}` in the path has a parameter of that name, which is a required scalar (not bytes or a record). Parameters not in the path must be `query`, `body` or `headers`.
 - `query` and `headers` are records, none of the three can be optional, and `GET` and `HEAD` take no `body`.
 - Route names are unique (they become function names), and so are method and path shapes: `/a/{x}` and `/a/{y}` are the same route.

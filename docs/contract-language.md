@@ -20,7 +20,7 @@ package orders @version("1.0.0")
 enum Currency { EUR GBP USD }
 
 type Money {
-  amount: int            // minor units (cents)
+  amount: int  // minor units (cents)
   currency: Currency
 }
 
@@ -35,7 +35,7 @@ type Order {
   customerId: string
   items: OrderItem[]
   total: Money
-  note?: string          // optional
+  note?: string  // optional
   placedAt: timestamp
 }
 
@@ -46,7 +46,7 @@ type CreateOrder {
 
 // ---------- events ----------
 event order.placed: Order {
-  key: id                // partition / routing key
+  key: id  // partition / routing key
 }
 
 event order.cancelled: { id: uuid, reason: string }

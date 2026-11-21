@@ -1,0 +1,96 @@
+// Every construct in the contract language, for tests of the formatter and the checker.
+// It is not a model of good contract design.
+package kitchen @version("0.1.0")
+
+/// A currency.
+enum Currency @deprecated("use Money.code") {
+  /// The euro.
+  EUR
+  GBP @deprecated
+  USD
+}
+
+enum Side { Left Right }
+
+/// A page of results.
+type Page<T> {
+  items: T[]
+  next?: string  // a cursor
+}
+
+type Pair<A, B> {
+  first: A
+  second: B
+}
+
+/// A customer order.
+type Order @deprecated("use Basket") {
+  id: uuid
+  /// The customer's id.
+  customerId: string @length(1, 40) @wire("customer_id")
+  email: string @format(email)
+  code: string @pattern("^[A-Z]{3}-\\d+$")
+  qty: int32 @min(1) @max(100)
+  ratio?: float64 @min(0.5)
+  tags: map<string, string[]>
+  sides: map<Side, int>
+  nested: { a: int, b?: bytes }
+  total: decimal
+  placedAt: timestamp
+  when?: timestamp @deprecated
+}
+
+type Empty {}
+
+error OutOfStock @status(409) {
+  sku: string
+  available: int
+}
+
+error Declined {
+  reason: string
+}
+
+// ---------- events ----------
+event order.placed: Order {
+  key: id  // routing
+  headers: { tenant: string, trace?: string }
+}
+
+event order.cancelled: { id: uuid, reason: string } @deprecated("use order.voided")
+
+event page.viewed: Page<Order>
+
+// ---------- HTTP ----------
+http /v1 {
+  /// Create an order.
+  POST   "/orders"       createOrder(body: Order, headers: { auth: string })
+    -> Order | OutOfStock | Declined | InvalidInput
+  GET    "/orders/{id}"  getOrder(id: uuid) -> Order?
+  GET    "/orders"       listOrders(query: { page?: int, size?: int }) -> Page<Order> @deprecated
+  DELETE "/orders/{id}"  deleteOrder(id: uuid) -> Empty | NotFound
+}
+
+http {
+  GET "/health"  health() -> Empty
+}
+
+// ---------- RPC ----------
+rpc Orders {
+  create(Order) -> Order | OutOfStock
+  watch(id: uuid, since?: timestamp) -> stream Order
+  upload(stream Order) -> Empty
+}
+
+// ---------- GraphQL ----------
+graphql {
+  query        order(id: uuid) -> Order?
+  mutation     placeOrder(input: Order) -> Order | Declined
+  subscription orderUpdated(id: uuid) -> Order
+}
+
+// ---------- sockets ----------
+socket tracking {
+  server courier.moved: { orderId: uuid, lat: float, lng: float }
+  client track.start:   { orderId: uuid } @deprecated
+}

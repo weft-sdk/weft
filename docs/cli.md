@@ -69,6 +69,14 @@ weft check: 1 breaking change
   Suggested: keep `total` with @deprecated, add the new field alongside.
 ```
 
+### `weft fmt`
+
+```
+weft fmt [PATH...] [--check]
+```
+
+Formats `.weft` files in place, in the one style described in [spec/language.md](../spec/language.md#style). A path is a file, or a folder that is searched for `.weft` files (hidden folders, `node_modules` and `target` are skipped). With no path it formats the current folder. `--check` changes nothing, lists the files that would change and exits with 1 (for CI). A file with a syntax error is reported, the other files are still formatted, and the exit code is 3.
+
 ### `weft dashboard`
 
 ```
