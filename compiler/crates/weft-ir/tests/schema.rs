@@ -47,10 +47,16 @@ pub fn sample() -> Ir {
     let mut qty = field("qty", prim(Primitive::Int));
     qty.rules = vec![
         Rule::Min { value: "1".into() },
-        Rule::Max { value: "100".into() },
+        Rule::Max {
+            value: "100".into(),
+        },
         Rule::Length { min: 1, max: 2 },
-        Rule::Pattern { regex: "^a$".into() },
-        Rule::Format { format: Format::Email },
+        Rule::Pattern {
+            regex: "^a$".into(),
+        },
+        Rule::Format {
+            format: Format::Email,
+        },
     ];
     let mut note = field("note", prim(Primitive::String));
     note.optional = true;
@@ -78,7 +84,12 @@ pub fn sample() -> Ir {
             deprecated: None,
             body: TypeBody::Record {
                 fields: vec![
-                    field("items", TypeRef::List { item: Box::new(TypeRef::Param { name: "T".into() }) }),
+                    field(
+                        "items",
+                        TypeRef::List {
+                            item: Box::new(TypeRef::Param { name: "T".into() }),
+                        },
+                    ),
                     field(
                         "tags",
                         TypeRef::Map {
@@ -99,7 +110,9 @@ pub fn sample() -> Ir {
             params: vec![],
             inline: true,
             deprecated: None,
-            body: TypeBody::Record { fields: vec![qty, note] },
+            body: TypeBody::Record {
+                fields: vec![qty, note],
+            },
         },
     ];
     ir.errors = vec![ErrorDef {
@@ -113,8 +126,14 @@ pub fn sample() -> Ir {
         optional: true,
         stream: false,
         errors: vec![
-            ErrorRef { package: "orders".into(), name: "OutOfStock".into() },
-            ErrorRef { package: BUILTIN_PACKAGE.into(), name: "NotFound".into() },
+            ErrorRef {
+                package: "orders".into(),
+                name: "OutOfStock".into(),
+            },
+            ErrorRef {
+                package: BUILTIN_PACKAGE.into(),
+                name: "NotFound".into(),
+            },
         ],
     };
     ir.events = vec![EventDef {
@@ -131,7 +150,11 @@ pub fn sample() -> Ir {
         method: HttpMethod::Get,
         base: Some("/v1".into()),
         path: "/orders/{id}".into(),
-        path_params: vec![ParamDef { name: "id".into(), ty: prim(Primitive::Uuid), optional: false }],
+        path_params: vec![ParamDef {
+            name: "id".into(),
+            ty: prim(Primitive::Uuid),
+            optional: false,
+        }],
         query: Some(named("GetOrderQuery")),
         body: Some(named("CreateOrder")),
         headers: None,
@@ -145,7 +168,10 @@ pub fn sample() -> Ir {
             doc: vec![],
             request: named("StreamUpdatesRequest"),
             client_streaming: true,
-            result: ResultDef { stream: true, ..result.clone() },
+            result: ResultDef {
+                stream: true,
+                ..result.clone()
+            },
             deprecated: None,
         }],
     }];
@@ -153,7 +179,11 @@ pub fn sample() -> Ir {
         kind: GraphqlKind::Query,
         name: "order".into(),
         doc: vec![],
-        args: vec![ParamDef { name: "id".into(), ty: prim(Primitive::Uuid), optional: true }],
+        args: vec![ParamDef {
+            name: "id".into(),
+            ty: prim(Primitive::Uuid),
+            optional: true,
+        }],
         result,
         deprecated: None,
     }];
@@ -212,7 +242,14 @@ fn minimal_document_is_valid() {
 #[test]
 fn json_uses_camel_case_and_tags() {
     let json = sample().to_json();
-    for expected in ["\"irVersion\": \"0.1\"", "\"wireName\"", "\"rpcServices\"", "\"kind\": \"record\"", "\"method\": \"GET\"", "\"rule\": \"min\""] {
+    for expected in [
+        "\"irVersion\": \"0.1\"",
+        "\"wireName\"",
+        "\"rpcServices\"",
+        "\"kind\": \"record\"",
+        "\"method\": \"GET\"",
+        "\"rule\": \"min\"",
+    ] {
         assert!(json.contains(expected), "missing {expected}");
     }
 }
