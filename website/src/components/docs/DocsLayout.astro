@@ -1,0 +1,515 @@
+---
+/**
+ * The docs page frame: the site header, a section bar with search, a directory tree for the
+ * current section on the left, the page in the middle and an "On this page" outline on the right.
+ * Below 1000px the tree moves behind a Contents button and the outline is dropped.
+ */
+import Base from "../../layouts/Base.astro";
+import Search from "./Search.astro";
+import { neighbours, sections, type DocSection } from "../../data/docs";
+
+interface Props {
+  section: DocSection;
+  title: string;
+  summary: string;
+  /** The folder this page sits in, for the breadcrumb and the tree. Omitted on a section's own page. */
+  folder?: string;
+  /** The page's own address, to highlight it in the tree. */
+  href: string;
+  headings?: { id: string; text: string }[];
+}
+
+const { section, title, summary, folder, href, headings = [] } = Astro.props;
+const { prev, next } = neighbours(href);
+
+// One row of the tree: the line-drawing prefix, then a folder name or a page link.
+interface Row {
+  prefix: string;
+  label: string;
+  href?: string;
+  folder?: boolean;
+}
+const rows: Row[] = [{ prefix: "", label: `${section.id}/`, href: `/docs/${section.id}`, folder: true }];
+section.groups.forEach((g, gi) => {
+  const lastGroup = gi === section.groups.length - 1;
+  rows.push({ prefix: lastGroup ? "└─ " : "├─ ", label: `${g.folder}/`, folder: true });
+  g.pages.forEach((p, pi) => {
+    const lastPage = pi === g.pages.length - 1;
+    rows.push({ prefix: `${lastGroup ? "   " : "│  "}${lastPage ? "└─ " : "├─ "}`, label: p.title, href: `/docs/${section.id}/${p.slug}` });
+  });
+});
+
+const pageTitle = href === `/docs/${section.id}` ? `${section.label} | Weft docs` : `${title} | Weft docs`;
+---
+
+<Base title={pageTitle} description={summary}>
+  <div class="bar wrap">
+    <nav class="sections" aria-label="Docs sections">
+      {sections.map((s) => <a href={`/docs/${s.id}`} aria-current={s.id === section.id ? "true" : undefined}>{s.label}</a>)}
+    </nav>
+    <button type="button" class="contents" id="docs-contents" aria-expanded="false" aria-controls="docs-tree">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
+      Contents
+    </button>
+    <button type="button" class="srch" data-search aria-label="Search the docs">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+      <span class="label">Search docs</span>
+      <kbd>⌘K</kbd>
+    </button>
+  </div>
+
+  <div class="frame wrap">
+    <aside class="nv" id="docs-tree" aria-label={`${section.label} pages`}>
+      <ul class="tree">
+        {
+          rows.map((r) => (
+            <li class:list={[r.folder && "folder", r.href === href && "on"]}>
+              <span class="g" aria-hidden="true">{r.prefix}</span>
+              {r.href ? <a href={r.href} aria-current={r.href === href ? "page" : undefined}>{r.label}</a> : <span class="f">{r.label}</span>}
+            </li>
+          ))
+        }
+      </ul>
+    </aside>
+
+    <article class="doc">
+      <nav class="crumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/docs">docs</a></li>
+          <li><a href={`/docs/${section.id}`}>{section.id}</a></li>
+          {folder && <li>{folder}</li>}
+          {folder && <li aria-current="page">{title.toLowerCase()}</li>}
+        </ol>
+      </nav>
+      <h1>{title}</h1>
+      <p class="lede">{summary}</p>
+      <slot />
+      {
+        (prev || next) && (
+          <nav class="pn" aria-label="Previous and next page">
+            {prev ? <a href={prev.href} rel="prev"><small>Previous</small>{prev.title}</a> : <span />}
+            {next && <a href={next.href} rel="next"><small>Next</small>{next.title}</a>}
+          </nav>
+        )
+      }
+    </article>
+
+    <aside class="toc" aria-label="On this page">
+      {
+        headings.length > 0 && (
+          <>
+            <h2>On this page</h2>
+            <ul>
+              {headings.map((h) => <li><a href={`#${h.id}`}>{h.text}</a></li>)}
+            </ul>
+          </>
+        )
+      }
+    </aside>
+  </div>
+
+  <Search />
+</Base>
+
+<script>
+  // The Contents button opens the tree on narrow screens.
+  const button = document.getElementById("docs-contents");
+  const tree = document.getElementById("docs-tree");
+  button?.addEventListener("click", () => {
+    const open = button.getAttribute("aria-expanded") !== "true";
+    button.setAttribute("aria-expanded", String(open));
+    tree?.classList.toggle("open", open);
+  });
+
+  // The outline marks the heading nearest the top of the page.
+  const links = [...document.querySelectorAll<HTMLAnchorElement>(".toc a")];
+  const targets = links.map((a) => document.getElementById(a.hash.slice(1))).filter((el): el is HTMLElement => el !== null);
+  if (targets.length) {
+    const mark = (id: string): void => {
+      for (const a of links) a.parentElement?.classList.toggle("on", a.hash === `#${id}`);
+    };
+    mark(targets[0]?.id ?? "");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) mark(e.target.id);
+      },
+      { rootMargin: "-120px 0px -70% 0px" },
+    );
+    for (const t of targets) observer.observe(t);
+  }
+</script>
+
+<style is:global>
+  :root {
+    --sub-h: 49px;
+  }
+</style>
+
+<style>
+  .bar {
+    position: sticky;
+    top: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: 48px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-base);
+  }
+
+  .sections {
+    display: flex;
+    gap: 26px;
+    height: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sections a {
+    display: flex;
+    align-items: center;
+    flex: none;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color var(--t-fast) ease;
+  }
+
+  .sections a:hover {
+    color: var(--fg);
+  }
+
+  .sections a[aria-current="true"] {
+    color: var(--fg);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .srch,
+  .contents {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 12px;
+    background: var(--raised);
+    color: var(--faint);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: border-color var(--t-fast) ease;
+  }
+
+  .srch {
+    margin-left: auto;
+    width: 240px;
+  }
+
+  .srch kbd {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0 5px;
+  }
+
+  .srch:hover,
+  .contents:hover {
+    border-color: var(--line-hover);
+  }
+
+  .contents {
+    display: none;
+  }
+
+  .frame {
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr) 210px;
+  }
+
+  .nv {
+    position: sticky;
+    top: calc(var(--header-h) + var(--sub-h) + env(safe-area-inset-top, 0px));
+    align-self: start;
+    max-height: calc(100vh - var(--header-h) - var(--sub-h));
+    overflow-y: auto;
+    padding: 22px 20px 32px 0;
+    border-right: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+
+  .tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tree li {
+    padding: 3px 0;
+    white-space: pre;
+    color: var(--muted);
+  }
+
+  .tree .g {
+    color: var(--line-hover);
+  }
+
+  .tree .f,
+  .tree .folder a {
+    color: var(--fg);
+  }
+
+  .tree a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color var(--t-fast) ease;
+  }
+
+  .tree a:hover {
+    color: var(--fg);
+  }
+
+  .tree .on a {
+    color: var(--accent);
+  }
+
+  .doc {
+    min-width: 0;
+    width: 100%;
+    max-width: 800px;
+    margin-inline: auto;
+    padding: 36px clamp(20px, 3vw, 48px) 72px;
+  }
+
+  .crumb {
+    margin: 0 0 14px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .crumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .crumb li + li::before {
+    content: "/";
+    margin-inline: 0.6em;
+  }
+
+  .crumb a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .crumb a:hover {
+    color: var(--fg);
+  }
+
+  h1 {
+    margin: 0 0 12px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 3.4vw, 2.75rem);
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0 0 28px;
+    max-width: 62ch;
+    font-size: var(--text-md);
+    color: var(--muted);
+  }
+
+  .toc {
+    position: sticky;
+    top: calc(var(--header-h) + var(--sub-h) + env(safe-area-inset-top, 0px));
+    align-self: start;
+    padding: 40px 0 32px 20px;
+  }
+
+  .toc h2 {
+    margin: 0 0 10px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--faint);
+  }
+
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--line);
+  }
+
+  .toc li {
+    margin-left: -1px;
+    padding: 4px 0 4px 14px;
+    border-left: 1px solid transparent;
+    font-size: var(--text-sm);
+  }
+
+  .toc a {
+    color: var(--faint);
+    text-decoration: none;
+    transition: color var(--t-fast) ease;
+  }
+
+  .toc a:hover,
+  .toc .on a {
+    color: var(--fg);
+  }
+
+  .toc .on {
+    border-left-color: var(--accent);
+  }
+
+  .pn {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 48px;
+  }
+
+  .pn a {
+    display: block;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--fg);
+    transition: border-color var(--t-fast) ease;
+  }
+
+  .pn a:hover {
+    border-color: var(--line-hover);
+  }
+
+  .pn a:last-child:not(:first-child) {
+    text-align: right;
+  }
+
+  .pn small {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  @media (max-width: 1200px) {
+    .frame {
+      grid-template-columns: 250px minmax(0, 1fr);
+    }
+
+    .toc {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .frame {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .contents {
+      display: flex;
+    }
+
+    .srch {
+      width: auto;
+    }
+
+    .srch .label,
+    .srch kbd {
+      display: none;
+    }
+
+    .bar {
+      gap: 12px;
+    }
+
+    .sections {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .nv {
+      display: none;
+      position: static;
+      max-height: none;
+      padding: 16px 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nv.open {
+      display: block;
+    }
+
+    .doc {
+      padding-inline: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sections a,
+    .srch,
+    .contents,
+    .tree a,
+    .toc a,
+    .pn a {
+      transition: none;
+    }
+  }
+</style>
+
+<style is:global>
+  /* The page's own content: headings, text, inline code, callouts. */
+  .doc h2 {
+    margin: 40px 0 10px;
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    scroll-margin-top: calc(var(--header-h) + var(--sub-h) + 16px);
+  }
+
+  .doc p {
+    margin: 0 0 14px;
+    max-width: 66ch;
+    color: var(--muted);
+  }
+
+  .doc code.i {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--fg);
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 1px 5px;
+  }
+
+  .doc .note {
+    margin: 20px 0;
+    max-width: 62ch;
+    padding: 4px 0 4px 14px;
+    border-left: 2px solid var(--accent);
+    color: var(--muted);
+  }
+
+  .doc .note b {
+    font-weight: 500;
+    color: var(--fg);
+  }
+</style>

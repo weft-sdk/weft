@@ -25,15 +25,17 @@ A docs section in `website/` with its own layout, navigation and search, and the
 
 ## Done
 
-- Work file.
+- Work file and layout options. The maintainer chose a mix of A, B and C.
+- Layout built: section bar, directory tree, outline, search dialog, language tabs, docs home, section pages and a page per entry in `src/data/docs.ts`. Docs link added to the navbar; footer links point at real pages.
+- `pnpm check` and `build` pass (67 pages). Lighthouse 100 in all four categories, both themes, on `/docs` and `/docs/contracts/events`. Checked in a browser: tabs, remembered language, search with keyboard, phone menu, no overflow, no console errors.
 
 ## Next step
 
-The docs layout options page is built and sent. Build the layout the maintainer picks (plan step 2), with placeholder pages only.
+Maintainer reviews the layout on the dev server. Then update the W5 row in the roadmap (drop "design-stage"), open the pull request and delete this work file. Writing the real docs content is a later task, once the backend exists.
 
 ## Waiting on
 
-- The maintainer's choice of docs layout (options A to D).
+- The maintainer's review of the built layout.
 
 ## How to check
 

@@ -120,6 +120,19 @@ Not commitments. Ideas that use the product itself as the visual:
 5. **Before and after.** Forty lines of setup across KafkaJS, Express and Socket.io collapse into a few lines of Weft.
 6. **Live compatibility table.** The nightly [conformance](conformance.md) results, showing exactly what is verified for each language and library.
 
+## Docs layout (W5)
+
+Chosen by the maintainer as a mix of three options: section tabs on top, a directory tree for the current section on the left, and an outline on the right.
+
+- **Section bar.** Under the site header: Guides, Contracts, Transports, Libraries, CLI, Dashboard, with a search button at the right (⌘K, Ctrl+K or `/`). It stays pinned.
+- **Tree.** A mono directory tree for the current section only: `section/`, its folders, then its pages, drawn with line characters. The current page is the accent colour. It sticks while you scroll.
+- **Page.** Breadcrumb, title, summary, then the body, then previous/next links within the section. Code examples use language tabs; the choice is remembered in the browser and applies to every tab group on every page.
+- **Outline.** "On this page" on the right, with the heading nearest the top marked.
+- **Search.** A dialog that filters a build-time index of every page and section in the browser. Arrow keys and Enter work. No server.
+- **Narrow screens.** Below 1200px the outline is dropped. Below 1000px the tree moves behind a Contents button and the section bar scrolls sideways.
+- **Docs home** (`/docs`): the search box and the six sections as open ruled columns.
+- **Content.** The structure lives in `website/src/data/docs.ts`; routes are `/docs`, `/docs/<section>` and `/docs/<section>/<page>`. Pages show a title and summary until their content is written, except Events, which demonstrates the page parts. The code in its non-TypeScript tabs is illustrative and is replaced when real generated output exists.
+
 ## Docs structure (draft)
 
 - Getting started (per language)

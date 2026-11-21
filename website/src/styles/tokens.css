@@ -46,6 +46,7 @@
   --text-base: 0.9375rem;
   --text-md: 1.0625rem;
   --text-lg: 1.125rem;
+  --text-xl: 1.3125rem;
   --text-lead: clamp(1.75rem, 3.2vw, 3rem);
   --text-hero: clamp(2.75rem, 7vw, 7rem);
 

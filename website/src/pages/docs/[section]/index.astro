@@ -1,0 +1,80 @@
+---
+import DocsLayout from "../../../components/docs/DocsLayout.astro";
+import { sections } from "../../../data/docs";
+
+export function getStaticPaths() {
+  return sections.map((section) => ({ params: { section: section.id }, props: { section } }));
+}
+
+const { section } = Astro.props;
+---
+
+<DocsLayout section={section} title={section.label} summary={section.summary} href={`/docs/${section.id}`}>
+  <div class="groups">
+    {
+      section.groups.map((g) => (
+        <section>
+          <h2 class="folder">{g.folder}/</h2>
+          <ul>
+            {
+              g.pages.map((p) => (
+                <li>
+                  <a href={`/docs/${section.id}/${p.slug}`}>{p.title}</a>
+                  <span>{p.summary}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</DocsLayout>
+
+<style>
+  .groups h2 {
+    margin: 36px 0 8px;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--faint);
+    letter-spacing: 0;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(9em, 14em) minmax(0, 1fr);
+    gap: 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  li a {
+    color: var(--fg);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  li a:hover {
+    color: var(--accent);
+  }
+
+  li span {
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  @media (max-width: 640px) {
+    li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+  }
+</style>

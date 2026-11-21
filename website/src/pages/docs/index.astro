@@ -1,0 +1,168 @@
+---
+import Base from "../../layouts/Base.astro";
+import Search from "../../components/docs/Search.astro";
+import { flat, sections } from "../../data/docs";
+---
+
+<Base title="Documentation | Weft" description="Guides, the contract language, every transport and library, the CLI and the dashboard.">
+  <section class="wrap home">
+    <h1>Documentation</h1>
+    <p class="intro">Install Weft, write a contract once and call every transport with types, in any of twelve languages.</p>
+    <button type="button" class="srch" data-search>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+      <span>Search the docs</span>
+      <kbd>⌘K</kbd>
+    </button>
+
+    <ul class="cols">
+      {
+        sections.map((s) => (
+          <li>
+            <a class="head" href={`/docs/${s.id}`}>{s.label}</a>
+            <p>{s.summary}</p>
+            <ul class="pages">
+              {flat.filter((p) => p.section.id === s.id).slice(0, 4).map((p) => <li><a href={p.href}>{p.title}</a></li>)}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+  <Search />
+</Base>
+
+<style>
+  .home {
+    padding-block: clamp(36px, 5vw, 72px);
+  }
+
+  h1 {
+    margin: 0 0 var(--stack-lead);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-lead);
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+  }
+
+  .srch {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: min(100%, 520px);
+    height: 48px;
+    margin-top: var(--stack-content);
+    padding: 0 16px;
+    background: var(--raised);
+    color: var(--faint);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: var(--text-base);
+    cursor: pointer;
+    transition: border-color var(--t-fast) ease;
+  }
+
+  .srch:hover {
+    border-color: var(--line-hover);
+  }
+
+  kbd {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0 5px;
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    list-style: none;
+    margin: var(--stack-row) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .cols > li {
+    padding: 28px 28px 32px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cols > li:nth-child(3n + 1) {
+    padding-left: 0;
+  }
+
+  .cols > li:not(:nth-child(3n + 1)) {
+    border-left: 1px solid var(--line);
+  }
+
+  .head {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  .cols p {
+    margin: 8px 0 16px;
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  .pages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pages a {
+    font-size: var(--text-sm);
+    color: var(--faint);
+    text-decoration: none;
+    transition: color var(--t-fast) ease;
+  }
+
+  .pages a:hover {
+    color: var(--fg);
+  }
+
+  @media (max-width: 900px) {
+    .cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cols > li:nth-child(3n + 1) {
+      padding-left: 28px;
+    }
+
+    .cols > li:nth-child(odd) {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .cols {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cols > li,
+    .cols > li:nth-child(odd) {
+      padding-inline: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .srch,
+    .pages a {
+      transition: none;
+    }
+  }
+</style>

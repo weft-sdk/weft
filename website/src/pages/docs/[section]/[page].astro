@@ -1,0 +1,47 @@
+---
+import DocsLayout from "../../../components/docs/DocsLayout.astro";
+import LangTabs from "../../../components/docs/LangTabs.astro";
+import { flat } from "../../../data/docs";
+
+export function getStaticPaths() {
+  return flat.map((page) => ({ params: { section: page.section.id, page: page.slug }, props: { page } }));
+}
+
+const { page } = Astro.props;
+
+// Only the Events page has body content so far; every other page shows its title and summary.
+const isEvents = page.href === "/docs/contracts/events";
+const headings = isEvents
+  ? [
+      { id: "publish-an-event", text: "Publish an event" },
+      { id: "keys-and-ordering", text: "Keys and ordering" },
+    ]
+  : [];
+
+const publish = [
+  { lang: "TypeScript", html: `<span class="k">// contracts/orders.weft</span>\n<span class="a">await</span> weft.kafka.<span class="a">publish</span>("order.placed", order)\n<span class="k">// runs on KafkaJS, typed as Order</span>` },
+  { lang: "Go", html: `<span class="k">// contracts/orders.weft</span>\nweft.Kafka.<span class="a">Publish</span>(ctx, "order.placed", order)\n<span class="k">// runs on the Go Kafka client, typed as Order</span>` },
+  { lang: "Python", html: `<span class="k"># contracts/orders.weft</span>\n<span class="a">await</span> weft.kafka.<span class="a">publish</span>("order.placed", order)\n<span class="k"># runs on the Python Kafka client, typed as Order</span>` },
+  { lang: "Rust", html: `<span class="k">// contracts/orders.weft</span>\nweft.kafka().<span class="a">publish</span>("order.placed", &amp;order).<span class="a">await</span>?;\n<span class="k">// runs on the Rust Kafka client, typed as Order</span>` },
+  { lang: "Java", html: `<span class="k">// contracts/orders.weft</span>\nweft.kafka().<span class="a">publish</span>("order.placed", order);\n<span class="k">// runs on Spring Kafka, typed as Order</span>` },
+];
+---
+
+<DocsLayout section={page.section} title={page.title} summary={page.summary} folder={page.folder} href={page.href} headings={headings}>
+  {
+    isEvents && (
+      <>
+        <h2 id="publish-an-event">Publish an event</h2>
+        <p>Call the transport by name. The payload is checked against the contract at the call site and again at runtime.</p>
+        <LangTabs samples={publish} label="Publish an event" />
+        <div class="note">
+          <b>The same library runs underneath.</b> Weft calls the library you already use, so your broker settings and middleware keep working.
+        </div>
+        <h2 id="keys-and-ordering">Keys and ordering</h2>
+        <p>
+          The key in the contract decides partitioning. Change it and <code class="i">weft check</code> reports it as a breaking change.
+        </p>
+      </>
+    )
+  }
+</DocsLayout>

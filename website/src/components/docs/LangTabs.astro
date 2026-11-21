@@ -1,0 +1,237 @@
+---
+/**
+ * Code in several languages. The chosen language is remembered and applied to every tab group
+ * on the page and on later pages. Samples are HTML strings so a page can colour its own tokens.
+ */
+interface Props {
+  samples: { lang: string; html: string }[];
+  label: string;
+}
+
+const { samples, label } = Astro.props;
+const uid = `lt-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+---
+
+<div class="langtabs" data-langtabs>
+  <div class="tabs">
+    <div class="list" role="tablist" aria-label={`${label}, language`}>
+    {
+      samples.map((s, i) => (
+        <button type="button" role="tab" id={`${uid}-t-${i}`} aria-controls={`${uid}-p-${i}`} aria-selected={i === 0} tabindex={i === 0 ? 0 : -1} data-lang={s.lang}>
+          {s.lang}
+        </button>
+      ))
+    }
+    </div>
+    <button type="button" class="copy" aria-label="Copy the code">
+      <svg class="i-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1.5" /><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" /></svg>
+      <svg class="i-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="tick" d="M5 12.5l4.5 4.5L19 7.5" pathLength="1" /></svg>
+    </button>
+  </div>
+  {
+    samples.map((s, i) => (
+      <pre role="tabpanel" id={`${uid}-p-${i}`} aria-labelledby={`${uid}-t-${i}`} hidden={i !== 0} tabindex="0" data-lang={s.lang} set:html={s.html} />
+    ))
+  }
+</div>
+
+<script>
+  const KEY = "weft-lang";
+
+  function groups(): HTMLElement[] {
+    return [...document.querySelectorAll<HTMLElement>("[data-langtabs]")];
+  }
+
+  /** Show one language in a group, if the group has it. */
+  function show(group: HTMLElement, lang: string, focus = false): void {
+    const tabs = [...group.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    if (!tabs.some((t) => t.dataset.lang === lang)) return;
+    for (const t of tabs) {
+      const on = t.dataset.lang === lang;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      if (on && focus) t.focus();
+    }
+    for (const p of group.querySelectorAll<HTMLElement>('[role="tabpanel"]')) p.hidden = p.dataset.lang !== lang;
+  }
+
+  function choose(lang: string): void {
+    for (const g of groups()) show(g, lang);
+    try {
+      localStorage.setItem(KEY, lang);
+    } catch {}
+  }
+
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(KEY);
+  } catch {}
+  if (saved) for (const g of groups()) show(g, saved);
+
+  for (const g of groups()) {
+    g.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      const tab = target.closest<HTMLButtonElement>('[role="tab"]');
+      if (tab?.dataset.lang) choose(tab.dataset.lang);
+      const copy = target.closest<HTMLButtonElement>(".copy");
+      if (copy) {
+        const panel = g.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])');
+        navigator.clipboard
+          .writeText(panel?.textContent ?? "")
+          .then(() => {
+            copy.classList.add("copied");
+            setTimeout(() => copy.classList.remove("copied"), 1600);
+          })
+          .catch(() => {});
+      }
+    });
+    g.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      const tabs = [...g.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      const i = tabs.findIndex((t) => t === document.activeElement);
+      if (i < 0) return;
+      const next = tabs[(i + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      if (next?.dataset.lang) {
+        choose(next.dataset.lang);
+        next.focus();
+      }
+      event.preventDefault();
+    });
+  }
+</script>
+
+<style>
+  .langtabs {
+    margin: 4px 0 24px;
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .tabs {
+    display: flex;
+    align-items: center;
+    padding-inline: 6px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .list {
+    display: flex;
+  }
+
+  .tabs button {
+    appearance: none;
+    flex: none;
+    background: none;
+    border: 0;
+    padding: 10px 10px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--faint);
+    cursor: pointer;
+    transition: color var(--t-fast) ease;
+  }
+
+  .tabs button:hover {
+    color: var(--fg);
+  }
+
+  .tabs button[aria-selected="true"] {
+    color: var(--fg);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .tabs button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .tabs .copy {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    margin-left: auto;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .copy svg {
+    position: absolute;
+    inset: 10px;
+    transition:
+      opacity 160ms ease,
+      transform 200ms ease;
+  }
+
+  .i-check {
+    opacity: 0;
+    transform: scale(0.6);
+    color: var(--accent);
+  }
+
+  .i-check .tick {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .copy.copied .i-copy {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .copy.copied .i-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .copy.copied .i-check .tick {
+    animation: draw 260ms 80ms ease-out forwards;
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  pre {
+    margin: 0;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.8;
+    color: var(--fg);
+  }
+
+  pre[hidden] {
+    display: none;
+  }
+
+  pre:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  pre :global(.k) {
+    color: var(--faint);
+  }
+
+  pre :global(.a) {
+    color: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tabs button,
+    .copy svg {
+      transition: none;
+    }
+
+    .copy.copied .i-check .tick {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+</style>
