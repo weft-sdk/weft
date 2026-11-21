@@ -49,24 +49,25 @@ Work is handed off through the repository, never through a conversation. Full pr
 
 ## Commands
 
-Add each command here in the same pull request that makes it work.
+Everything runs through the root `Makefile` (`make help` lists it). Add each command there, and here, in the same pull request that makes it work.
 
 | Command | What it does |
 | --- | --- |
-| `pnpm --dir website install` | Install the website's dependencies (Node 22.23.4 or later, pnpm 11) |
-| `pnpm --dir website dev` | Run the website locally at `http://localhost:4321` |
-| `pnpm --dir website check` | Type-check the website (`astro check`, TypeScript strict) |
-| `pnpm --dir website build` | Build the static site into `website/dist/` |
-| `cargo build --manifest-path compiler/Cargo.toml` | Build the compiler workspace (Rust 1.95, pinned in `compiler/rust-toolchain.toml`) |
-| `cargo test --manifest-path compiler/Cargo.toml` | Run the compiler's tests |
-| `cargo clippy --manifest-path compiler/Cargo.toml --all-targets -- -D warnings` | Lint the compiler; CI denies warnings |
-| `cargo fmt --manifest-path compiler/Cargo.toml --all --check` | Check formatting |
-| `cargo run --manifest-path compiler/Cargo.toml -p weft-cli -- <args>` | Run the `weft` CLI from source (`init`, `fmt`, `check`, `gen`) |
-| `WEFT_REQUIRE_TSC=1 cargo test --manifest-path compiler/Cargo.toml -p weft-codegen` | The code generator tests type-check its output with `tsc` (`npm i -g typescript`). Without `WEFT_REQUIRE_TSC` they skip when `tsc` is missing |
-| `UPDATE_SCHEMA=1 cargo test --manifest-path compiler/Cargo.toml -p weft-ir --test schema` | Regenerate `spec/ir.schema.json` after changing the IR types |
-| `INSTA_UPDATE=always cargo test --manifest-path compiler/Cargo.toml` | Accept changed snapshot tests. Read the `.snap` diffs before committing |
+| `make check` | What CI runs: format check, clippy, tests and build for the compiler, then the website's type-check and build. Run `make site-install` once first |
+| `make fmt` / `make fmt-check` | Format the compiler's Rust code / check formatting |
+| `make lint` | Clippy with warnings denied (CI denies them too) |
+| `make test` | Run the compiler's tests |
+| `make test-tsc` | Tests that type-check the code generator's output with `tsc` (`npm i -g typescript`). Plain `make test` skips them when `tsc` is missing |
+| `make build` | Build the compiler workspace (Rust 1.95, pinned in `compiler/rust-toolchain.toml`) |
+| `make weft ARGS="check ."` | Run the `weft` CLI from source (`init`, `fmt`, `check`, `gen`) |
+| `make schema` | Regenerate `spec/ir.schema.json` after changing the IR types |
+| `make snapshots` | Accept changed snapshot tests. Read the `.snap` diffs before committing |
+| `make site-install` | Install the website's dependencies (Node 22.23.4 or later, pnpm 11) |
+| `make site-dev` | Run the website at `http://localhost:4321` |
+| `make site-check` | Type-check the website (`astro check`, TypeScript strict) |
+| `make site-build` | Build the static site into `website/dist/` |
 
 ## Repository
 
 - GitHub: `github.com/weft-sdk/weft` (private). Default branch `main`.
-- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `docs/`, `website/`, `compiler/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
+- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `website/`, `compiler/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
