@@ -4,6 +4,7 @@
  * licence and logo notes. Links to pages that do not exist yet (documentation) are planned for W5.
  */
 import Logo from "./Logo.astro";
+import Icon from "./Icon.astro";
 
 const columns: { title: string; links: { label: string; href: string; external?: boolean }[] }[] = [
   {
@@ -42,6 +43,10 @@ const columns: { title: string; links: { label: string; href: string; external?:
     <div class="brand">
       <a class="mark" href="/" aria-label="Weft home"><Logo size={22} />weft</a>
       <p>One interface for every way your services talk.</p>
+      <div class="social">
+        <a href="https://github.com/weft-sdk/weft" target="_blank" rel="noopener noreferrer" aria-label="Weft on GitHub (opens in a new tab)"><Icon name="github" size={20} /></a>
+        <a href="https://www.npmjs.com/org/weft-sdk" target="_blank" rel="noopener noreferrer" aria-label="Weft on npm (opens in a new tab)"><Icon name="npm" size={20} /></a>
+      </div>
     </div>
     {
       columns.map((c) => (
@@ -99,6 +104,22 @@ const columns: { title: string; links: { label: string; href: string; external?:
     color: var(--muted);
   }
 
+  .social {
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .social a {
+    display: flex;
+    color: var(--muted);
+    transition: color var(--t-fast) ease;
+  }
+
+  .social a:hover {
+    color: var(--fg);
+  }
+
   h2 {
     margin: 0 0 16px;
     font-size: var(--text-sm);
@@ -153,7 +174,8 @@ const columns: { title: string; links: { label: string; href: string; external?:
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .col a {
+    .col a,
+    .social a {
       transition: none;
     }
   }
