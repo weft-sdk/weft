@@ -1,0 +1,14 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\nhttp {\\n  GET \\\"/a\\\" a() Order\\n}\")"
+---
+weft::syntax
+
+  × expected `->`, found `Order`
+   ╭─[test.weft:3:16]
+ 2 │ http {
+ 3 │   GET "/a" a() Order
+   ·                ──┬──
+   ·                  ╰── expected `->`
+ 4 │ }
+   ╰────

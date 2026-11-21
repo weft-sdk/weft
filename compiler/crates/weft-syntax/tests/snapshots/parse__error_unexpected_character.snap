@@ -1,0 +1,13 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\ntype A { x: int; }\")"
+---
+weft::syntax
+
+  × unexpected character `;`
+   ╭─[test.weft:2:16]
+ 1 │ package p
+ 2 │ type A { x: int; }
+   ·                ┬
+   ·                ╰── not part of the contract language
+   ╰────

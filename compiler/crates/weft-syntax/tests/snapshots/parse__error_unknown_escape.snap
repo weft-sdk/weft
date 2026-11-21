@@ -1,0 +1,13 @@
+---
+source: crates/weft-syntax/tests/parse.rs
+expression: "err(\"package p\\ntype A { x: string @pattern(\\\"\\\\d\\\") }\")"
+---
+weft::syntax
+
+  × unknown escape `\d`
+   ╭─[test.weft:2:30]
+ 1 │ package p
+ 2 │ type A { x: string @pattern("\d") }
+   ·                              ─┬
+   ·                               ╰── write a backslash as `\\`, so a regex digit is `\\d`
+   ╰────
