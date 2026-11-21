@@ -42,7 +42,17 @@ Detected: TypeScript (pnpm)
 Next: edit contracts/orders.weft, then run `weft gen`.
 ```
 
-Detects the language and package manager: npm, pnpm, yarn, bun, deno, go modules, pip, uv, poetry, Maven, Gradle, dotnet, cargo, bundler, composer, mix, SwiftPM, pub. Only offers libraries that exist for that language ([languages.md](languages.md)). Non-interactive: `weft init --yes --http express --kafka kafkajs`.
+Detects the language and package manager: npm, pnpm, yarn, bun, deno, go modules, pip, uv, poetry, Maven, Gradle, dotnet, cargo, bundler, composer, mix, SwiftPM, pub. Only offers libraries that exist for that language ([languages.md](languages.md)).
+
+```
+weft init [--yes] [--name NAME] [--lang LANG] [--contracts PATH] [--http [LIBRARY]] [--kafka [LIBRARY]] ...
+```
+
+- **Non-interactive.** `weft init --yes --http express --kafka kafkajs`. Every transport has a flag (`--http`, `--gql`, `--grpc`, `--rpc`, `--ws`, `--sse`, `--kafka`, `--mq`, `--nats`, `--redis`, `--cloud`, `--mqtt`, `--pulsar`) that takes a library, or none for the default. With `--yes` and no transport flag it sets up HTTP. Without `--yes` it asks, and any flag you pass answers its question. Without a terminal it needs `--yes`.
+- **The service name** is also its contract package: lower-case letters, digits and `_`, starting with a letter. It defaults to the folder name.
+- **The example contract** uses the transports you chose: an event for the messaging ones, a route for HTTP, and so on. It is already formatted and checked, and `weft gen` runs on it before `weft init` finishes.
+- **It never overwrites.** If `weft.yaml`, the example contract or the generated file exists, it stops before writing anything. It also checks the whole setup in memory first, so a name TypeScript cannot hold fails with nothing left behind.
+- **Installing packages** (the `pnpm add` line above) is added with the language packages (phase P2); today `weft init` sets up the config, the contract and the generated code.
 
 ### `weft gen`
 

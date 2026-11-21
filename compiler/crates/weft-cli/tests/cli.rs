@@ -545,3 +545,245 @@ fn check_works_from_a_subfolder() {
     let dir = tagged_project("check_sub", V1);
     assert_eq!(code(&weft(&["check"], &dir.join("contracts"))), 0);
 }
+
+// ---- weft init ----
+
+/// An empty folder with a given name, so the default service name is predictable.
+fn empty(name: &str) -> PathBuf {
+    scratch(name)
+}
+
+#[test]
+fn init_yes_sets_up_an_empty_folder() {
+    let dir = empty("init_basic");
+    let o = weft(&["init", "--yes"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let t = text(&o);
+    assert!(
+        t.contains("No project detected here") && t.contains("Wrote weft.yaml"),
+        "{t}"
+    );
+    assert!(t.contains("Wrote src/weft.gen.ts"), "{t}");
+    let yaml = fs::read_to_string(dir.join("weft.yaml")).unwrap();
+    assert!(
+        yaml.contains("service: init_basic") && yaml.contains("language: typescript"),
+        "{yaml}"
+    );
+    assert!(
+        yaml.contains("http:\n    library: express\n    port: 3000"),
+        "{yaml}"
+    );
+    let contract = fs::read_to_string(dir.join("contracts/init_basic.weft")).unwrap();
+    assert!(contract.contains("package init_basic") && contract.contains("http {"));
+    assert!(fs::read_to_string(dir.join("src/weft.gen.ts"))
+        .unwrap()
+        .contains("export namespace init_basic"));
+}
+
+#[test]
+fn what_init_writes_passes_every_other_command() {
+    let dir = empty("init_then_everything");
+    assert_eq!(
+        code(&weft(
+            &["init", "--yes", "--name", "orders", "--http", "--kafka", "--gql", "--ws"],
+            &dir
+        )),
+        0
+    );
+    assert_eq!(
+        code(&weft(&["gen", "--check"], &dir)),
+        0,
+        "generated file is current"
+    );
+    assert_eq!(
+        code(&weft(&["fmt", "--check"], &dir)),
+        0,
+        "example contract is already formatted"
+    );
+    // And it can be checked against a baseline, once there is one.
+    git(&dir, &["init", "-q", "-b", "main"]);
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-q", "-m", "init"]);
+    git(&dir, &["tag", "v1"]);
+    assert_eq!(code(&weft(&["check"], &dir)), 0);
+}
+
+#[test]
+fn init_flags_choose_transports_and_libraries() {
+    let dir = empty("init_flags");
+    let o = weft(
+        &[
+            "init",
+            "--yes",
+            "--name",
+            "orders",
+            "--http",
+            "fastify",
+            "--kafka",
+            "--sse",
+            "--redis",
+            "node-redis",
+        ],
+        &dir,
+    );
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let yaml = fs::read_to_string(dir.join("weft.yaml")).unwrap();
+    for expected in [
+        "http:\n    library: fastify",
+        "kafka:\n    library: kafkajs\n    brokers: ${KAFKA_BROKERS}\n    group: orders",
+        "sse:\n    path: /events",
+        "redis:\n    library: node-redis",
+    ] {
+        assert!(yaml.contains(expected), "missing {expected:?} in\n{yaml}");
+    }
+    assert!(!yaml.contains("gql"), "{yaml}");
+    let contract = fs::read_to_string(dir.join("contracts/orders.weft")).unwrap();
+    assert!(contract.contains("event item.created") && contract.contains("socket updates"));
+}
+
+#[test]
+fn init_detects_the_project_and_package_manager() {
+    let dir = empty("init_detect");
+    fs::write(dir.join("package.json"), "{}").unwrap();
+    fs::write(dir.join("pnpm-lock.yaml"), "").unwrap();
+    let o = weft(&["init", "--yes"], &dir);
+    assert_eq!(code(&o), 0);
+    assert!(
+        text(&o).contains("Detected: TypeScript (pnpm)"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn init_uses_the_given_contracts_folder() {
+    let dir = empty("init_contracts");
+    assert_eq!(
+        code(&weft(
+            &[
+                "init",
+                "--yes",
+                "--name",
+                "api",
+                "--contracts",
+                "./spec/contracts"
+            ],
+            &dir
+        )),
+        0
+    );
+    assert!(dir.join("spec/contracts/api.weft").exists());
+    assert!(fs::read_to_string(dir.join("weft.yaml"))
+        .unwrap()
+        .contains("- ./spec/contracts"));
+    assert_eq!(code(&weft(&["gen", "--check"], &dir)), 0);
+}
+
+#[test]
+fn init_makes_a_service_name_from_the_folder() {
+    let dir = scratch("My Service-2");
+    assert_eq!(code(&weft(&["init", "--yes"], &dir)), 0);
+    assert!(fs::read_to_string(dir.join("weft.yaml"))
+        .unwrap()
+        .contains("service: my_service_2"));
+}
+
+#[test]
+fn init_never_overwrites() {
+    let dir = empty("init_twice");
+    assert_eq!(code(&weft(&["init", "--yes", "--name", "orders"], &dir)), 0);
+    let before = fs::read_to_string(dir.join("weft.yaml")).unwrap();
+    fs::write(dir.join("weft.yaml"), format!("{before}# mine\n")).unwrap();
+    let o = weft(&["init", "--yes", "--name", "orders"], &dir);
+    assert_eq!(code(&o), 2);
+    assert!(text(&o).contains("already exists"), "{}", text(&o));
+    assert!(fs::read_to_string(dir.join("weft.yaml"))
+        .unwrap()
+        .ends_with("# mine\n"));
+
+    // An existing contract or generated file also stops it, before anything is written.
+    let dir = empty("init_existing_contract");
+    fs::create_dir_all(dir.join("contracts")).unwrap();
+    fs::write(dir.join("contracts/orders.weft"), "package mine\n").unwrap();
+    let o = weft(&["init", "--yes", "--name", "orders"], &dir);
+    assert_eq!(code(&o), 2);
+    assert!(
+        !dir.join("weft.yaml").exists(),
+        "nothing is written when it stops"
+    );
+    assert_eq!(
+        fs::read_to_string(dir.join("contracts/orders.weft")).unwrap(),
+        "package mine\n"
+    );
+}
+
+#[test]
+fn init_rejects_bad_input_and_writes_nothing() {
+    let cases: [(&[&str], &str); 8] = [
+        (&["--name", "9lives"], "not a valid service name"),
+        (&["--name", "My-Service"], "not a valid service name"),
+        (&["--name", "weft"], "reserved"),
+        (&["--name", "class"], "cannot be used"),
+        (
+            &["--http", "nope"],
+            "is not a HTTP library. Choose one of: express, fastify, hono, nestjs",
+        ),
+        (&["--sse", "x"], "has no library to choose"),
+        (&["--lang", "go"], "does not set up go yet"),
+        (&["--contracts", "x.weft"], "is a folder"),
+    ];
+    for (i, (flags, needle)) in cases.iter().enumerate() {
+        let dir = empty(&format!("init_bad_{i}"));
+        let mut args = vec!["init", "--yes"];
+        args.extend(*flags);
+        let o = weft(&args, &dir);
+        assert_eq!(code(&o), 2, "{flags:?}: {}", text(&o));
+        assert!(
+            text(&o).contains(needle),
+            "{flags:?}: wanted {needle:?} in {}",
+            text(&o)
+        );
+        assert_eq!(
+            fs::read_dir(&dir).unwrap().count(),
+            0,
+            "{flags:?} left files behind"
+        );
+    }
+}
+
+#[test]
+fn init_without_a_terminal_and_without_yes_says_what_to_do() {
+    let dir = empty("init_no_tty");
+    let o = weft(&["init"], &dir);
+    assert_eq!(code(&o), 2);
+    assert!(
+        text(&o).contains("needs a terminal") && text(&o).contains("--yes"),
+        "{}",
+        text(&o)
+    );
+    assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
+}
+
+#[test]
+fn init_every_transport_flag_works() {
+    let dir = empty("init_all");
+    let o = weft(
+        &[
+            "init", "--yes", "--name", "all", "--http", "--gql", "--grpc", "--rpc", "--ws",
+            "--sse", "--kafka", "--mq", "--nats", "--redis", "--cloud", "--mqtt", "--pulsar",
+        ],
+        &dir,
+    );
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let yaml = fs::read_to_string(dir.join("weft.yaml")).unwrap();
+    for t in [
+        "http", "gql", "grpc", "rpc", "ws", "sse", "kafka", "mq", "nats", "redis", "cloud", "mqtt",
+        "pulsar",
+    ] {
+        assert!(
+            yaml.contains(&format!("  {t}:\n")),
+            "{t} missing in\n{yaml}"
+        );
+    }
+    assert_eq!(code(&weft(&["gen", "--check"], &dir)), 0);
+}

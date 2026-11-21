@@ -2,7 +2,7 @@
 
 Design documents for Weft: one interface for every way services talk, in every language. The product overview is the [top-level README](../README.md). Guidance for coding agents is in [CLAUDE.md](../CLAUDE.md).
 
-Status: **design stage. Nothing is built.**
+Status: **design stage.** The compiler and CLI are built (phase P1). The language packages, conformance suite and dashboard are not. See the [roadmap](roadmap.md).
 
 ## Project state
 

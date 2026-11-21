@@ -2,7 +2,7 @@
 
 Weft is **one interface for every way services talk**. Developers call `weft.http`, `weft.gql`, `weft.grpc`, `weft.rpc`, `weft.ws`, `weft.sse`, `weft.kafka`, `weft.mq`, `weft.nats`, `weft.redis`, `weft.cloud`, `weft.mqtt` and `weft.pulsar`, and Weft runs the real library underneath (Express, Apollo, KafkaJS, Socket.io, Spring Kafka, FastAPI, ...). Contracts are written once in language-neutral `.weft` files, and a Rust compiler generates typed code for 13 languages. Overview: [README](README.md). Design: [docs/](docs/README.md).
 
-**Status: design stage.** Only the website exists (`website/`) and an empty Rust workspace (`compiler/`, no features yet); the product is not built. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
+**Status: design stage.** The website (`website/`) and the compiler and CLI (`compiler/`: `weft init`, `fmt`, `check`, and `gen` for TypeScript) are built. The language packages, conformance suite and dashboard are not. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
 
 **Weft is not a code scanner.** An outdated README once described the project (then called Splice) as one. That idea was dropped completely ([ADR 0001](docs/decisions/0001-library-not-scanner.md), [history](docs/history.md)). Do not reintroduce it. Do not reopen decisions in [history](docs/history.md) or [decisions/](docs/decisions/) unless the maintainer asks.
 
@@ -61,7 +61,7 @@ Add each command here in the same pull request that makes it work.
 | `cargo test --manifest-path compiler/Cargo.toml` | Run the compiler's tests |
 | `cargo clippy --manifest-path compiler/Cargo.toml --all-targets -- -D warnings` | Lint the compiler; CI denies warnings |
 | `cargo fmt --manifest-path compiler/Cargo.toml --all --check` | Check formatting |
-| `cargo run --manifest-path compiler/Cargo.toml -p weft-cli -- <args>` | Run the `weft` CLI from source (`fmt`, `gen`) |
+| `cargo run --manifest-path compiler/Cargo.toml -p weft-cli -- <args>` | Run the `weft` CLI from source (`init`, `fmt`, `check`, `gen`) |
 | `WEFT_REQUIRE_TSC=1 cargo test --manifest-path compiler/Cargo.toml -p weft-codegen` | The code generator tests type-check its output with `tsc` (`npm i -g typescript`). Without `WEFT_REQUIRE_TSC` they skip when `tsc` is missing |
 | `UPDATE_SCHEMA=1 cargo test --manifest-path compiler/Cargo.toml -p weft-ir --test schema` | Regenerate `spec/ir.schema.json` after changing the IR types |
 | `INSTA_UPDATE=always cargo test --manifest-path compiler/Cargo.toml` | Accept changed snapshot tests. Read the `.snap` diffs before committing |

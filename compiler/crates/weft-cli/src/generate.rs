@@ -26,6 +26,18 @@ pub struct GenArgs {
     watch: bool,
 }
 
+impl GenArgs {
+    /// `weft gen` with every option left to `weft.yaml`.
+    pub fn defaults() -> Self {
+        GenArgs {
+            lang: None,
+            out: None,
+            check: false,
+            watch: false,
+        }
+    }
+}
+
 const DEFAULT_OUT: &str = "src/weft.gen.ts";
 
 fn usage(message: impl std::fmt::Display) -> ExitCode {
