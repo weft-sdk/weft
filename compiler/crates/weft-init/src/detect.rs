@@ -54,6 +54,26 @@ impl fmt::Display for PackageManager {
     }
 }
 
+impl PackageManager {
+    /// The program and arguments that add `packages` to a project.
+    pub fn add_command(self, packages: &[String]) -> (String, Vec<String>) {
+        let mut args: Vec<String> = match self {
+            PackageManager::Npm => vec!["install".into()],
+            PackageManager::Deno => vec!["add".into()],
+            _ => vec!["add".into()],
+        };
+        for p in packages {
+            // Deno takes npm packages with a prefix.
+            args.push(if self == PackageManager::Deno {
+                format!("npm:{p}")
+            } else {
+                p.clone()
+            });
+        }
+        (self.to_string(), args)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Detected {
     pub language: Option<Language>,

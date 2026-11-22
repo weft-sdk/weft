@@ -648,7 +648,7 @@ fn init_detects_the_project_and_package_manager() {
     let dir = empty("init_detect");
     fs::write(dir.join("package.json"), "{}").unwrap();
     fs::write(dir.join("pnpm-lock.yaml"), "").unwrap();
-    let o = weft(&["init", "--yes"], &dir);
+    let o = weft(&["init", "--yes", "--no-install"], &dir);
     assert_eq!(code(&o), 0);
     assert!(
         text(&o).contains("Detected: TypeScript (pnpm)"),
@@ -788,4 +788,125 @@ fn init_every_transport_flag_works() {
         );
     }
     assert_eq!(code(&weft(&["gen", "--check"], &dir)), 0);
+}
+
+// ---- weft init installs the packages ----
+
+#[test]
+fn init_without_a_package_manager_prints_the_install_command() {
+    let dir = empty("init_install_hint");
+    let o = weft(
+        &["init", "--yes", "--http", "express", "--kafka", "kafkajs"],
+        &dir,
+    );
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains(
+            "Next: install the packages with `npm install @weft-sdk/core @weft-sdk/http-express express @weft-sdk/kafka-kafkajs kafkajs`"
+        ),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn init_with_no_install_prints_the_command_for_the_detected_manager() {
+    let dir = empty("init_no_install");
+    fs::write(dir.join("package.json"), "{}").unwrap();
+    fs::write(dir.join("pnpm-lock.yaml"), "").unwrap();
+    let o = weft(
+        &["init", "--yes", "--no-install", "--kafka", "kafkajs"],
+        &dir,
+    );
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains("Next: install the packages with `pnpm add @weft-sdk/core @weft-sdk/kafka-kafkajs kafkajs`"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[test]
+fn init_leaves_out_packages_that_do_not_exist_yet() {
+    let dir = empty("init_only_core");
+    let o = weft(&["init", "--yes", "--gql"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains("`npm install @weft-sdk/core`"),
+        "{}",
+        text(&o)
+    );
+}
+
+/// A `pnpm` that records what it was asked and exits with `status`.
+#[cfg(unix)]
+fn fake_pnpm(dir: &Path, status: i32) -> PathBuf {
+    use std::os::unix::fs::PermissionsExt;
+    let bin = dir.join("fake-bin");
+    fs::create_dir_all(&bin).unwrap();
+    let script = bin.join("pnpm");
+    fs::write(
+        &script,
+        format!(
+            "#!/bin/sh\necho \"$PWD: $@\" > \"{}/pnpm.log\"\nexit {status}\n",
+            dir.display()
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    bin
+}
+
+#[cfg(unix)]
+fn weft_with_path(args: &[&str], dir: &PathBuf, bin: &Path) -> Output {
+    let path = format!(
+        "{}:{}",
+        bin.display(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    Command::new(env!("CARGO_BIN_EXE_weft"))
+        .args(args)
+        .current_dir(dir)
+        .env("PATH", path)
+        .output()
+        .unwrap()
+}
+
+#[cfg(unix)]
+#[test]
+fn init_installs_with_the_detected_package_manager() {
+    let dir = empty("init_install_runs");
+    fs::write(dir.join("package.json"), "{}").unwrap();
+    fs::write(dir.join("pnpm-lock.yaml"), "").unwrap();
+    let bin = fake_pnpm(&dir, 0);
+    let o = weft_with_path(&["init", "--yes", "--http", "express"], &dir, &bin);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let log = fs::read_to_string(dir.join("pnpm.log")).unwrap();
+    assert!(
+        log.trim_end()
+            .ends_with("add @weft-sdk/core @weft-sdk/http-express express"),
+        "{log}"
+    );
+    assert!(
+        text(&o).contains("✓ pnpm add @weft-sdk/core"),
+        "{}",
+        text(&o)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn init_still_succeeds_when_the_install_fails() {
+    let dir = empty("init_install_fails");
+    fs::write(dir.join("package.json"), "{}").unwrap();
+    fs::write(dir.join("pnpm-lock.yaml"), "").unwrap();
+    let bin = fake_pnpm(&dir, 1);
+    let o = weft_with_path(&["init", "--yes", "--http", "express"], &dir, &bin);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains("`pnpm add @weft-sdk/core") && text(&o).contains("failed"),
+        "{}",
+        text(&o)
+    );
+    assert!(dir.join("weft.yaml").exists() && dir.join("src/weft.gen.ts").exists());
 }
