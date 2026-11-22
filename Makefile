@@ -7,7 +7,7 @@ PNPM := pnpm --dir website
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
         site-install site-dev site-check site-build \
-        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance go-check go-test
+        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance go-check go-test go-kafka-test
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -90,3 +90,6 @@ go-check: ## Format check, vet and test the Go module (with the race detector)
 
 go-test: ## Test the Go module
 	cd go && go test ./...
+
+go-kafka-test: ## Run the Go Kafka adapter tests against the broker from ts-kafka-up
+	cd go && WEFT_TEST_KAFKA=127.0.0.1:9092 go test -race ./kafka/...

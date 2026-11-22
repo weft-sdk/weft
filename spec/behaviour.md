@@ -170,3 +170,5 @@ The Kafka adapter (`@weft-sdk/kafka-kafkajs`, on KafkaJS) follows [Messaging](#m
 - **Retries hold up the partition.** A message being retried is retried before the next one is taken, so keep the total retry time well under the consumer's session timeout (30 s by default) or the group will rebalance.
 - **Not supported:** `delayMs`, transactions, request-reply. They fail with a clear `Internal` error.
 - **Known noise.** KafkaJS 2.2.4 prints Node's `TimeoutNegativeWarning` on recent Node versions. It comes from KafkaJS's request queue and is harmless.
+
+The Go adapter (`go/kafka/franz`, on franz-go) behaves the same: the same `ce_` headers and key, so a Go service and a TypeScript service read each other's messages; a group that has committed nothing starts at the end unless `fromBeginning` is set; the offset is committed after the handler returns, and a message that shutdown interrupted is left uncommitted.

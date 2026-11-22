@@ -3,9 +3,9 @@ name: go
 on:
   push:
     branches: [main]
-    paths: ["go/**", "spec/**", ".github/workflows/go.yml"]
+    paths: ["go/**", "spec/**", "sdks/typescript/docker-compose.yaml", ".github/workflows/go.yml"]
   pull_request:
-    paths: ["go/**", "spec/**", ".github/workflows/go.yml"]
+    paths: ["go/**", "spec/**", "sdks/typescript/docker-compose.yaml", ".github/workflows/go.yml"]
 
 permissions:
   contents: read
@@ -31,3 +31,20 @@ jobs:
         run: test -z "$(gofmt -l .)"
       - run: go vet ./...
       - run: go test -race ./...
+
+  kafka:
+    # The Kafka adapter against a real broker. Linux only: the runners for the others have no Docker.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.mod
+      - run: docker compose --file sdks/typescript/docker-compose.yaml up -d --wait
+      - run: go test -race ./kafka/...
+        working-directory: go
+        env:
+          WEFT_TEST_KAFKA: 127.0.0.1:9092
+      - if: failure()
+        run: docker compose --file sdks/typescript/docker-compose.yaml logs kafka | tail -50
