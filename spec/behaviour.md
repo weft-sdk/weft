@@ -55,3 +55,28 @@ Eight categories, in every language. Contract-declared errors carry their own st
 | `Unavailable` | 503 | `UNAVAILABLE` | retried |
 | `Timeout` | 504 | `DEADLINE_EXCEEDED` | retried |
 | `Internal` | 500 | `INTERNAL` | retried, then sent to the dead-letter destination |
+
+## Configuration
+
+Every package reads `weft.yaml` ([the CLI doc](../docs/06-cli.md#config-file-weftyaml)) the same way:
+
+- `${NAME}` in a value reads the environment variable. A variable that is not set is a configuration error, and every such problem is reported together.
+- These variables override the file, and only for settings that exist or are named this way:
+
+| Variable | Overrides |
+| --- | --- |
+| `WEFT_SERVICE` | `service` |
+| `WEFT_<TRANSPORT>_<KEY>`, such as `WEFT_KAFKA_BROKERS` | `transports.<transport>.<key>`. The transport must be in the file. A key matches an existing one ignoring case and underscores. The value is converted to the type of the setting it replaces (number, boolean) |
+| `WEFT_SERVICES_<NAME>` | `services.<name>` |
+| `WEFT_TELEMETRY_<KEY>` | `telemetry.<key>` |
+
+- `topics:` maps an event name to the real topic or queue name; an event with no entry uses its own name.
+- `service` is required.
+
+## Lifecycle
+
+- Handlers and transports are registered first. `start()` then connects each transport in the order registered; if one fails, the ones already started are closed and `start()` fails with `Unavailable`.
+- `stop()` stops taking new work in every transport, waits for in-flight handlers up to the grace period (30 s by default), then closes the transports in reverse order. A handler still running when the grace period ends is abandoned: its signal is aborted and the transports are closed anyway. `stop()` reports how many were abandoned and is safe to call more than once.
+- New work after `stop()` begins is refused with `Unavailable`.
+- Middleware runs outermost first: the middleware added to Weft, then the transport's own, then the handler. A middleware continues by calling `next()` once; not calling it stops the chain.
+- A deadline only ever gets shorter as it is passed on. A timed-out call fails with `Timeout`; a cancelled one with `Unavailable`.
