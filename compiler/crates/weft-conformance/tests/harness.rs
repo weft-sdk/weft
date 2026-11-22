@@ -507,3 +507,15 @@ fn a_result_expectation_looks_inside_objects_and_arrays_but_not_at_extra_fields(
     );
     assert!(!contains(&json!({ "a": null }), &got));
 }
+
+#[test]
+fn no_two_cases_ask_the_same_question() {
+    // The same input with two expectations is a contradiction, and the fake runner could not tell them apart.
+    let (_, all) = setup();
+    let mut seen = HashMap::new();
+    for c in &all {
+        if let Some(other) = seen.insert(case_key(c), c.id.clone()) {
+            panic!("`{}` and `{other}` ask the same question", c.id);
+        }
+    }
+}
