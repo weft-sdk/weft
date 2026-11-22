@@ -20,6 +20,8 @@ pub enum Expect {
     Config(Value),
     /// A `config` that is invalid: one problem for each of these, each containing the text.
     Problems(Vec<String>),
+    /// An operation's result, of which these fields (and only these) are checked.
+    Result(Value),
 }
 
 /// What a case asks the runner to do.
@@ -33,6 +35,8 @@ pub enum Kind {
     },
     /// `config`: read weft.yaml text with an environment.
     Config { yaml: String, env: Value },
+    /// Any other operation (`messaging`, ...): the request is `op` and these arguments.
+    Op { op: String, args: Value },
 }
 
 #[derive(Clone, Debug)]
@@ -48,7 +52,7 @@ impl Case {
     pub fn ty(&self) -> Option<&Value> {
         match &self.kind {
             Kind::Decode { ty, .. } => Some(ty),
-            Kind::Config { .. } => None,
+            Kind::Config { .. } | Kind::Op { .. } => None,
         }
     }
 }
@@ -76,6 +80,8 @@ struct RawCase {
     wire: Option<Value>,
     yaml: Option<String>,
     env: Option<Value>,
+    op: Option<String>,
+    args: Option<Value>,
     expect: RawExpect,
 }
 
@@ -86,6 +92,7 @@ struct RawExpect {
     issues: Option<Vec<String>>,
     config: Option<Value>,
     problems: Option<Vec<String>>,
+    result: Option<Value>,
 }
 
 /// Every `*.yaml` file in `dir`, in name order. Any mistake in a case is an error naming the case.
@@ -108,7 +115,11 @@ pub fn load(dir: &Path) -> Result<Vec<Case>, String> {
                 return Err(format!("{file}: the case id `{}` is used twice", raw.id));
             }
             let kind = match (raw.ty, raw.wire, raw.yaml) {
-                (Some(ty), Some(wire), None) if raw.env.is_none() => Kind::Decode {
+                (None, None, None) if raw.op.is_some() => Kind::Op {
+                    op: raw.op.clone().unwrap_or_default(),
+                    args: raw.args.clone().unwrap_or_else(|| serde_json::json!({})),
+                },
+                (Some(ty), Some(wire), None) if raw.env.is_none() && raw.op.is_none() => Kind::Decode {
                     ty: typeref::parse(&ty)
                         .map_err(|e| format!("{file}: case `{}`: {e}", raw.id))?,
                     wire,
@@ -119,21 +130,24 @@ pub fn load(dir: &Path) -> Result<Vec<Case>, String> {
                 },
                 _ => {
                     return Err(format!(
-                    "{file}: case `{}`: a case has either `type` and `wire`, or `yaml` (and `env`)",
+                    "{file}: case `{}`: a case has either `type` and `wire`, or `yaml` (and `env`), or `op` (and `args`)",
                     raw.id
                 ))
                 }
             };
             let e = raw.expect;
             let decode = matches!(kind, Kind::Decode { .. });
-            let expect = match (e.canonical, e.issues, e.config, e.problems) {
-                (Some(c), None, None, None) if decode => Expect::Canonical(c),
-                (None, Some(i), None, None) if decode => Expect::Issues(i),
-                (None, None, Some(c), None) if !decode => Expect::Config(c),
-                (None, None, None, Some(p)) if !decode => Expect::Problems(p),
+            let config = matches!(kind, Kind::Config { .. });
+            let op = matches!(kind, Kind::Op { .. });
+            let expect = match (e.canonical, e.issues, e.config, e.problems, e.result) {
+                (Some(c), None, None, None, None) if decode => Expect::Canonical(c),
+                (None, Some(i), None, None, None) if decode => Expect::Issues(i),
+                (None, None, Some(c), None, None) if config => Expect::Config(c),
+                (None, None, None, Some(p), None) if config => Expect::Problems(p),
+                (None, None, None, None, Some(r)) if op => Expect::Result(r),
                 _ => {
                     return Err(format!(
-                        "{file}: case `{}`: `expect` needs exactly one of `canonical` or `issues` (for `type`), `config` or `problems` (for `yaml`)",
+                        "{file}: case `{}`: `expect` needs exactly one of `canonical` or `issues` (for `type`), `config` or `problems` (for `yaml`), or `result` (for `op`)",
                         raw.id
                     ))
                 }

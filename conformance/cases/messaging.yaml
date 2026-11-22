@@ -1,0 +1,143 @@
+description: Publishing and receiving through an in-memory broker. The jitter is fixed at one half and the sleeps are recorded, so the backoff is exact (150, 300, 600, 1200 ms).
+cases:
+  # ---- retries and dead letters, by error category ----
+  - id: messaging.retry.then-succeed
+    op: messaging
+    args:
+      event: order.placed
+      payload: &order { id: "123e4567-e89b-42d3-a456-426614174000", customer: "Ann", lines: [{ sku: "apple", qty: 1 }], total: { amount: 100, currency: "EUR" }, sides: {}, labels: {}, placedAt: "2026-11-23T10:00:00.000Z" }
+      handler: { fail: { times: 2, category: Unavailable } }
+    expect: { result: { calls: 3, attempts: [1, 2, 3], sleeps: [150, 300], dlq: [], unacked: 0, received: *order } }
+
+  - id: messaging.retry.timeout-is-retried-then-dead-lettered
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: Timeout } } }
+    expect:
+      result:
+        calls: 5
+        attempts: [1, 2, 3, 4, 5]
+        sleeps: [150, 300, 600, 1200]
+        dlq: [{ destination: order.placed.dlq, category: Timeout, attempts: "5", originalDestination: order.placed, sameId: true }]
+
+  - id: messaging.retry.internal-is-retried-then-dead-lettered
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: Internal } } }
+    expect: { result: { calls: 5, dlq: [{ destination: order.placed.dlq, category: Internal, attempts: "5", originalDestination: order.placed, sameId: true }] } }
+
+  - id: messaging.retry.an-ordinary-exception-counts-as-internal
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: Plain } } }
+    expect: { result: { calls: 5, dlq: [{ destination: order.placed.dlq, category: Internal, attempts: "5", originalDestination: order.placed, sameId: true }] } }
+
+  - id: messaging.retry.invalid-input-is-dead-lettered-at-once
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: InvalidInput } } }
+    expect: { result: { calls: 1, attempts: [1], sleeps: [], dlq: [{ destination: order.placed.dlq, category: InvalidInput, attempts: "1", originalDestination: order.placed, sameId: true }] } }
+
+  - id: messaging.retry.not-found-is-dropped
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: NotFound } } }
+    expect: { result: { calls: 1, sleeps: [], dlq: [], unacked: 0 } }
+
+  - id: messaging.retry.unauthorized-is-dropped
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: Unauthorized } } }
+    expect: { result: { calls: 1, sleeps: [], dlq: [] } }
+
+  - id: messaging.retry.forbidden-is-dropped
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: Forbidden } } }
+    expect: { result: { calls: 1, sleeps: [], dlq: [] } }
+
+  - id: messaging.retry.conflict-is-dropped
+    op: messaging
+    args: { event: order.placed, payload: *order, handler: { fail: { times: always, category: Conflict } } }
+    expect: { result: { calls: 1, sleeps: [], dlq: [] } }
+
+  - id: messaging.retry.the-attempts-option
+    op: messaging
+    args: { event: order.placed, payload: *order, subscribe: { attempts: 2 }, handler: { fail: { times: always, category: Unavailable } } }
+    expect: { result: { calls: 2, sleeps: [150], dlq: [{ destination: order.placed.dlq, category: Unavailable, attempts: "2", originalDestination: order.placed, sameId: true }] } }
+
+  - id: messaging.dead-letter.a-name-of-its-own
+    op: messaging
+    args: { event: order.placed, payload: *order, subscribe: { attempts: 1, deadLetter: failed.orders }, handler: { fail: { times: always, category: Internal } } }
+    expect: { result: { calls: 1, dlq: [{ destination: failed.orders, category: Internal, attempts: "1", originalDestination: order.placed, sameId: true }] } }
+
+  - id: messaging.dead-letter.can-be-turned-off
+    op: messaging
+    args: { event: order.placed, payload: *order, subscribe: { attempts: 1, deadLetter: false }, handler: { fail: { times: always, category: Internal } } }
+    expect: { result: { calls: 1, dlq: [], destinations: [order.placed] } }
+
+  - id: messaging.dead-letter.follows-the-topic-name
+    op: messaging
+    args: { event: order.placed, topic: prod.orders.placed.v1, payload: *order, subscribe: { attempts: 1 }, handler: { fail: { times: always, category: Internal } } }
+    expect: { result: { destinations: [prod.orders.placed.v1, prod.orders.placed.v1.dlq], dlq: [{ destination: prod.orders.placed.v1.dlq, originalDestination: prod.orders.placed.v1 }] } }
+
+  # ---- the envelope ----
+  - id: messaging.envelope.is-a-cloudevent-with-the-events-key
+    op: messaging
+    args: { event: order.placed, payload: *order }
+    expect:
+      result:
+        calls: 1
+        received: *order
+        envelope: { type: order.placed, source: conformance, datacontenttype: application/json, key: "123e4567-e89b-42d3-a456-426614174000", hasId: true, hasTime: true, headers: {} }
+
+  - id: messaging.envelope.the-key-can-be-given
+    op: messaging
+    args: { event: order.placed, payload: *order, publish: { key: custom } }
+    expect: { result: { envelope: { key: custom } } }
+
+  - id: messaging.envelope.an-event-without-a-key-has-none
+    op: messaging
+    args: { event: order.cancelled, payload: { id: "123e4567-e89b-42d3-a456-426614174000", reason: "changed my mind" } }
+    expect: { result: { calls: 1, destinations: [order.cancelled], envelope: { type: order.cancelled, key: null } } }
+
+  - id: messaging.envelope.headers-and-the-idempotency-key-travel
+    op: messaging
+    args: { event: order.placed, payload: *order, publish: { headers: { tenant: t1 }, idempotencyKey: k1 } }
+    expect: { result: { envelope: { headers: { tenant: t1, weft-idempotency-key: k1 } } } }
+
+  - id: messaging.envelope.the-topic-name-is-the-destination
+    op: messaging
+    args: { event: order.placed, topic: prod.placed, payload: *order }
+    expect: { result: { destinations: [prod.placed], calls: 1 } }
+
+  # ---- what is refused ----
+  - id: messaging.publish.an-invalid-payload-sends-nothing
+    op: messaging
+    args: { event: order.placed, payload: { id: not-a-uuid } }
+    expect: { result: { publishError: InvalidInput, destinations: [], calls: 0 } }
+
+  - id: messaging.publish.delay-is-not-supported-by-the-memory-broker
+    op: messaging
+    args: { event: order.placed, payload: *order, publish: { delayMs: 100 } }
+    expect: { result: { publishError: Internal, destinations: [], calls: 0 } }
+
+  - id: messaging.receive.a-body-that-breaks-the-contract-is-dead-lettered-unseen
+    op: messaging
+    args: { event: order.placed, rawBody: '{"id": 5}' }
+    expect: { result: { calls: 0, dlq: [{ destination: order.placed.dlq, category: InvalidInput, attempts: "1", originalDestination: order.placed, sameId: true }] } }
+
+  - id: messaging.receive.a-body-that-is-not-json-is-dead-lettered-unseen
+    op: messaging
+    args: { event: order.placed, rawBody: "not json" }
+    expect: { result: { calls: 0, dlq: [{ destination: order.placed.dlq, category: InvalidInput, attempts: "1", originalDestination: order.placed, sameId: true }] } }
+
+  # ---- duplicates ----
+  - id: messaging.dedupe.the-same-idempotency-key-is-handled-once
+    op: messaging
+    args: { event: order.placed, payload: *order, dedupe: true, publish: { idempotencyKey: same, times: 3 } }
+    expect: { result: { calls: 1, attempts: [1] } }
+
+  - id: messaging.dedupe.without-a-key-every-message-is-new
+    op: messaging
+    args: { event: order.placed, payload: *order, dedupe: true, publish: { times: 3 } }
+    expect: { result: { calls: 3 } }
+
+  # ---- shutdown ----
+  - id: messaging.shutdown.a-message-being-retried-is-not-acknowledged
+    op: messaging
+    args: { event: order.placed, payload: *order, stopDuringBackoff: true, handler: { fail: { times: always, category: Unavailable } } }
+    expect: { result: { calls: 1, attempts: [1], sleeps: [150], dlq: [], unacked: 1 } }

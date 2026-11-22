@@ -138,6 +138,11 @@ pub fn run_runner(
         let request = match &case.kind {
             Kind::Decode { ty, wire } => json!({ "op": "decode", "type": ty, "wire": wire }),
             Kind::Config { yaml, env } => json!({ "op": "config", "yaml": yaml, "env": env }),
+            Kind::Op { op, args } => {
+                let mut request = args.clone();
+                request["op"] = json!(op);
+                request
+            }
         };
         let answer = runner.call(request);
         let outcome = match answer {
