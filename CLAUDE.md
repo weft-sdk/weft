@@ -69,10 +69,11 @@ Everything runs through the root `Makefile` (`make help` lists it). Add each com
 | `make site-build` | Build the static site into `website/dist/` |
 | `make ts-fixtures` | Regenerate the TypeScript tests' generated files (`core/test/fixtures`, `e2e/src/weft.gen.ts`) with the real compiler. A Rust test fails when the e2e file is stale |
 | `make ts-kafka-up` / `ts-kafka-down` / `ts-kafka-test` | Start or stop a Kafka broker in Docker, and run the Kafka adapter and end-to-end tests against it (CI does this in its `kafka` job). If `docker pull` hangs in a script, a stuck credential helper is the usual cause: pull with an empty `DOCKER_CONFIG` |
+| `make conformance` | Build the TypeScript runner and run the conformance cases against every runner in `conformance/runners.yaml` (`cargo run -p weft-conformance -- run --help` has the filters) |
 | `make ts-install` | Install the TypeScript packages' dependencies (`sdks/typescript`, a pnpm workspace) |
 | `make ts-check` | Build, type-check and test the TypeScript packages (`ts-build` and `ts-test` run the parts; adapters type-check and test against core's build, so build first) |
 
 ## Repository
 
 - GitHub: `github.com/weft-sdk/weft` (private). Default branch `main`.
-- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `spec/`, `website/`, `compiler/`, `sdks/typescript/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
+- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `spec/`, `conformance/`, `website/`, `compiler/`, `sdks/typescript/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).

@@ -1,0 +1,21 @@
+{
+  "name": "@weft-sdk/conformance-runner",
+  "version": "0.0.0",
+  "description": "The TypeScript runner for the Weft conformance harness (spec/conformance-protocol.md)",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "echo \"the conformance harness is the test\""
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsup": "9.0.0",
+    "typescript": "6.0.3"
+  },
+  "dependencies": {
+    "@weft-sdk/core": "workspace:*"
+  }
+}

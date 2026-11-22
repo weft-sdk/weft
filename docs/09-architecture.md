@@ -87,7 +87,7 @@ weft/
 │   ├── elixir/
 │   ├── swift/
 │   └── dart/
-├── conformance/         # cases, harness, docker-compose
+├── conformance/         # cases, contracts, runners.yaml (the harness is compiler/crates/weft-conformance)
 ├── dashboard/
 │   ├── server/          # Rust (axum)
 │   └── ui/              # React + Vite
