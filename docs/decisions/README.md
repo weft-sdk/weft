@@ -50,3 +50,4 @@ Why Weft is the way it is. One file per decision, numbered in the order they wer
 
 **Consequences.** What follows, good and bad.
 ```
+| [0022](0022-go-package-lives-in-go.md) | The Go package lives in `go/` at the repository root | Accepted |
