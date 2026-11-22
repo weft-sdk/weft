@@ -277,7 +277,7 @@ fn a_runner_that_accepts_what_it_should_reject_fails() {
     let report = run_runner("oracle", &mut o, &irs, &all).unwrap();
     let invalid = all
         .iter()
-        .filter(|c| matches!(c.expect, Expect::Issues(_)))
+        .filter(|c| matches!(c.expect, Expect::Issues(_) | Expect::Problems(_)))
         .count();
     assert!(invalid > 50);
     assert_eq!(report.failed(), invalid);
