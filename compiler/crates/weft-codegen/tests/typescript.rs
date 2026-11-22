@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use weft_check::{check, Source};
-use weft_codegen::{typescript, Int64, Options};
+use weft_codegen::{typescript, Int64, Options, Transport};
 use weft_ir::Ir;
 
 const ORDERS: &str = include_str!("../../../../spec/examples/orders.weft");
@@ -112,6 +112,180 @@ fn names_typescript_cannot_hold_are_errors_that_say_which() {
             "{needle}: {err:?}"
         );
     }
+}
+
+// ---- the typed `weft` object ----
+
+fn transport(name: &str, library: &str) -> Transport {
+    Transport {
+        name: name.into(),
+        library: Some(library.into()),
+    }
+}
+
+fn with_facade(files: &[(&str, &str)], service: &str, transports: Vec<Transport>) -> String {
+    typescript(
+        &irs(files),
+        &Options {
+            service: Some(service.into()),
+            transports,
+            ..Options::default()
+        },
+    )
+    .unwrap_or_else(|e| panic!("{e:?}"))
+}
+
+/// The part of the file from the facade's heading to its end.
+fn facade_of(out: &str) -> &str {
+    &out[out.find("// ---- The typed `weft` object ----").unwrap()..]
+}
+
+#[test]
+fn without_transports_there_is_no_facade_and_no_import() {
+    let out = generate(&[("orders.weft", ORDERS)]);
+    assert!(!out.contains("@weft-sdk"));
+    assert!(!out.contains("createWeft"));
+}
+
+#[test]
+fn facade_for_http_and_kafka() {
+    let out = with_facade(
+        &[("orders.weft", ORDERS), ("payments.weft", PAYMENTS)],
+        "orders",
+        vec![transport("http", "express"), transport("kafka", "kafkajs")],
+    );
+    assert!(out.contains("from \"@weft-sdk/http-express\""));
+    assert!(out.contains("from \"@weft-sdk/kafka-kafkajs\""));
+    insta::assert_snapshot!(facade_of(&out));
+}
+
+#[test]
+fn facade_only_for_what_has_a_package() {
+    let out = with_facade(
+        &[("orders.weft", ORDERS)],
+        "orders",
+        vec![
+            transport("kafka", "kafkajs"),
+            transport("gql", "apollo-server"),
+            transport("http", "fastify"),
+        ],
+    );
+    let facade = facade_of(&out);
+    assert!(facade.contains("kafka: kafka as unknown as TypedMessaging<Events, Kafka>"));
+    assert!(!facade.contains("TypedHttp<"), "{facade}");
+    assert!(!out.contains("@weft-sdk/http-express"));
+    assert!(facade.contains("Not available in the TypeScript package yet, so not in `weft`: gql (apollo-server), http (fastify)."));
+}
+
+#[test]
+fn no_facade_when_no_transport_has_a_package() {
+    let out = with_facade(
+        &[("orders.weft", ORDERS)],
+        "orders",
+        vec![transport("gql", "apollo-server")],
+    );
+    assert!(!out.contains("createWeft"));
+}
+
+#[test]
+fn an_unnamed_library_means_the_default() {
+    let out = with_facade(
+        &[("orders.weft", ORDERS)],
+        "orders",
+        vec![
+            Transport {
+                name: "http".into(),
+                library: None,
+            },
+            Transport {
+                name: "kafka".into(),
+                library: None,
+            },
+        ],
+    );
+    assert!(out.contains("createWeft"));
+}
+
+#[test]
+fn only_the_own_package_is_served_and_every_package_can_be_called() {
+    let out = with_facade(
+        &[("orders.weft", ORDERS), ("payments.weft", PAYMENTS)],
+        "payments",
+        vec![transport("http", "express")],
+    );
+    let routes = out
+        .split("export type HttpRoutes = {")
+        .nth(1)
+        .unwrap()
+        .split("\n};\n")
+        .next()
+        .unwrap();
+    assert!(
+        routes.trim().is_empty(),
+        "payments has no routes of its own: {routes}"
+    );
+    assert!(
+        out.contains("export type HttpServices = {\n  orders: {\n    "),
+        "{out}"
+    );
+}
+
+#[test]
+fn the_same_event_in_two_packages_is_an_error() {
+    let a = "package a\nevent thing.happened: { id: uuid }";
+    let b = "package b\nevent thing.happened: { id: uuid }";
+    let err = typescript(
+        &irs(&[("a.weft", a), ("b.weft", b)]),
+        &Options {
+            service: Some("a".into()),
+            transports: vec![transport("kafka", "kafkajs")],
+            ..Options::default()
+        },
+    )
+    .unwrap_err();
+    assert!(
+        err.iter().any(|e| e
+            .to_string()
+            .contains("`thing.happened` is declared in both")),
+        "{err:?}"
+    );
+    // Without the facade the same contracts are fine.
+    generate(&[("a.weft", a), ("b.weft", b)]);
+}
+
+#[test]
+fn route_paths_are_keyed_by_full_path_and_by_short_path_unless_it_is_taken() {
+    // one(): full /v1/t, short /t. two(): full /v1/v1/t, short /v1/t, which is one()'s full path.
+    let src = "package s\ntype T { a: int }\nhttp /v1 {\n  GET \"/t\" one() -> T\n  GET \"/v1/t\" two() -> T\n  POST \"/u\" make(body: T) -> T\n}";
+    let out = with_facade(&[("s.weft", src)], "s", vec![transport("http", "express")]);
+    let routes = out
+        .split("export type HttpRoutes = {")
+        .nth(1)
+        .unwrap()
+        .split("\n};\n")
+        .next()
+        .unwrap();
+    for key in [
+        "\"GET /v1/t\"",
+        "\"GET /t\"",
+        "\"GET /v1/v1/t\"",
+        "\"POST /v1/u\"",
+        "\"POST /u\"",
+    ] {
+        assert_eq!(routes.matches(key).count(), 1, "{key} in {routes}");
+    }
+}
+
+#[test]
+fn the_committed_e2e_file_is_current() {
+    // sdks/typescript/packages/e2e is generated by `make ts-fixtures`; this fails when it is stale.
+    let committed = include_str!("../../../../sdks/typescript/packages/e2e/src/weft.gen.ts");
+    let fresh = with_facade(
+        &[("orders.weft", ORDERS)],
+        "orders",
+        vec![transport("http", "express"), transport("kafka", "kafkajs")],
+    );
+    assert_eq!(committed, fresh, "run `make ts-fixtures`");
 }
 
 /// Everything below the types, so snapshots stay readable. The IR has its own tests.

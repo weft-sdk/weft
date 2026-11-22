@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from "node:fs"
+import { readFile } from "node:fs/promises"
+import { dirname, join, resolve } from "node:path"
 import { parse } from "yaml"
 import { ConfigError } from "./errors.js"
 
@@ -137,12 +140,41 @@ export function parseConfig(text: string, env: Env = {}): Config {
 
 /** Reads `weft.yaml` (or another path) from disk. */
 export async function loadConfig(path = "weft.yaml", env: Env = process.env): Promise<Config> {
-  const { readFile } = await import("node:fs/promises")
   let text: string
   try {
     text = await readFile(path, "utf8")
   } catch (cause) {
     throw new ConfigError([`cannot read ${path}: ${cause instanceof Error ? cause.message : String(cause)}`])
+  }
+  return parseConfig(text, env)
+}
+
+/** `weft.yaml` in `from` or the nearest folder above it, or `undefined`. */
+export function findConfigFile(from: string = process.cwd()): string | undefined {
+  let dir = resolve(from)
+  for (;;) {
+    const candidate = join(dir, "weft.yaml")
+    if (existsSync(candidate)) return candidate
+    const parent = dirname(dir)
+    if (parent === dir) return undefined
+    dir = parent
+  }
+}
+
+/**
+ * Reads `weft.yaml` at once. With no path it looks in the working folder and then each folder
+ * above it, as the CLI does. Relative paths are not resolved: they are for the CLI.
+ */
+export function loadConfigSync(path?: string, env: Env = process.env): Config {
+  const file = path ?? findConfigFile()
+  if (file === undefined) {
+    throw new ConfigError(["no weft.yaml found in the working folder or any folder above it: run `weft init`"])
+  }
+  let text: string
+  try {
+    text = readFileSync(file, "utf8")
+  } catch (cause) {
+    throw new ConfigError([`cannot read ${file}: ${cause instanceof Error ? cause.message : String(cause)}`])
   }
   return parseConfig(text, env)
 }

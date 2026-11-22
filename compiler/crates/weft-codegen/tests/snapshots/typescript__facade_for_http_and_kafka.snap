@@ -1,0 +1,61 @@
+---
+source: crates/weft-codegen/tests/typescript.rs
+expression: facade_of(&out)
+---
+// ---- The typed `weft` object ----
+
+/** Every event, by name, with its payload type. */
+export type Events = {
+  "order.placed": orders.Order;
+  "order.cancelled": orders.OrderCancelled;
+  "payment.captured": payments.Charge;
+};
+
+/** The routes this service serves: those of its own package. */
+export type HttpRoutes = {
+  "POST /v1/orders": { body: orders.CreateOrder; params: undefined; query: undefined; headers: undefined; result: orders.Order; optional: false };
+  "POST /orders": { body: orders.CreateOrder; params: undefined; query: undefined; headers: undefined; result: orders.Order; optional: false };
+  "GET /v1/orders/{id}": { body: undefined; params: { id: Uuid }; query: undefined; headers: undefined; result: orders.Order; optional: true };
+  "GET /orders/{id}": { body: undefined; params: { id: Uuid }; query: undefined; headers: undefined; result: orders.Order; optional: true };
+  "GET /v1/orders": { body: undefined; params: undefined; query: orders.ListOrdersQuery; headers: undefined; result: orders.Order[]; optional: false };
+  "GET /orders": { body: undefined; params: undefined; query: orders.ListOrdersQuery; headers: undefined; result: orders.Order[]; optional: false };
+};
+
+/** The routes of every package, for calling other services with `weft.http.to(name)`. */
+export type HttpServices = {
+  orders: {
+    "POST /v1/orders": { body: orders.CreateOrder; params: undefined; query: undefined; headers: undefined; result: orders.Order; optional: false };
+    "POST /orders": { body: orders.CreateOrder; params: undefined; query: undefined; headers: undefined; result: orders.Order; optional: false };
+    "GET /v1/orders/{id}": { body: undefined; params: { id: Uuid }; query: undefined; headers: undefined; result: orders.Order; optional: true };
+    "GET /orders/{id}": { body: undefined; params: { id: Uuid }; query: undefined; headers: undefined; result: orders.Order; optional: true };
+    "GET /v1/orders": { body: undefined; params: undefined; query: orders.ListOrdersQuery; headers: undefined; result: orders.Order[]; optional: false };
+    "GET /orders": { body: undefined; params: undefined; query: orders.ListOrdersQuery; headers: undefined; result: orders.Order[]; optional: false };
+  };
+  payments: {
+  };
+};
+
+/** Builds the `weft` object from `weft.yaml` (or the config you pass). Import `weft` for the usual one. */
+export function createWeft(options: { config?: Config } = {}) {
+  const core = new Weft({ contracts: new Contracts(contracts, { int64: "number" }), config: options.config ?? loadConfigSync() });
+  const http = new Http(core, { adapter: expressAdapter() });
+  const kafka = new Messaging(core, { adapter: kafkaJsAdapter(), name: "kafka" });
+  return {
+    /** Connects every transport. Register handlers first. */
+    start: () => core.start(),
+    /** Stops taking new work, finishes what is running, and closes connections. */
+    stop: () => core.stop(),
+    /** Middleware for every transport. */
+    use: (middleware: Middleware<Context>) => core.use(middleware),
+    /** The untyped runtime underneath. */
+    core,
+    http: http as unknown as TypedHttp<HttpRoutes, HttpServices, Express>,
+    kafka: kafka as unknown as TypedMessaging<Events, Kafka>,
+  };
+}
+
+let current: ReturnType<typeof createWeft> | undefined;
+/** The usual `weft` object. It is built from `weft.yaml` the first time it is used, so importing this file for its types needs no config. */
+export const weft: ReturnType<typeof createWeft> = new Proxy({} as ReturnType<typeof createWeft>, {
+  get: (_target, key) => Reflect.get((current ??= createWeft()), key),
+});

@@ -10,7 +10,10 @@ pub const FILE_NAME: &str = "weft.yaml";
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
+    pub service: Option<String>,
     pub language: Option<String>,
+    #[serde(default)]
+    pub transports: BTreeMap<String, TransportConfig>,
     #[serde(default)]
     pub contracts: Vec<ContractSource>,
     #[serde(default)]
@@ -30,6 +33,12 @@ pub enum ContractSource {
         #[allow(dead_code)]
         packages: BTreeMap<String, String>,
     },
+}
+
+/// One entry of `transports:`. Only the library is read here; the rest is for the runtime.
+#[derive(Debug, Default, Deserialize)]
+pub struct TransportConfig {
+    pub library: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
