@@ -24,6 +24,7 @@ Every request has an `id` (a number) and an `op`. Every response repeats the `id
 | `decode` | `type`: a type reference as in the IR; `wire`: any JSON value | See below |
 | `config` | `yaml`: the text of a weft.yaml; `env`: an object of environment variables | See below |
 | `messaging` | A scenario: see below | What happened, see below |
+| `http` | A scenario: see below | What was answered, see below |
 
 ### `decode`
 
@@ -80,5 +81,29 @@ The result:
 | `unacked` | Messages the broker never saw acknowledged |
 
 A case lists only the result fields it cares about, and for objects and arrays only the parts it names (arrays must be the same length).
+
+### `http`
+
+One request to one route, run through the runner's HTTP handling with an adapter that captures the route instead of listening on a socket. The handler is scripted.
+
+| Request field | Meaning |
+| --- | --- |
+| `route` | The operation name in the contracts, such as `createOrder` |
+| `request` | `{ params, query, headers, body }`. `params` and `headers` map names to text; `query` maps a name to text or a list of text; `body` is the raw body text, or absent |
+| `handler.returns` | The result, in wire form. `null` means "nothing" |
+| `handler.returnsRaw` | A value returned as it is, without being checked against the contract (to try the server's refusal to send it) |
+| `handler.throws` | `{ category }` (one of the eight), `{ plain: true }` (an ordinary exception whose message contains a secret), or `{ declared: { name, fields, message } }` |
+| `handler.status`, `handler.headers` | Set on the response by the handler |
+
+The result:
+
+| Field | Meaning |
+| --- | --- |
+| `status`, `contentType`, `body` | The response. `contentType` is without parameters, `body` is parsed JSON or `null` |
+| `issues` | The sorted `path`s of the problem body's `issues`, or `null` |
+| `headers` | The response headers other than `content-type`, in lower case |
+| `calls` | How many times the handler ran. 0 when the request was refused |
+| `seen` | What the handler was given, in wire form: `{ params, query, headers, body }`, each `null` when the route has none |
+| `leaksSecret` | Whether the response contains the secret that the `plain` exception carried |
 
 New operations are added with the conformance cases that need them, and listed here.

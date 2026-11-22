@@ -29,7 +29,7 @@ conformance/
 
 The **harness** (`weft-conformance run`, in Rust) compiles the contracts to the [IR](../spec/ir.md), starts each language's **runner**, hands it the IR, sends it every case, and compares the answers. A runner is a small program that wraps its language's package and speaks a JSON-lines protocol on standard input and output ([spec/conformance-protocol.md](../spec/conformance-protocol.md)). Because the harness gives the runner the IR, a runner needs no generated code.
 
-A case (so far, encoding, validation, configuration and messaging):
+A case (so far, encoding, validation, configuration, messaging and HTTP):
 
 ```yaml
 - id: encoding.timestamp.positive-offset-becomes-utc
@@ -42,7 +42,7 @@ A case (so far, encoding, validation, configuration and messaging):
   expect: { issues: [n] }          # invalid, with exactly these issue paths
 ```
 
-The runner decodes the wire value as the type, then encodes the result again; the case says what must come back. A configuration case gives the text of a `weft.yaml` and an environment, and expects the resulting config or the problems. A messaging case is a scripted scenario (a handler that fails twice, then a publish) on an in-memory broker, with the waits recorded, that expects exact numbers of calls, waits and dead letters. Messages may differ between languages, issue paths may not. Cases that involve more than one service or a broker (retries, dead letters, tracing across a transport) come with the messaging and HTTP work in P3.
+The runner decodes the wire value as the type, then encodes the result again; the case says what must come back. A configuration case gives the text of a `weft.yaml` and an environment, and expects the resulting config or the problems. A messaging case is a scripted scenario (a handler that fails twice, then a publish) on an in-memory broker, with the waits recorded, that expects exact numbers of calls, waits and dead letters. An HTTP case sends one request to one route, with a scripted handler and no socket, and expects the status, the problem body and what the handler was given. Messages may differ between languages, issue paths may not. Cases that involve more than one service or a broker (retries, dead letters, tracing across a transport) come with the messaging and HTTP work in P3.
 
 ```
 make conformance          # builds the TypeScript runner, then runs every case against every runner
@@ -51,7 +51,7 @@ weft-conformance run --runner typescript --filter encoding.int --results results
 
 Where the infrastructure is needed (Kafka for the messaging cases), it runs in Docker.
 
-**What exists today.** The harness, the protocol, runners for TypeScript and Go, and 220 cases (encoding, validation, `weft.yaml` configuration, and messaging scenarios on an in-memory broker) that both pass, which is what "the same in every language" means so far. The harness itself is tested with runners that give wrong answers on purpose. No other language has a runner yet, and the messaging, HTTP, tracing and shutdown cases in the table above are not written.
+**What exists today.** The harness, the protocol, runners for TypeScript and Go, and 251 cases (encoding, validation, `weft.yaml` configuration, messaging scenarios on an in-memory broker, and HTTP requests through each language's handling) that both pass, which is what "the same in every language" means so far. The harness itself is tested with runners that give wrong answers on purpose. No other language has a runner yet, and the messaging, HTTP, tracing and shutdown cases in the table above are not written.
 
 ## In CI
 

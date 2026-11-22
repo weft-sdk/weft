@@ -146,3 +146,26 @@ func (m *Messaging) instrumentedDeadLetter(ctx context.Context, target string, e
 }
 
 func nowMs() float64 { return float64(timeNow().UnixNano()) / 1e6 }
+
+type httpInstruments struct {
+	serverDuration, clientDuration metric.Float64Histogram
+}
+
+var (
+	httpInstrumentsMu  sync.Mutex
+	httpInstrumentsVal httpInstruments
+	httpInstrumentsFor metric.MeterProvider
+)
+
+// httpMetrics creates the HTTP instruments on first use, and again if the global meter provider has changed.
+func httpMetrics() *httpInstruments {
+	httpInstrumentsMu.Lock()
+	defer httpInstrumentsMu.Unlock()
+	if httpInstrumentsFor != otel.GetMeterProvider() {
+		m := meter()
+		httpInstrumentsVal.serverDuration, _ = m.Float64Histogram("weft.http.server.duration", metric.WithUnit("ms"), metric.WithDescription("Time to answer a request, by method, route and status"))
+		httpInstrumentsVal.clientDuration, _ = m.Float64Histogram("weft.http.client.duration", metric.WithUnit("ms"), metric.WithDescription("Time for a call to another service, including retries"))
+		httpInstrumentsFor = otel.GetMeterProvider()
+	}
+	return &httpInstrumentsVal
+}
