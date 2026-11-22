@@ -42,7 +42,7 @@ jobs:
           go-version-file: go/go.mod
           cache-dependency-path: go/go.mod
       - run: docker compose --file sdks/typescript/docker-compose.yaml up -d --wait
-      - run: go test -race ./kafka/...
+      - run: go test -race ./kafka/... ./e2e/...
         working-directory: go
         env:
           WEFT_TEST_KAFKA: 127.0.0.1:9092

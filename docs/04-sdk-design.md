@@ -134,6 +134,25 @@ await weft.start()
 - A configured transport with no TypeScript package yet is left out, with a comment saying so.
 - The generic types behind this (`TypedHttp`, `TypedMessaging`) are in `@weft-sdk/core`; the generated code supplies only the maps of events and routes.
 
+### Go
+
+One file, `weft.gen.go` (the folder it is in names its package, or `codegen.package`). It is `gofmt`-clean, so formatting it never changes it. Type names carry their contract package (`OrdersOrder`) because every package is in the one file.
+
+```go
+w, err := e2e.New(e2e.Options{})                       // reads weft.yaml; adapters: net/http and franz-go
+err = w.Kafka.OnOrderPlaced(func(ctx context.Context, o OrdersOrder, mc *weft.MessageContext) error { ... }, weft.SubscribeOptions{})
+err = w.Kafka.PublishOrderPlaced(ctx, order, weft.PublishOptions{})   // the payload is a struct, checked at compile time
+err = w.HTTP.HandleCreateOrder(func(ctx context.Context, in CreateOrderInput) (OrdersOrder, error) { ... })
+order, err := w.HTTP.Orders().CreateOrder(ctx, OrdersCreateOrderRequest{Body: body})
+err = w.Start(ctx)
+```
+
+- Types: records are structs with `json` tags holding the wire name; enums are string types with constants; `uuid` is `UUID`; `int` is `int64`; an optional scalar is a pointer, an optional list or map is the list or map itself; generics are Go generics; `timestamp` is `time.Time` and `bytes` is `[]byte`.
+- The contracts are embedded as JSON and parsed once (`Contracts()`); the runtime converts between these structs and the wire form from the IR, so validation is the same as in every language.
+- Each event has `Publish<Event>` and `On<Event>`. A route this service serves has `Handle<Route>`, taking a typed input and returning a typed result (a pointer, for a result that may be missing: `nil` answers 404). Every package has a client, `w.HTTP.<Package>()`, with a typed method per route. A declared error has `New<Error>` to return it and `As<Error>` to read it.
+- Routes served are those of the service's own package; events are the events of every package, by name, and two packages declaring the same name is an error at `weft gen`.
+- Only HTTP on `net/http` and Kafka on `franz-go` have Go packages yet; other configured transports are left out, with a comment saying so.
+
 ## Quality bar
 
 A package is released only when it passes the [conformance suite](07-conformance.md) for every adapter it ships.

@@ -1,0 +1,20 @@
+# The orders service of the Larder example, in Go, used to test everything together. `make go-fixtures`
+# regenerates weft.gen.go from the contract in spec/examples with the real compiler.
+service: orders
+language: go
+
+contracts:
+  - ../../spec/examples/orders.weft
+
+codegen:
+  out: weft.gen.go
+  package: e2e
+
+transports:
+  http:
+    library: nethttp
+    port: 3000
+  kafka:
+    library: franz
+    brokers: ${KAFKA_BROKERS}
+    group: orders
