@@ -95,3 +95,14 @@ export class WeftError extends Error {
 export function isWeftError(value: unknown): value is WeftError {
   return value instanceof WeftError
 }
+
+/** `weft.yaml` could not be used. `problems` lists everything wrong, not only the first. */
+export class ConfigError extends Error {
+  override readonly name = "ConfigError"
+  readonly problems: readonly string[]
+
+  constructor(problems: readonly string[]) {
+    super(`Invalid Weft configuration:\n${problems.map((p) => `  - ${p}`).join("\n")}`)
+    this.problems = problems
+  }
+}
