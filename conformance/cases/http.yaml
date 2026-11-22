@@ -92,9 +92,9 @@ cases:
     args: { route: whoami, request: {}, handler: { returns: { amount: 1, currency: EUR } } }
     expect: { result: { status: 400, issues: [headers.x-tenant], calls: 0 } }
 
-  - id: http.reject.problems-in-several-parts-are-all-reported
+  - id: http.reject.the-detail-names-the-first-problem
     op: http
-    args: { route: getOrder, request: { params: { id: nope } }, handler: { returns: *order } }
+    args: { route: getOrder, request: { params: { id: still-nope } }, handler: { returns: *order } }
     expect: { result: { status: 400, body: { detail: "Invalid input: params.id must be a UUID" } } }
 
   # ---- what a handler may throw ----
