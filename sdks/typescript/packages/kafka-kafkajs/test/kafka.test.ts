@@ -114,6 +114,10 @@ describe.skipIf(BROKERS === undefined)("KafkaJsAdapter against a real broker", (
     await messaging.publish("order.placed", order)
 
     const kafka = new Kafka({ brokers: [BROKERS as string] })
+    const admin = kafka.admin()
+    await admin.connect()
+    await admin.createTopics({ waitForLeaders: true, topics: [{ topic: `${n.placed}.dlq` }] })
+    await admin.disconnect()
     const consumer = kafka.consumer({ groupId: `dlq-${n.group}` })
     await consumer.connect()
     await consumer.subscribe({ topic: `${n.placed}.dlq`, fromBeginning: true })
@@ -150,7 +154,8 @@ describe.skipIf(BROKERS === undefined)("KafkaJsAdapter against a real broker", (
 
     const second = node(n)
     const received: unknown[] = []
-    second.messaging.on("order.placed", (payload) => void received.push(payload))
+    // The group has committed nothing (the first consumer never acknowledged), so read from the start.
+    second.messaging.on("order.placed", (payload) => void received.push(payload), { fromBeginning: true })
     await second.weft.start()
     await vi.waitFor(() => expect(received).toHaveLength(1), { timeout: 40_000 })
     expect(received[0]).toEqual(order)

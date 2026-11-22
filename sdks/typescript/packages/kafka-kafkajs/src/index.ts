@@ -23,6 +23,12 @@ export interface KafkaJsAdapterOptions {
   readonly clientId?: string
   /** The consumer group used when `on()` gives none. Or `transports.kafka.group`. Default: the service name. */
   readonly group?: string
+  /**
+   * Create the topics this service consumes if they do not exist yet, before subscribing (a consumer
+   * that subscribes to a topic the broker has not created yet fails). Default true. A failure to
+   * create, such as no permission, is ignored: the topic may already be there.
+   */
+  readonly createTopics?: boolean
   /** Other KafkaJS settings (ssl, sasl, ...), used when the adapter makes its own instance. */
   readonly config?: Omit<KafkaConfig, "brokers" | "clientId">
 }
@@ -89,9 +95,16 @@ export class KafkaJsAdapter implements MessagingAdapter<Kafka> {
     this.kafka = options.kafka
   }
 
-  /** The `Kafka` instance. Available once started (or at once, if you passed your own). */
+  /** The `Kafka` instance, made from the configured brokers the first time it is needed. */
   get raw(): Kafka {
-    if (this.kafka === undefined) throw WeftError.internal("The Kafka client is created by start()")
+    if (this.kafka === undefined) {
+      const brokers = this.options.brokers !== undefined ? [...this.options.brokers] : parseBrokers(this.settings.brokers)
+      if (brokers.length === 0) {
+        throw WeftError.internal("There are no Kafka brokers: set brokers under transports.kafka in weft.yaml (or WEFT_KAFKA_BROKERS)")
+      }
+      const clientId = this.options.clientId ?? (typeof this.settings.clientId === "string" ? this.settings.clientId : this.service)
+      this.kafka = new Kafka({ ...this.options.config, clientId, brokers, logLevel: logLevel.NOTHING })
+    }
     return this.kafka
   }
 
@@ -105,15 +118,7 @@ export class KafkaJsAdapter implements MessagingAdapter<Kafka> {
   }
 
   async start(): Promise<void> {
-    if (this.kafka === undefined) {
-      const brokers = this.options.brokers !== undefined ? [...this.options.brokers] : parseBrokers(this.settings.brokers)
-      if (brokers.length === 0) {
-        throw WeftError.internal("There are no Kafka brokers: set brokers under transports.kafka in weft.yaml (or WEFT_KAFKA_BROKERS)")
-      }
-      const clientId = this.options.clientId ?? (typeof this.settings.clientId === "string" ? this.settings.clientId : this.service)
-      this.kafka = new Kafka({ ...this.options.config, clientId, brokers, logLevel: logLevel.NOTHING })
-    }
-    this.producer = this.kafka.producer({ allowAutoTopicCreation: true })
+    this.producer = this.raw.producer({ allowAutoTopicCreation: true })
     await this.producer.connect()
   }
 
@@ -129,9 +134,23 @@ export class KafkaJsAdapter implements MessagingAdapter<Kafka> {
     this.subscriptions.push({ topic: destination, group, fromBeginning: options.fromBeginning === true, handler })
   }
 
+  private async ensureTopics(topics: readonly string[]): Promise<void> {
+    if (this.options.createTopics === false || topics.length === 0) return
+    const admin = this.raw.admin()
+    try {
+      await admin.connect()
+      await admin.createTopics({ waitForLeaders: true, topics: topics.map((topic) => ({ topic })) })
+    } catch {
+      // Not allowed, or already there: subscribing will say if the topic is really missing.
+    } finally {
+      await admin.disconnect().catch(() => undefined)
+    }
+  }
+
   /** KafkaJS must know every topic of a consumer before it runs, so consuming starts here. */
   async ready(): Promise<void> {
     const kafka = this.raw
+    await this.ensureTopics([...new Set(this.subscriptions.map((s) => s.topic))])
     const groups = new Map<string, Subscription[]>()
     for (const s of this.subscriptions) groups.set(s.group, [...(groups.get(s.group) ?? []), s])
     for (const [groupId, subs] of groups) {
