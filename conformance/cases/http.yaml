@@ -1,0 +1,185 @@
+description: One request to one route, through each language's HTTP handling, without a socket. The same decoding, the same problem bodies, the same statuses.
+cases:
+  # ---- a good request ----
+  - id: http.serve.a-valid-request-reaches-the-handler-decoded
+    op: http
+    args:
+      route: createOrder
+      request: { body: &orderText '{"id":"123e4567-e89b-42d3-a456-426614174000","customer":"Ann","lines":[{"sku":"apple","qty":1}],"total":{"amount":100,"currency":"EUR"},"sides":{},"labels":{},"placedAt":"2026-11-23T10:00:00.000Z"}' }
+      handler: { returns: &order { id: "123e4567-e89b-42d3-a456-426614174000", customer: "Ann", lines: [{ sku: "apple", qty: 1 }], total: { amount: 100, currency: "EUR" }, sides: {}, labels: {}, placedAt: "2026-11-23T10:00:00.000Z" } }
+    expect: { result: { status: 200, contentType: application/json, body: *order, calls: 1, seen: { body: *order, query: null, headers: null, params: {} } } }
+
+  - id: http.serve.path-parameters-are-decoded
+    op: http
+    args: { route: getOrder, request: { params: { id: "123e4567-e89b-42d3-a456-426614174000" } }, handler: { returns: *order } }
+    expect: { result: { status: 200, body: *order, seen: { params: { id: "123e4567-e89b-42d3-a456-426614174000" } } } }
+
+  - id: http.serve.query-values-are-converted-to-their-types
+    op: http
+    args:
+      route: listOrders
+      request: { query: { page: "2", tags: [a, b], flag: "true", ratio: "1.5" } }
+      handler: { returns: [] }
+    expect: { result: { status: 200, body: [], seen: { query: { page: 2, tags: [a, b], flag: true, ratio: 1.5 } } } }
+
+  - id: http.serve.one-value-for-a-list-is-a-list
+    op: http
+    args: { route: listOrders, request: { query: { tags: only } }, handler: { returns: [] } }
+    expect: { result: { status: 200, seen: { query: { tags: [only] } } } }
+
+  - id: http.serve.nothing-in-the-query-is-fine
+    op: http
+    args: { route: listOrders, request: {}, handler: { returns: [] } }
+    expect: { result: { status: 200, calls: 1, seen: { query: {} } } }
+
+  - id: http.serve.headers-are-matched-by-their-wire-name-ignoring-case
+    op: http
+    args: { route: whoami, request: { headers: { X-Tenant: t1 } }, handler: { returns: { amount: 1, currency: EUR } } }
+    expect: { result: { status: 200, body: { amount: 1, currency: EUR }, seen: { headers: { x-tenant: t1 } } } }
+
+  - id: http.serve.the-handler-can-set-the-status-and-headers
+    op: http
+    args:
+      route: createOrder
+      request: { body: *orderText }
+      handler: { returns: *order, status: 201, headers: { location: /v1/orders/1 } }
+    expect: { result: { status: 201, headers: { location: /v1/orders/1 }, contentType: application/json } }
+
+  - id: http.serve.an-empty-result
+    op: http
+    args: { route: deleteOrder, request: { params: { id: "123e4567-e89b-42d3-a456-426614174000" } }, handler: { returns: {} } }
+    expect: { result: { status: 200, body: {} } }
+
+  # ---- a request that breaks the contract: every issue at once, the handler never called ----
+  - id: http.reject.every-problem-in-the-body-is-listed
+    op: http
+    args: { route: createOrder, request: { body: '{"customer": 5}' }, handler: { returns: *order } }
+    expect:
+      result:
+        status: 400
+        contentType: application/problem+json
+        body: { type: "urn:weft:error:InvalidInput", title: InvalidInput, status: 400 }
+        issues: [body.customer, body.id, body.labels, body.lines, body.placedAt, body.sides, body.total]
+        calls: 0
+
+  - id: http.reject.a-missing-body
+    op: http
+    args: { route: createOrder, request: {}, handler: { returns: *order } }
+    expect: { result: { status: 400, issues: [body], calls: 0 } }
+
+  - id: http.reject.an-empty-body
+    op: http
+    args: { route: createOrder, request: { body: "   " }, handler: { returns: *order } }
+    expect: { result: { status: 400, issues: [body], calls: 0 } }
+
+  - id: http.reject.a-body-that-is-not-json
+    op: http
+    args: { route: createOrder, request: { body: "{nope" }, handler: { returns: *order } }
+    expect: { result: { status: 400, issues: [body], calls: 0 } }
+
+  - id: http.reject.a-path-parameter-that-is-not-a-uuid
+    op: http
+    args: { route: getOrder, request: { params: { id: nope } }, handler: { returns: *order } }
+    expect: { result: { status: 400, issues: [params.id], calls: 0 } }
+
+  - id: http.reject.query-values-of-the-wrong-type
+    op: http
+    args: { route: listOrders, request: { query: { page: abc, flag: maybe, ratio: x } }, handler: { returns: [] } }
+    expect: { result: { status: 400, issues: [query.flag, query.page, query.ratio], calls: 0 } }
+
+  - id: http.reject.a-required-header-is-missing
+    op: http
+    args: { route: whoami, request: {}, handler: { returns: { amount: 1, currency: EUR } } }
+    expect: { result: { status: 400, issues: [headers.x-tenant], calls: 0 } }
+
+  - id: http.reject.the-detail-names-the-first-problem
+    op: http
+    args: { route: getOrder, request: { params: { id: still-nope } }, handler: { returns: *order } }
+    expect: { result: { status: 400, body: { detail: "Invalid input: params.id must be a UUID" } } }
+
+  # ---- what a handler may throw ----
+  - id: http.errors.not-found
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: NotFound } } }
+    expect: { result: { status: 404, contentType: application/problem+json, body: { type: "urn:weft:error:NotFound", title: NotFound, status: 404, detail: "failed with NotFound" } } }
+
+  - id: http.errors.unauthorized
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: Unauthorized } } }
+    expect: { result: { status: 401, body: { type: "urn:weft:error:Unauthorized" } } }
+
+  - id: http.errors.forbidden
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: Forbidden } } }
+    expect: { result: { status: 403, body: { type: "urn:weft:error:Forbidden" } } }
+
+  - id: http.errors.conflict
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: Conflict } } }
+    expect: { result: { status: 409, body: { type: "urn:weft:error:Conflict" } } }
+
+  - id: http.errors.unavailable
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: Unavailable } } }
+    expect: { result: { status: 503, body: { type: "urn:weft:error:Unavailable" } } }
+
+  - id: http.errors.timeout
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: Timeout } } }
+    expect: { result: { status: 504, body: { type: "urn:weft:error:Timeout" } } }
+
+  - id: http.errors.invalid-input-from-the-handler
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: InvalidInput } } }
+    expect: { result: { status: 400, body: { type: "urn:weft:error:InvalidInput" } } }
+
+  - id: http.errors.internal-does-not-describe-the-server
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { category: Internal } } }
+    expect: { result: { status: 500, body: { type: "urn:weft:error:Internal", detail: "Internal server error" }, leaksSecret: false } }
+
+  - id: http.errors.an-ordinary-exception-is-internal-and-its-message-is-not-sent
+    op: http
+    args: { route: createOrder, request: { body: *orderText }, handler: { throws: { plain: true } } }
+    expect: { result: { status: 500, body: { type: "urn:weft:error:Internal", detail: "Internal server error" }, leaksSecret: false } }
+
+  - id: http.errors.a-declared-error-has-its-status-and-fields
+    op: http
+    args:
+      route: createOrder
+      request: { body: *orderText }
+      handler: { throws: { declared: { name: OutOfStock, fields: { sku: apple, available: 0 }, message: No apples } } }
+    expect:
+      result:
+        status: 409
+        contentType: application/problem+json
+        body: { type: "urn:weft:error:conformance.OutOfStock", title: OutOfStock, status: 409, detail: No apples, fields: { sku: apple, available: 0 } }
+
+  - id: http.errors.a-declared-error-the-route-does-not-list-is-a-bug
+    op: http
+    args:
+      route: createOrder
+      request: { body: *orderText }
+      handler: { throws: { declared: { name: Declined, fields: { reason: no }, message: nope } } }
+    expect: { result: { status: 500, body: { type: "urn:weft:error:Internal", detail: "Internal server error" } } }
+
+  # ---- results ----
+  - id: http.result.an-optional-result-that-is-missing-is-404
+    op: http
+    args: { route: getOrder, request: { params: { id: "123e4567-e89b-42d3-a456-426614174000" } }, handler: { returns: null } }
+    expect: { result: { status: 404, body: { type: "urn:weft:error:NotFound" } } }
+
+  - id: http.result.a-result-that-must-be-there-is-a-bug-when-missing
+    op: http
+    args: { route: ping, request: {}, handler: { returns: null } }
+    expect: { result: { status: 500, body: { type: "urn:weft:error:Internal" } } }
+
+  - id: http.result.a-result-that-breaks-the-contract-is-a-bug-and-not-sent
+    op: http
+    args: { route: listOrders, request: {}, handler: { returnsRaw: [{ nope: true }] } }
+    expect: { result: { status: 500, body: { type: "urn:weft:error:Internal", detail: "Internal server error" } } }
+
+  - id: http.result.a-route-with-nothing-to-read
+    op: http
+    args: { route: ping, request: { params: { ignored: x }, query: { ignored: y } }, handler: { returns: {} } }
+    expect: { result: { status: 200, body: {}, calls: 1 } }

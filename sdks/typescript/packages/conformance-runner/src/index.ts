@@ -3,6 +3,7 @@
  * standard input and output, and uses nothing but `@weft-sdk/core`.
  */
 import { createInterface } from "node:readline"
+import { http } from "./http.js"
 import { messaging } from "./messaging.js"
 import { ConfigError, Contracts, isWeftError, parseConfig, version, type Ir, type TypeRef } from "@weft-sdk/core"
 
@@ -50,6 +51,8 @@ async function handle(request: Request): Promise<unknown> {
     }
     case "messaging":
       return messaging(need(), request as unknown as Parameters<typeof messaging>[1])
+    case "http":
+      return http(need(), request as unknown as Parameters<typeof http>[1])
     default:
       throw new Error(`unknown op ${request.op}`)
   }

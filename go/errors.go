@@ -85,8 +85,11 @@ func errorf(category Category, format string, args ...any) *Error {
 	return &Error{Category: category, Message: fmt.Sprintf(format, args...)}
 }
 
-// AsError returns the *Error in err's chain, or wraps any other error as Internal.
+// AsError returns the *Error in err's chain, or wraps any other error as Internal. A nil error gives nil.
 func AsError(err error) *Error {
+	if err == nil {
+		return nil
+	}
 	var e *Error
 	if errors.As(err, &e) {
 		return e

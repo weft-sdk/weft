@@ -93,6 +93,22 @@ func main() {
 				continue
 			}
 			write(response{ID: req.ID, OK: true, Result: result})
+		case "http":
+			if contracts == nil {
+				write(response{ID: req.ID, Error: "no contracts loaded: send `load` first"})
+				continue
+			}
+			var h httpRequest
+			if err := json.Unmarshal(line, &h); err != nil {
+				write(response{ID: req.ID, Error: "not an http request: " + err.Error()})
+				continue
+			}
+			result, err := httpScenario(contracts, h)
+			if err != nil {
+				write(response{ID: req.ID, Error: err.Error()})
+				continue
+			}
+			write(response{ID: req.ID, OK: true, Result: result})
 		case "config":
 			config, err := weft.ParseConfig(req.YAML, req.Env)
 			if err != nil {

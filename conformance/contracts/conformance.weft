@@ -134,6 +134,21 @@ type DictLength {
 
 type Empty {}
 
+error Declined {
+  reason: string
+}
+
+http /v1 {
+  POST   "/orders"       createOrder(body: Order) -> Order | OutOfStock | InvalidInput
+  GET    "/orders/{id}"  getOrder(id: uuid) -> Order?
+  GET    "/orders"       listOrders(query: { page?: int, tags?: string[], flag?: bool, ratio?: float })
+    -> Order[]
+  GET    "/whoami"       whoami(headers: { tenant: string @wire("x-tenant"), trace?: string })
+    -> Money
+  DELETE "/orders/{id}"  deleteOrder(id: uuid) -> Empty | NotFound
+  PUT    "/ping"         ping() -> Empty
+}
+
 event order.placed: Order {
   key: id
 }
