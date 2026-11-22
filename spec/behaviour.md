@@ -158,3 +158,15 @@ The status of a category is in [Errors](#errors); a declared error has its contr
 **Shutdown.** A request in flight when `stop()` begins finishes and its response is written; connections are closed as they go idle, and the rest after a short grace. A request that arrives after `stop()` began is refused with 503.
 
 **Observability.** A server span `<METHOD> <route>` (parent from `traceparent`) and a client span per attempt, with `http.request.method`, `http.route`, `http.response.status_code`; histograms `weft.http.server.duration` and `weft.http.client.duration` (ms).
+
+## Kafka
+
+The Kafka adapter (`@weft-sdk/kafka-kafkajs`, on KafkaJS) follows [Messaging](#messaging) and adds:
+
+- **Attributes.** CloudEvents attributes are `ce_` headers (`ce_id`, `ce_type`, `ce_source`, `ce_time`, `ce_datacontenttype`, `ce_specversion`); the ordering key is the Kafka key; other headers are Kafka headers. A message that was not sent by Weft (no `ce_` headers) is still delivered: its `id` is `topic:partition:offset` and its `type` is the topic.
+- **Settings.** `transports.kafka`: `brokers` (a list, or a comma-separated string), `group` (the default consumer group), `clientId` (default: the service name). An option on `on()` overrides the group. `fromBeginning` applies when the group has no committed offset yet.
+- **Acknowledging.** A message's offset is committed when its handler returns. A handler that throws (because shutdown began mid-retry) leaves it uncommitted, and the group's next consumer receives it again.
+- **Topics.** Before subscribing, the adapter creates the topics it will consume if they do not exist (a consumer that subscribes to a missing topic fails). Setting `createTopics: false` skips this. Topics it only publishes to, such as dead-letter topics, are created by the broker on first send, which needs `auto.create.topics.enable` (the default).
+- **Retries hold up the partition.** A message being retried is retried before the next one is taken, so keep the total retry time well under the consumer's session timeout (30 s by default) or the group will rebalance.
+- **Not supported:** `delayMs`, transactions, request-reply. They fail with a clear `Internal` error.
+- **Known noise.** KafkaJS 2.2.4 prints Node's `TimeoutNegativeWarning` on recent Node versions. It comes from KafkaJS's request queue and is harmless.

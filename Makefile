@@ -7,7 +7,7 @@ PNPM := pnpm --dir website
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
         site-install site-dev site-check site-build \
-        ts-install ts-check ts-build ts-test ts-fixtures
+        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -71,3 +71,12 @@ ts-check: ## Build, type-check and test the TypeScript packages (adapters type-c
 
 ts-fixtures: ## Regenerate the TypeScript tests' fixture from spec/examples with the real compiler
 	cd sdks/typescript/fixtures && $(CARGO) run -q --manifest-path ../../../compiler/Cargo.toml -p weft-cli -- gen
+
+ts-kafka-up: ## Start a Kafka broker for the adapter tests (needs Docker)
+	docker compose --file sdks/typescript/docker-compose.yaml up -d --wait
+
+ts-kafka-down: ## Stop the test broker
+	docker compose --file sdks/typescript/docker-compose.yaml down
+
+ts-kafka-test: ts-build ## Run the Kafka adapter tests against the broker from ts-kafka-up
+	WEFT_TEST_KAFKA=127.0.0.1:9092 $(TS) --filter @weft-sdk/kafka-kafkajs test

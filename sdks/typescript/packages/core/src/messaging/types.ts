@@ -1,3 +1,4 @@
+import type { Config } from "../config.js"
 import type { Context } from "../middleware.js"
 import type { Transport } from "../weft.js"
 
@@ -77,6 +78,10 @@ export interface Delivery {
  */
 export interface MessagingAdapter<Raw = unknown> extends Transport {
   readonly raw: Raw
+  /** Settings from `transports.<name>` in weft.yaml (brokers, group, ...) and the whole config. Called once, first. */
+  configure?(settings: Readonly<Record<string, unknown>>, config: Config): void
+  /** Called after every `subscribe`, for libraries that must know all subscriptions before they start consuming. */
+  ready?(): Promise<void>
   capabilities(): MessagingCapabilities
   publish(destination: string, envelope: Envelope, options: Readonly<Record<string, unknown>>): Promise<void>
   subscribe(
