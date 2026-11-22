@@ -68,7 +68,7 @@ Everything runs through the root `Makefile` (`make help` lists it). Add each com
 | `make site-check` | Type-check the website (`astro check`, TypeScript strict) |
 | `make site-build` | Build the static site into `website/dist/` |
 | `make ts-install` | Install the TypeScript packages' dependencies (`sdks/typescript`, a pnpm workspace) |
-| `make ts-check` | Type-check, build and test the TypeScript packages (`ts-build` and `ts-test` run the parts) |
+| `make ts-check` | Build, type-check and test the TypeScript packages (`ts-build` and `ts-test` run the parts; adapters type-check and test against core's build, so build first) |
 
 ## Repository
 

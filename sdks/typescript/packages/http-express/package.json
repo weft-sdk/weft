@@ -1,0 +1,48 @@
+{
+  "name": "@weft-sdk/http-express",
+  "version": "0.0.0",
+  "description": "Weft for TypeScript: the HTTP adapter on Express",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@weft-sdk/core": "workspace:*",
+    "express": "^5.0.0"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/context-async-hooks": "2.12.0",
+    "@opentelemetry/core": "2.12.0",
+    "@opentelemetry/sdk-trace-base": "2.12.0",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.6",
+    "@weft-sdk/core": "workspace:*",
+    "express": "5.3.0",
+    "tsup": "9.0.0",
+    "typescript": "6.0.3",
+    "vitest": "5.1.1"
+  }
+}
