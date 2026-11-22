@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use serde_json::{json, Value};
-use weft_conformance::cases::{self, Case, Expect};
+use weft_conformance::cases::{self, Case, Expect, Kind};
 use weft_conformance::runner::{Process, Runner};
 use weft_conformance::{compare, compile_contracts, run_runner, typeref, unknown_types};
 
@@ -73,8 +73,10 @@ fn case(expect: Expect) -> Case {
     Case {
         id: "c".into(),
         file: "f.yaml".into(),
-        ty: json!({}),
-        wire: json!(null),
+        kind: Kind::Decode {
+            ty: json!({}),
+            wire: json!(null),
+        },
         expect,
     }
 }
@@ -151,7 +153,7 @@ struct Oracle {
 fn oracle(cases: &[Case], wrong: impl Fn(&str, Value) -> Value + 'static) -> Oracle {
     let answers = cases
         .iter()
-        .map(|c| (key(&c.ty, &c.wire), c.expect.clone()))
+        .map(|c| (case_key(c), c.expect.clone()))
         .collect();
     Oracle {
         answers,
@@ -161,8 +163,11 @@ fn oracle(cases: &[Case], wrong: impl Fn(&str, Value) -> Value + 'static) -> Ora
     }
 }
 
-fn key(ty: &Value, wire: &Value) -> String {
-    format!("{ty}|{wire}")
+fn case_key(c: &Case) -> String {
+    match &c.kind {
+        Kind::Decode { ty, wire } => format!("{ty}|{wire}"),
+        Kind::Config { yaml, env } => format!("config|{yaml}|{env}"),
+    }
 }
 
 impl Runner for Oracle {
@@ -176,15 +181,25 @@ impl Runner for Oracle {
                 self.loaded = true;
                 Ok(json!({}))
             }
-            "decode" => {
-                assert!(self.loaded, "decode before load");
-                let k = key(&request["type"], &request["wire"]);
+            op @ ("decode" | "config") => {
+                assert!(self.loaded, "{op} before load");
+                let k = if op == "decode" {
+                    format!("{}|{}", request["type"], request["wire"])
+                } else {
+                    format!(
+                        "config|{}|{}",
+                        request["yaml"].as_str().unwrap(),
+                        request["env"]
+                    )
+                };
                 let expect = self.answers.get(&k).ok_or("no such case")?;
                 let honest = match expect {
                     Expect::Canonical(c) => json!({ "valid": true, "canonical": c }),
                     Expect::Issues(paths) => {
                         json!({ "valid": false, "issues": paths.iter().map(|p| json!({ "path": p, "message": "m" })).collect::<Vec<_>>() })
                     }
+                    Expect::Config(c) => json!({ "valid": true, "config": c }),
+                    Expect::Problems(p) => json!({ "valid": false, "problems": p }),
                 };
                 Ok((self.wrong)(&k, honest))
             }
@@ -230,7 +245,7 @@ fn a_runner_that_gets_one_answer_wrong_fails_exactly_that_case() {
         .iter()
         .find(|c| c.id == "encoding.timestamp.positive-offset-becomes-utc")
         .unwrap();
-    let target = key(&victim.ty, &victim.wire);
+    let target = case_key(victim);
     let mut o = oracle(&all, move |k, honest| {
         if *k == target {
             json!({ "valid": true, "canonical": "2026-11-23T10:00:00.000Z" }) // forgot to convert to UTC

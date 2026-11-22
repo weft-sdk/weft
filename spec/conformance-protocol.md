@@ -22,6 +22,7 @@ Every request has an `id` (a number) and an `op`. Every response repeats the `id
 | `hello` | none | `{ "language": "typescript", "version": "0.0.0", "protocol": "0.1" }` |
 | `load` | `ir`: an array of IR documents | `{}`. Replaces the contracts the runner knows. Every later operation uses them |
 | `decode` | `type`: a type reference as in the IR; `wire`: any JSON value | See below |
+| `config` | `yaml`: the text of a weft.yaml; `env`: an object of environment variables | See below |
 
 ### `decode`
 
@@ -35,5 +36,17 @@ The runner decodes `wire` as `type`, then, if it was valid, encodes the result a
 
 - `canonical` is the wire form after the round trip: names are wire names, optional fields that were missing or `null` are left out, fields the contract does not have are gone, timestamps are in UTC with milliseconds, and so on ([shared behaviour](behaviour.md#wire-format-json)).
 - `issues` lists every problem. A case compares the **paths** (using wire names, as in `behaviour.md`); the messages are for people and may differ between languages.
+
+### `config`
+
+The runner reads the file as it would at start-up, with `env` as the environment ([configuration](behaviour.md#configuration)).
+
+```json
+{ "id": 4, "op": "config", "yaml": "service: orders", "env": { } }
+{ "id": 4, "ok": true, "result": { "valid": true, "config": { "service": "orders", "transports": { }, "topics": { }, "services": { }, "telemetry": { } } } }
+{ "id": 4, "ok": true, "result": { "valid": false, "problems": [ "service is required" ] } }
+```
+
+A case compares `config` as a value, and `problems` by count and by text: each expected piece of text must be in a problem, and there must be no other problems. The wording of a problem may differ between languages.
 
 New operations are added with the conformance cases that need them, and listed here.

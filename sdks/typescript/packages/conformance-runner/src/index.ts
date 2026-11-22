@@ -3,7 +3,7 @@
  * standard input and output, and uses nothing but `@weft-sdk/core`.
  */
 import { createInterface } from "node:readline"
-import { Contracts, isWeftError, version, type Ir, type TypeRef } from "@weft-sdk/core"
+import { ConfigError, Contracts, isWeftError, parseConfig, version, type Ir, type TypeRef } from "@weft-sdk/core"
 
 const PROTOCOL = "0.1"
 
@@ -35,6 +35,15 @@ function handle(request: Request): unknown {
         return { valid: true, canonical: c.encode(type, decoded.value) }
       } catch (error) {
         if (isWeftError(error)) return { valid: false, issues: error.issues }
+        throw error
+      }
+    }
+    case "config": {
+      try {
+        const config = parseConfig(request.yaml as string, request.env as Record<string, string>)
+        return { valid: true, config }
+      } catch (error) {
+        if (error instanceof ConfigError) return { valid: false, problems: error.problems }
         throw error
       }
     }

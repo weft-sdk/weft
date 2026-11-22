@@ -13,7 +13,7 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use weft_check::Source;
 
-use crate::cases::Case;
+use crate::cases::{Case, Kind};
 use crate::runner::Runner;
 
 /// Compiles every `.weft` file in `dir` into IR documents.
@@ -67,7 +67,9 @@ pub fn unknown_types(cases: &[Case], irs: &[Value]) -> Vec<String> {
     let mut problems = Vec::new();
     for case in cases {
         let mut named = Vec::new();
-        walk(&case.ty, &mut named);
+        if let Some(ty) = case.ty() {
+            walk(ty, &mut named);
+        }
         for (package, name) in named {
             let found = irs.iter().any(|ir| {
                 ir["package"] == json!(package)
@@ -133,7 +135,11 @@ pub fn run_runner(
     runner.call(json!({ "op": "load", "ir": irs }))?;
     let mut results = Vec::new();
     for case in cases {
-        let answer = runner.call(json!({ "op": "decode", "type": case.ty, "wire": case.wire }));
+        let request = match &case.kind {
+            Kind::Decode { ty, wire } => json!({ "op": "decode", "type": ty, "wire": wire }),
+            Kind::Config { yaml, env } => json!({ "op": "config", "yaml": yaml, "env": env }),
+        };
+        let answer = runner.call(request);
         let outcome = match answer {
             Ok(result) => compare::check(case, &result),
             Err(e) => Err(format!("the runner failed: {e}")),
