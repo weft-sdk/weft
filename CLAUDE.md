@@ -45,7 +45,8 @@ Work is handed off through the repository, never through a conversation. Full pr
 - Writing docs: plain words, short sentences, active voice. Name things the way a user would. Tables for comparisons. No marketing filler in design docs.
 - Website: Astro + TypeScript (strict), pnpm only, design tokens for every colour and size (`website/src/styles/tokens.css`, from [11-website.md › Visual direction](docs/11-website.md#visual-direction-the-terminal)), light and dark themes, works at phone width, keyboard accessible, respects reduced motion. Logos come from the `simple-icons` package through `src/components/Icon.astro`.
 - Rust (`compiler/`): one workspace, crates in `compiler/crates/` named as in [architecture](docs/09-architecture.md#repo-layout). `unsafe` is forbidden. Commit `Cargo.lock`. A new crate dependency needs a reason in the commit message, and goes in `[workspace.dependencies]`.
-- Language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [10-tech-stack.md](docs/10-tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
+- TypeScript packages (`sdks/typescript/`): pnpm only, TypeScript strict (6.0.3, pinned; tsup needs the compiler API), tsup for ESM and CJS, Vitest, exact dependency versions. Nothing is published (the maintainer's job).
+- Other language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [10-tech-stack.md](docs/10-tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
 
 ## Commands
 
@@ -66,6 +67,8 @@ Everything runs through the root `Makefile` (`make help` lists it). Add each com
 | `make site-dev` | Run the website at `http://localhost:4321` |
 | `make site-check` | Type-check the website (`astro check`, TypeScript strict) |
 | `make site-build` | Build the static site into `website/dist/` |
+| `make ts-install` | Install the TypeScript packages' dependencies (`sdks/typescript`, a pnpm workspace) |
+| `make ts-check` | Type-check, build and test the TypeScript packages (`ts-build` and `ts-test` run the parts) |
 
 ## Repository
 

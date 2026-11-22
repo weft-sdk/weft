@@ -1,0 +1,17 @@
+{
+  "name": "weft-typescript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  },
+  "packageManager": "pnpm@11.0.8",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

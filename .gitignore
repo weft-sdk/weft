@@ -4,3 +4,7 @@ compiler/target/
 
 # Maintainer's personal notes (agents must not read them; see CLAUDE.md)
 notes/
+
+# TypeScript packages
+node_modules/
+dist/

@@ -6,12 +6,13 @@ PNPM := pnpm --dir website
 
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
-        site-install site-dev site-check site-build
+        site-install site-dev site-check site-build \
+        ts-install ts-check ts-build ts-test
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
 
-check: fmt-check lint test build site-check site-build ## What CI runs: compiler checks, then the website's (run site-install first)
+check: fmt-check lint test build site-check site-build ts-check ## What CI runs: compiler, website and TypeScript checks (run site-install and ts-install first)
 
 fmt: ## Format the compiler's Rust code
 	$(CARGO) fmt $(MANIFEST) --all
@@ -51,3 +52,19 @@ site-check: ## Type-check the website
 
 site-build: ## Build the static site into website/dist/
 	$(PNPM) build
+
+TS := pnpm --dir sdks/typescript
+
+ts-install: ## Install the TypeScript packages' dependencies (Node 22.23.4 or later, pnpm 11)
+	$(TS) install --frozen-lockfile
+
+ts-build: ## Build the TypeScript packages (ESM and CJS)
+	$(TS) build
+
+ts-test: ## Test the TypeScript packages
+	$(TS) test
+
+ts-check: ## Type-check, build and test the TypeScript packages
+	$(TS) typecheck
+	$(TS) build
+	$(TS) test
