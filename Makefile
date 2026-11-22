@@ -7,7 +7,7 @@ PNPM := pnpm --dir website
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
         site-install site-dev site-check site-build \
-        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance go-check go-test go-kafka-test
+        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance conformance-table go-check go-test go-kafka-test go-fixtures
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -91,8 +91,11 @@ go-check: ## Format check, vet and test the Go module (with the race detector)
 go-test: ## Test the Go module
 	cd go && go test ./...
 
-go-kafka-test: ## Run the Go Kafka adapter tests against the broker from ts-kafka-up
-	cd go && WEFT_TEST_KAFKA=127.0.0.1:9092 go test -race ./kafka/...
+go-kafka-test: ## Run the Go Kafka adapter and end-to-end tests against the broker from ts-kafka-up
+	cd go && WEFT_TEST_KAFKA=127.0.0.1:9092 go test -race ./kafka/... ./e2e/...
+
+go-fixtures: ## Regenerate go/e2e/weft.gen.go from spec/examples with the real compiler
+	cd go/e2e && $(CARGO) run -q --manifest-path ../../compiler/Cargo.toml -p weft-cli -- gen
 
 conformance-table: ts-build ## Run everything, Kafka included (make ts-kafka-up first), and write conformance/compatibility.md
 	WEFT_TEST_KAFKA=127.0.0.1:9092 $(CARGO) run -q $(MANIFEST) -p weft-conformance -- run --require-infra --table conformance/compatibility.md

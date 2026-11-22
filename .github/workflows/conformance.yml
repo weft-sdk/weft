@@ -36,6 +36,11 @@ jobs:
         working-directory: compiler
         env:
           WEFT_REQUIRE_RUNNERS: "1"
+      # The Go generator's output is compiled with the Go toolchain.
+      - run: cargo test --locked -p weft-codegen
+        working-directory: compiler
+        env:
+          WEFT_REQUIRE_GO: "1"
       # Everything, with a real Kafka broker for the cross-language cases. The table that comes out must be
       # the committed one: `make conformance-table` regenerates it.
       - run: docker compose --file sdks/typescript/docker-compose.yaml up -d --wait

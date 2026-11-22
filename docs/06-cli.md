@@ -66,7 +66,8 @@ Reads the contracts named in `weft.yaml`, checks them, and writes the typed code
 - **Language.** `--lang`, or `language:` in `weft.yaml`.
 - **Contracts.** The `contracts:` entries (a folder, default `./contracts`). Every `.weft` file in them is checked together, so packages can import each other. A failing contract writes nothing and exits with 3.
 - **Output.** `--out`, or `codegen.out` (default `src/weft.gen.ts`). The file is deterministic, and is left alone when it would not change.
-- **The typed `weft` object.** For the transports in `weft.yaml` that have a package for the language (TypeScript: `http` on `express`, `kafka` on `kafkajs`), the file also wires them up and types them from the contracts, using `service:` to know which package's routes this service serves. [SDK design](04-sdk-design.md#typescript) has the details.
+- **Languages.** TypeScript and Go. `weft gen --lang go` writes `weft.gen.go` (default; `codegen.out` changes it), in the package named by `codegen.package` or, if that is not set, by the folder it is written to.
+- **The typed `weft` object.** For the transports in `weft.yaml` that have a package for the language (TypeScript: `http` on `express`, `kafka` on `kafkajs`; Go: `http` on `nethttp`, `kafka` on `franz`), the file also wires them up and types them from the contracts, using `service:` to know which package's routes this service serves. [SDK design](04-sdk-design.md#typescript) has the details.
 - `--check` writes nothing and exits with 1 if the file is missing or out of date (for CI).
 - `--watch` regenerates on save.
 
