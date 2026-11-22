@@ -109,6 +109,17 @@ func main() {
 				continue
 			}
 			write(response{ID: req.ID, OK: true, Result: result})
+		case "service.start", "service.publish", "service.call", "service.received", "service.served", "service.spans", "service.stop":
+			if contracts == nil {
+				write(response{ID: req.ID, Error: "no contracts loaded: send `load` first"})
+				continue
+			}
+			result, err := serviceOp(contracts, req.Op, line)
+			if err != nil {
+				write(response{ID: req.ID, Error: err.Error()})
+				continue
+			}
+			write(response{ID: req.ID, OK: true, Result: result})
 		case "config":
 			config, err := weft.ParseConfig(req.YAML, req.Env)
 			if err != nil {
@@ -138,4 +149,50 @@ func decode(c *weft.Contracts, ref weft.TypeRef, wire any) map[string]any {
 		return map[string]any{"valid": false, "issues": weft.AsError(err).Issues}
 	}
 	return map[string]any{"valid": true, "canonical": canonical}
+}
+
+// serviceOp runs one of the service.* operations.
+func serviceOp(c *weft.Contracts, op string, line []byte) (map[string]any, error) {
+	switch op {
+	case "service.start":
+		var a serviceStart
+		if err := json.Unmarshal(line, &a); err != nil {
+			return nil, err
+		}
+		return serviceStartOp(c, a)
+	case "service.publish":
+		var a servicePublish
+		if err := json.Unmarshal(line, &a); err != nil {
+			return nil, err
+		}
+		return servicePublishOp(c, a)
+	case "service.call":
+		var a serviceCall
+		if err := json.Unmarshal(line, &a); err != nil {
+			return nil, err
+		}
+		return serviceCallOp(c, a)
+	case "service.received":
+		var a struct {
+			ID        string `json:"svc"`
+			Count     int    `json:"count"`
+			TimeoutMs int    `json:"timeoutMs"`
+		}
+		if err := json.Unmarshal(line, &a); err != nil {
+			return nil, err
+		}
+		return serviceReceivedOp(a)
+	case "service.served", "service.stop":
+		var a struct {
+			ID string `json:"svc"`
+		}
+		if err := json.Unmarshal(line, &a); err != nil {
+			return nil, err
+		}
+		if op == "service.served" {
+			return serviceServedOp(a.ID)
+		}
+		return serviceStopOp(a.ID)
+	}
+	return serviceSpansOp(), nil
 }

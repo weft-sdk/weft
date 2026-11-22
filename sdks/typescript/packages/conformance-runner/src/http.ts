@@ -103,7 +103,7 @@ function thrown(contracts: Contracts, pkg: string, t: NonNullable<NonNullable<Re
 }
 
 /** What the handler was given, in wire form, so it can be compared across languages. */
-function encodeInput(contracts: Contracts, route: RouteDef, input: Record<string, unknown>): unknown {
+export function encodeInput(contracts: Contracts, route: RouteDef, input: Record<string, unknown>): unknown {
   const out: Record<string, unknown> = {}
   const params = (input.params ?? {}) as Record<string, unknown>
   out.params = Object.fromEntries((route.pathParams ?? []).map((p) => [p.name, contracts.encode(p.type, params[p.name])]))

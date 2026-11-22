@@ -41,8 +41,16 @@ jobs:
         working-directory: compiler
         env:
           WEFT_REQUIRE_GO: "1"
-      - run: cargo run --locked -p weft-conformance -- run --results ../conformance-results.json
+      # Everything, with a real Kafka broker for the cross-language cases. The table that comes out must be
+      # the committed one: `make conformance-table` regenerates it.
+      - run: docker compose --file sdks/typescript/docker-compose.yaml up -d --wait
+      - run: cargo run --locked -p weft-conformance -- run --require-infra --results ../conformance-results.json --table ../conformance/compatibility.md
         working-directory: compiler
+        env:
+          WEFT_TEST_KAFKA: 127.0.0.1:9092
+      - run: git diff --exit-code conformance/compatibility.md
+      - if: failure()
+        run: docker compose --file sdks/typescript/docker-compose.yaml logs kafka | tail -40
       - uses: actions/upload-artifact@v4
         with:
           name: conformance-results

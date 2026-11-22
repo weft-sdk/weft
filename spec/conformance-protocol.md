@@ -25,6 +25,7 @@ Every request has an `id` (a number) and an `op`. Every response repeats the `id
 | `config` | `yaml`: the text of a weft.yaml; `env`: an object of environment variables | See below |
 | `messaging` | A scenario: see below | What happened, see below |
 | `http` | A scenario: see below | What was answered, see below |
+| `service.start`, `service.publish`, `service.call`, `service.received`, `service.served`, `service.spans`, `service.stop` | See below | A real service, for cases that make two languages talk |
 
 ### `decode`
 
@@ -105,5 +106,23 @@ The result:
 | `calls` | How many times the handler ran. 0 when the request was refused |
 | `seen` | What the handler was given, in wire form: `{ params, query, headers, body }`, each `null` when the route has none |
 | `leaksSecret` | Whether the response contains the secret that the `plain` exception carried |
+
+### `service.*`
+
+A real service, started inside the runner with its language's package, on a real HTTP socket and a real Kafka broker. The harness starts two runners (`$A` and `$B` in a case) and has one service talk to the other. A service is named by `svc`, because every request already has an `id`.
+
+| Operation | Request fields | Result |
+| --- | --- | --- |
+| `service.start` | `svc`, `service` (its name), `kafka: { brokers, group, topics }`, `consumes: [{ event, fromBeginning, attempts, fail }]`, `serves: [{ route, handler }]` (a handler is scripted as in `http`), `services: { name: url }` | `{ httpPort }`: the port it listens on |
+| `service.publish` | `svc`, `event`, `payload` (wire form), `key`, `headers`, `inSpan` | `{ ok, error?, traceId }` |
+| `service.call` | `svc`, `service` (which entry of `services`), `route`, `request: { params, query, headers, body }` (wire form), `inSpan`, `timeoutMs`, `idempotencyKey` | `{ ok, result?, error?, traceId }`. An error is `{ category, message, issues }` or `{ declared: { package, name, fields }, message }` |
+| `service.received` | `svc`, `count`, `timeoutMs` | `{ count, messages }`, waiting until `count` messages were handled. Each message: `payload` (wire form), `key`, `attempt`, `envelope` (`type`, `source`, `datacontenttype`, `hasId`, `hasTime`), `headers`, `traceId`, `parentSpanId` |
+| `service.served` | `svc` | `{ calls, requests }`: what the served routes were asked, each with `seen` (the input, as in `http`), `traceId`, `hasDeadline`, `hasTraceparent` |
+| `service.spans` | none | `{ spans }`: every finished OpenTelemetry span of this runner (`kind`, `name`, `traceId`, `spanId`, `parentSpanId`) |
+| `service.stop` | `svc` | `{ drained, abandoned }` |
+
+`inSpan` runs the publish or call inside a span, so the trace that crosses to the other language has an id to compare. Handlers that consume are `fromBeginning` by default, so a message sent before the consumer has joined its group is not missed.
+
+A pair case is a list of named `steps`, each for `$A` or `$B`; a step's result is kept under its name, and later steps and the expectations refer to it as `${name.path}` or `name.path`. Strings may use `$RUN` (a unique id for the run, so topics never collide) and `$BROKERS`. A case lists `paths` (a value each path must contain) and `equal` (pairs of paths that must hold the same value).
 
 New operations are added with the conformance cases that need them, and listed here.

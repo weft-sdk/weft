@@ -4,6 +4,7 @@
  */
 import { createInterface } from "node:readline"
 import { http } from "./http.js"
+import * as service from "./service.js"
 import { messaging } from "./messaging.js"
 import { ConfigError, Contracts, isWeftError, parseConfig, version, type Ir, type TypeRef } from "@weft-sdk/core"
 
@@ -53,6 +54,20 @@ async function handle(request: Request): Promise<unknown> {
       return messaging(need(), request as unknown as Parameters<typeof messaging>[1])
     case "http":
       return http(need(), request as unknown as Parameters<typeof http>[1])
+    case "service.start":
+      return service.start(need(), request as unknown as Parameters<typeof service.start>[1])
+    case "service.publish":
+      return service.publish(need(), request as unknown as Parameters<typeof service.publish>[1])
+    case "service.call":
+      return service.call(need(), request as unknown as Parameters<typeof service.call>[1])
+    case "service.received":
+      return service.received(request as unknown as Parameters<typeof service.received>[0])
+    case "service.served":
+      return service.served(request as unknown as Parameters<typeof service.served>[0])
+    case "service.spans":
+      return service.spans()
+    case "service.stop":
+      return service.stop(request as unknown as Parameters<typeof service.stop>[0])
     default:
       throw new Error(`unknown op ${request.op}`)
   }

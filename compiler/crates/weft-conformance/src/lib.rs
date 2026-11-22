@@ -3,7 +3,9 @@
 
 pub mod cases;
 pub mod compare;
+pub mod pairs;
 pub mod runner;
+pub mod table;
 pub mod typeref;
 
 use std::fs;
@@ -135,6 +137,9 @@ pub fn run_runner(
     runner.call(json!({ "op": "load", "ir": irs }))?;
     let mut results = Vec::new();
     for case in cases {
+        if matches!(case.kind, Kind::Pair { .. }) {
+            continue; // needs two runners and real infrastructure: see `pairs`
+        }
         let request = match &case.kind {
             Kind::Decode { ty, wire } => json!({ "op": "decode", "type": ty, "wire": wire }),
             Kind::Config { yaml, env } => json!({ "op": "config", "yaml": yaml, "env": env }),
@@ -143,6 +148,7 @@ pub fn run_runner(
                 request["op"] = json!(op);
                 request
             }
+            Kind::Pair { .. } => unreachable!("skipped above"),
         };
         let answer = runner.call(request);
         let outcome = match answer {

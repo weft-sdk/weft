@@ -168,6 +168,9 @@ fn case_key(c: &Case) -> String {
         Kind::Decode { ty, wire } => format!("{ty}|{wire}"),
         Kind::Config { yaml, env } => format!("config|{yaml}|{env}"),
         Kind::Op { op, args } => format!("{op}|{args}"),
+        Kind::Pair { steps, .. } => {
+            format!("pair|{}", c.id).replace('|', "|") + &steps.len().to_string()
+        }
     }
 }
 
@@ -206,11 +209,19 @@ impl Runner for Oracle {
                     Expect::Config(c) => json!({ "valid": true, "config": c }),
                     Expect::Problems(p) => json!({ "valid": false, "problems": p }),
                     Expect::Result(r) => r.clone(),
+                    Expect::Pair { .. } => json!({}),
                 };
                 Ok((self.wrong)(&k, honest))
             }
         }
     }
+}
+
+/// How many cases one runner runs by itself: the pair cases need two runners and real infrastructure.
+fn singles(all: &[Case]) -> usize {
+    all.iter()
+        .filter(|c| !matches!(c.kind, Kind::Pair { .. }))
+        .count()
 }
 
 fn setup() -> (Vec<Value>, Vec<Case>) {
@@ -226,7 +237,7 @@ fn a_runner_that_agrees_with_every_case_passes_them_all() {
     let (irs, all) = setup();
     let mut o = oracle(&all, |_, a| a);
     let report = run_runner("oracle", &mut o, &irs, &all).unwrap();
-    assert_eq!(report.results.len(), all.len());
+    assert_eq!(report.results.len(), singles(&all));
     assert_eq!(
         report.failed(),
         0,
@@ -316,7 +327,7 @@ fn a_runner_error_fails_the_case_and_the_run_goes_on() {
     }
     let (irs, all) = setup();
     let report = run_runner("broken", &mut Broken, &irs, &all).unwrap();
-    assert_eq!(report.failed(), all.len());
+    assert_eq!(report.failed(), singles(&all));
     assert!(report.results[0]
         .failure
         .as_deref()
@@ -517,5 +528,262 @@ fn no_two_cases_ask_the_same_question() {
         if let Some(other) = seen.insert(case_key(c), c.id.clone()) {
             panic!("`{}` and `{other}` ask the same question", c.id);
         }
+    }
+}
+
+// ---- pair cases ----
+
+mod pair {
+    use std::sync::{Arc, Mutex};
+
+    use serde_json::{json, Value};
+    use weft_conformance::cases::{self, Expect, Kind};
+    use weft_conformance::pairs::{at, run_pair, substitute, Infra};
+    use weft_conformance::runner::Runner;
+    use weft_conformance::table;
+    use weft_conformance::{CaseResult, RunnerReport};
+
+    /// A pretend language: services keep what is published to them in a store shared by both runners, as a
+    /// broker would. It answers like a runner that agrees with the case.
+    #[derive(Clone)]
+    struct Loopback {
+        store: Arc<Mutex<Vec<Value>>>,
+        trace: &'static str,
+        break_it: bool,
+    }
+
+    impl Runner for Loopback {
+        fn call(&mut self, request: Value) -> Result<Value, String> {
+            match request["op"].as_str().unwrap() {
+                "service.start" => Ok(json!({ "httpPort": 4321 })),
+                "service.publish" => {
+                    self.store.lock().unwrap().push(request["payload"].clone());
+                    Ok(json!({ "ok": true, "traceId": self.trace }))
+                }
+                "service.received" => {
+                    let store = self.store.lock().unwrap();
+                    let messages: Vec<Value> = store
+                        .iter()
+                        .map(|p| json!({ "payload": if self.break_it { json!({}) } else { p.clone() }, "key": p["id"], "attempt": 1, "traceId": self.trace,
+                            "envelope": { "type": "order.placed", "source": "orders", "datacontenttype": "application/json", "hasId": true, "hasTime": true } }))
+                        .collect();
+                    Ok(json!({ "count": messages.len(), "messages": messages }))
+                }
+                "service.stop" => Ok(json!({ "drained": true, "abandoned": 0 })),
+                other => Err(format!("unknown op {other}")),
+            }
+        }
+    }
+
+    fn kafka_case() -> weft_conformance::cases::Case {
+        let all = cases::load(&super::conformance_dir().join("cases")).unwrap();
+        all.into_iter()
+            .find(|c| c.id == "cross.kafka.an-event-reaches-the-other-language")
+            .unwrap()
+    }
+
+    fn infra() -> Infra {
+        Infra {
+            kafka: Some("localhost:9092".into()),
+        }
+    }
+
+    #[test]
+    fn a_pair_case_runs_its_steps_on_both_runners_and_checks_what_came_out() {
+        let store = Arc::new(Mutex::new(Vec::new()));
+        let mut a = Loopback {
+            store: store.clone(),
+            trace: "t1",
+            break_it: false,
+        };
+        let mut b = Loopback {
+            store,
+            trace: "t1",
+            break_it: false,
+        };
+        run_pair(&kafka_case(), &mut a, &mut b, "r1", &infra()).unwrap();
+    }
+
+    #[test]
+    fn a_receiver_that_changes_the_payload_fails_the_case_with_the_path() {
+        let store = Arc::new(Mutex::new(Vec::new()));
+        let mut a = Loopback {
+            store: store.clone(),
+            trace: "t1",
+            break_it: false,
+        };
+        let mut b = Loopback {
+            store,
+            trace: "t1",
+            break_it: true,
+        };
+        let err = run_pair(&kafka_case(), &mut a, &mut b, "r1", &infra()).unwrap_err();
+        assert!(err.contains("got.messages.0.payload"), "{err}");
+    }
+
+    #[test]
+    fn a_trace_that_does_not_continue_fails_the_case() {
+        let store = Arc::new(Mutex::new(Vec::new()));
+        let mut a = Loopback {
+            store: store.clone(),
+            trace: "one",
+            break_it: false,
+        };
+        let mut b = Loopback {
+            store,
+            trace: "another",
+            break_it: false,
+        };
+        let err = run_pair(&kafka_case(), &mut a, &mut b, "r1", &infra()).unwrap_err();
+        assert!(
+            err.contains("publish.traceId and got.messages.0.traceId should be the same"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn a_step_that_the_runner_cannot_do_is_named() {
+        struct Never;
+        impl Runner for Never {
+            fn call(&mut self, _: Value) -> Result<Value, String> {
+                Err("not today".into())
+            }
+        }
+        let err = run_pair(&kafka_case(), &mut Never, &mut Never, "r1", &infra()).unwrap_err();
+        assert!(
+            err.contains("step `consumer` (service.start on $B): not today"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn paths_and_substitution() {
+        let results = json!({ "server": { "httpPort": 4321, "list": [{ "a": "x" }] } });
+        assert_eq!(at(&results, "server.list.0.a"), Some(&json!("x")));
+        assert_eq!(at(&results, "server.list.1"), None);
+        assert_eq!(at(&results, "server.httpPort.deeper"), None);
+        let i = infra();
+        assert_eq!(
+            substitute(&json!("${server.httpPort}"), "r9", &i, &results),
+            json!(4321),
+            "a whole reference keeps its type"
+        );
+        assert_eq!(
+            substitute(
+                &json!("http://127.0.0.1:${server.httpPort}/x"),
+                "r9",
+                &i,
+                &results
+            ),
+            json!("http://127.0.0.1:4321/x")
+        );
+        assert_eq!(
+            substitute(
+                &json!({ "t": "placed-$RUN", "b": "$BROKERS", "l": ["$RUN"] }),
+                "r9",
+                &i,
+                &results
+            ),
+            json!({ "t": "placed-r9", "b": "localhost:9092", "l": ["r9"] })
+        );
+    }
+
+    #[test]
+    fn every_real_pair_case_names_runners_and_steps_that_make_sense() {
+        let all = cases::load(&super::conformance_dir().join("cases")).unwrap();
+        let pairs: Vec<_> = all
+            .iter()
+            .filter(|c| matches!(c.kind, Kind::Pair { .. }))
+            .collect();
+        assert!(pairs.len() >= 10, "only {} pair cases", pairs.len());
+        for c in pairs {
+            let Kind::Pair { steps, needs } = &c.kind else {
+                unreachable!()
+            };
+            let Expect::Pair { paths, equal } = &c.expect else {
+                panic!("{}: not a pair expectation", c.id)
+            };
+            assert!(
+                !paths.is_empty() || !equal.is_empty(),
+                "{} expects nothing",
+                c.id
+            );
+            let names: Vec<&str> = steps.iter().map(|s| s.name.as_str()).collect();
+            let mut seen = std::collections::HashSet::new();
+            for n in &names {
+                assert!(seen.insert(*n), "{}: step `{n}` twice", c.id);
+            }
+            // Every path an expectation reads starts with the name of a step.
+            for p in paths.keys().chain(equal.iter().flat_map(|(a, b)| [a, b])) {
+                let first = p.split('.').next().unwrap();
+                assert!(
+                    names.contains(&first),
+                    "{}: `{p}` does not start with a step name {names:?}",
+                    c.id
+                );
+            }
+            for n in needs {
+                assert_eq!(n, "kafka", "{}: unknown need", c.id);
+            }
+        }
+    }
+
+    #[test]
+    fn the_table_says_only_what_the_run_showed() {
+        let report = |runner: &str, passed: bool| RunnerReport {
+            runner: runner.into(),
+            language: runner.into(),
+            version: "0.0.0".into(),
+            results: vec![
+                CaseResult {
+                    id: "encoding.int.zero".into(),
+                    passed: true,
+                    failure: None,
+                },
+                CaseResult {
+                    id: "encoding.int.max".into(),
+                    passed,
+                    failure: None,
+                },
+                CaseResult {
+                    id: "http.serve.x".into(),
+                    passed: true,
+                    failure: None,
+                },
+            ],
+        };
+        let reports = vec![report("go", true), report("typescript", false)];
+        let pair =
+            |c: &str, s: &str, passed: bool, skipped: bool| weft_conformance::pairs::PairResult {
+                id: "cross.x".into(),
+                caller: c.into(),
+                server: s.into(),
+                passed,
+                skipped,
+                failure: None,
+            };
+        let text = table::render(&reports, &[]);
+        assert!(
+            text.contains("| encoding | 2 / 2 | 1 / 2 |")
+                && text.contains("| http | 1 / 1 | 1 / 1 |"),
+            "{text}"
+        );
+        assert!(
+            text.contains("Not run: it needs real infrastructure"),
+            "no pairs, no claim: {text}"
+        );
+
+        let text = table::render(
+            &reports,
+            &[
+                pair("go", "typescript", true, false),
+                pair("go", "typescript", false, false),
+                pair("typescript", "go", true, false),
+                pair("go", "go", true, true),
+            ],
+        );
+        assert!(text.contains("| go | 0 / 0 | 1 / 2 |"), "{text}");
+        assert!(text.contains("| typescript | 1 / 1 | 0 / 0 |"), "{text}");
+        assert!(text.contains("1 pair case(s) were skipped"), "{text}");
     }
 }

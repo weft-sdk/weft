@@ -32,9 +32,9 @@ If you only read three product docs: **concepts**, **contract-language**, **api*
 
 The exact resume point is [Roadmap › Current status](12-roadmap.md#current-status).
 
-- **Phase:** P1 (compiler and CLI) and P2 (the TypeScript package) are done. P3 (the conformance suite and the Go package) is next. The website is built and can resume now that the backend exists for TypeScript.
-- **Built:** the website (`website/`); a Rust workspace (`compiler/`) with the parser, checker, compatibility checker and the `weft init`, `fmt`, `check` and `gen` commands; and the TypeScript package (`sdks/typescript/`): the core, HTTP on Express and Kafka on KafkaJS, tested end to end against a real Kafka broker. CI passes on Linux, macOS and Windows.
-- **Not built:** the conformance suite, every other language package, every other transport, the dashboard and the docs content. Nothing is published to npm.
+- **Phase:** P1 (compiler and CLI), P2 (the TypeScript package) and P3 (the conformance suite and the Go package) are done. P4 (more transports) is next. The website can resume.
+- **Built:** the website (`website/`); the Rust workspace (`compiler/`) with the parser, checker, compatibility checker and the `weft init`, `fmt`, `check` and `gen` (TypeScript and Go) commands; the TypeScript package (`sdks/typescript/`) and the Go package (`go/`), each with HTTP and Kafka; and the conformance suite (`conformance/`): both languages pass the same 251 cases, and each talks to the other over real HTTP and Kafka ([compatibility.md](../conformance/compatibility.md)). CI passes on Linux, macOS and Windows.
+- **Not built:** the other languages, the other transports, the dashboard and the docs content. Nothing is published.
 - **Production-ready:** no.
 
 ## Rules for these docs

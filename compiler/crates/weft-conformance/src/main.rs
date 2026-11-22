@@ -7,7 +7,10 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
-use weft_conformance::runner::Process;
+use weft_conformance::cases::Kind;
+use weft_conformance::pairs::{run_pair, Infra, PairResult};
+use weft_conformance::runner::{Process, Runner};
+use weft_conformance::table;
 use weft_conformance::{cases, compile_contracts, run_runner, unknown_types, RunnerReport};
 
 #[derive(Parser)]
@@ -33,6 +36,12 @@ enum Cmd {
         /// Write the results as JSON to this file
         #[arg(long, value_name = "FILE")]
         results: Option<PathBuf>,
+        /// Write the compatibility table (Markdown) to this file
+        #[arg(long, value_name = "FILE")]
+        table: Option<PathBuf>,
+        /// Fail, rather than skip, a case that needs infrastructure (Kafka) that is not there
+        #[arg(long)]
+        require_infra: bool,
         /// The conformance folder. Default: `conformance/` in this folder or one above
         #[arg(long, value_name = "DIR")]
         dir: Option<PathBuf>,
@@ -67,9 +76,18 @@ fn main() -> ExitCode {
         only,
         filter,
         results,
+        table,
+        require_infra,
         dir,
     } = Cli::parse().command;
-    match run(&only, filter.as_deref(), results.as_deref(), dir) {
+    match run(
+        &only,
+        filter.as_deref(),
+        results.as_deref(),
+        table.as_deref(),
+        require_infra,
+        dir,
+    ) {
         Ok(failed) => ExitCode::from(u8::from(failed)),
         Err(e) => {
             eprintln!("weft-conformance: {e}");
@@ -83,6 +101,8 @@ fn run(
     only: &[String],
     filter: Option<&str>,
     results: Option<&Path>,
+    table_file: Option<&Path>,
+    require_infra: bool,
     dir: Option<PathBuf>,
 ) -> Result<bool, String> {
     let dir = match dir {
@@ -133,6 +153,71 @@ fn run(
         );
     }
 
+    // Cases that need two languages and real infrastructure, for every ordered pair of runners.
+    let infra = Infra {
+        kafka: std::env::var("WEFT_TEST_KAFKA")
+            .ok()
+            .filter(|v| !v.is_empty()),
+    };
+    let chosen: Vec<(&String, &RunnerDef)> = runners
+        .runners
+        .iter()
+        .filter(|(n, _)| only.is_empty() || only.contains(n))
+        .collect();
+    let mut pairs: Vec<PairResult> = Vec::new();
+    let mut counter = 0u32;
+    for case in all.iter().filter(|c| matches!(c.kind, Kind::Pair { .. })) {
+        let Kind::Pair { needs, .. } = &case.kind else {
+            continue;
+        };
+        let missing: Vec<&String> = needs.iter().filter(|n| !infra.has(n)).collect();
+        for (a_name, a_def) in &chosen {
+            for (b_name, b_def) in &chosen {
+                let mut result = PairResult {
+                    id: case.id.clone(),
+                    caller: (*a_name).clone(),
+                    server: (*b_name).clone(),
+                    passed: false,
+                    skipped: false,
+                    failure: None,
+                };
+                if !missing.is_empty() {
+                    if require_infra {
+                        result.failure = Some(format!(
+                            "needs {} (set WEFT_TEST_KAFKA)",
+                            missing
+                                .iter()
+                                .map(|m| m.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ));
+                    } else {
+                        result.skipped = true;
+                        result.passed = true;
+                    }
+                    pairs.push(result);
+                    continue;
+                }
+                counter += 1;
+                let run = format!(
+                    "{}{counter}",
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map_or(0, |d| d.as_millis())
+                );
+                let outcome = start(a_def, &root, &irs).and_then(|mut a| {
+                    let mut b = start(b_def, &root, &irs)?;
+                    run_pair(case, &mut a, &mut b, &run, &infra)
+                });
+                match outcome {
+                    Ok(()) => result.passed = true,
+                    Err(e) => result.failure = Some(e),
+                }
+                pairs.push(result);
+            }
+        }
+    }
+
     let mut failed = false;
     for r in &reports {
         let bad = r.failed();
@@ -149,13 +234,49 @@ fn run(
             println!("  FAIL {}: {}", f.id, f.failure.as_deref().unwrap_or(""));
         }
     }
+    if !pairs.is_empty() {
+        let ran = pairs.iter().filter(|p| !p.skipped).count();
+        let skipped = pairs.len() - ran;
+        let bad = pairs.iter().filter(|p| !p.passed).count();
+        println!(
+            "pairs: {} of {ran} passed{}",
+            ran - bad,
+            if skipped > 0 {
+                format!(", {skipped} skipped (no infrastructure)")
+            } else {
+                String::new()
+            }
+        );
+        for p in pairs.iter().filter(|p| !p.passed) {
+            failed = true;
+            println!(
+                "  FAIL {} [{} -> {}]: {}",
+                p.id,
+                p.caller,
+                p.server,
+                p.failure.as_deref().unwrap_or("")
+            );
+        }
+    }
     if let Some(path) = results {
-        let doc = serde_json::json!({ "cases": all.len(), "runners": reports });
+        let doc = serde_json::json!({ "cases": all.len(), "runners": reports, "pairs": pairs });
         fs::write(
             path,
             serde_json::to_string_pretty(&doc).expect("results serialise") + "\n",
         )
         .map_err(|e| format!("{}: {e}", path.display()))?;
     }
+    if let Some(path) = table_file {
+        fs::write(path, table::render(&reports, &pairs))
+            .map_err(|e| format!("{}: {e}", path.display()))?;
+    }
     Ok(failed)
+}
+
+/// Starts a runner and gives it the contracts.
+fn start(def: &RunnerDef, root: &Path, irs: &[serde_json::Value]) -> Result<Process, String> {
+    let mut p = Process::start(&def.command, root)?;
+    p.call(serde_json::json!({ "op": "hello" }))?;
+    p.call(serde_json::json!({ "op": "load", "ir": irs }))?;
+    Ok(p)
 }

@@ -7,7 +7,7 @@ PNPM := pnpm --dir website
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
         site-install site-dev site-check site-build \
-        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance go-check go-test go-kafka-test go-fixtures
+        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance conformance-table go-check go-test go-kafka-test go-fixtures
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -82,7 +82,7 @@ ts-kafka-down: ## Stop the test broker
 ts-kafka-test: ts-build ## Run the Kafka adapter and end-to-end tests against the broker from ts-kafka-up
 	WEFT_TEST_KAFKA=127.0.0.1:9092 $(TS) --filter @weft-sdk/kafka-kafkajs --filter weft-e2e test
 
-conformance: ts-build ## Run the conformance cases against every language runner (needs Node and Go)
+conformance: ts-build ## Run the conformance cases against every language runner (needs Node and Go; the cross-language Kafka cases run when WEFT_TEST_KAFKA is set)
 	$(CARGO) run -q $(MANIFEST) -p weft-conformance -- run
 
 go-check: ## Format check, vet and test the Go module (with the race detector)
@@ -96,3 +96,6 @@ go-kafka-test: ## Run the Go Kafka adapter and end-to-end tests against the brok
 
 go-fixtures: ## Regenerate go/e2e/weft.gen.go from spec/examples with the real compiler
 	cd go/e2e && $(CARGO) run -q --manifest-path ../../compiler/Cargo.toml -p weft-cli -- gen
+
+conformance-table: ts-build ## Run everything, Kafka included (make ts-kafka-up first), and write conformance/compatibility.md
+	WEFT_TEST_KAFKA=127.0.0.1:9092 $(CARGO) run -q $(MANIFEST) -p weft-conformance -- run --require-infra --table conformance/compatibility.md

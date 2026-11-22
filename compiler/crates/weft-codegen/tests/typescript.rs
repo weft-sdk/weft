@@ -616,6 +616,15 @@ fn go_the_committed_e2e_file_is_current() {
     assert_eq!(committed, fresh, "run `make go-fixtures`");
 }
 
+/// The folder of the Go module as `go.mod` wants it: forward slashes, and none of the `\\?\` prefix that
+/// `canonicalize` puts on Windows paths, which Go refuses.
+fn go_dir(repo: &std::path::Path) -> String {
+    let path = repo.join("go").display().to_string();
+    path.strip_prefix(r"\\?\")
+        .unwrap_or(&path)
+        .replace('\\', "/")
+}
+
 fn tool(name: &str, arg: &str) -> bool {
     Command::new(name)
         .arg(arg)
@@ -652,7 +661,7 @@ fn go_the_generated_code_is_gofmt_clean_and_compiles() {
         dir.join("go.mod"),
         format!(
             "module example.com/gen\n\ngo 1.26.0\n\nrequire github.com/weft-sdk/weft/go v0.0.0\n\nreplace github.com/weft-sdk/weft/go => {}\n",
-            repo.join("go").display().to_string().replace('\\', "/")
+            go_dir(&repo)
         ),
     )
     .unwrap();

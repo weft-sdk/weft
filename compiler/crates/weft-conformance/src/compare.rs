@@ -80,7 +80,7 @@ pub fn check(case: &Case, result: &Value) -> Result<(), String> {
             "expected the config {want}, but it was rejected with {:?}",
             problems(result)
         )),
-        Expect::Result(_) => Ok(()),
+        Expect::Result(_) | Expect::Pair { .. } => Ok(()),
         Expect::Problems(want) if valid => Err(format!(
             "expected it to be rejected ({} problem(s)), but it was accepted as {}",
             want.len(),
