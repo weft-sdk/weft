@@ -253,3 +253,23 @@ describe("timestamps and bytes", () => {
     expect(() => c.encode(prim("bytes"), [1, 2])).toThrow(WeftError)
   })
 })
+
+describe("rules read the code form, also when encoding", () => {
+  const Blob = named("conformance", "BlobLength")
+  const blobs = new Contracts({
+    conformance: {
+      irVersion: "0.1",
+      package: "conformance",
+      types: [
+        { name: "BlobLength", kind: "record", fields: [{ name: "blob", wireName: "blob", type: { kind: "primitive", name: "bytes" }, rules: [{ rule: "length", min: 2, max: 4 }] }] },
+      ],
+    },
+  })
+
+  it("counts the bytes of a Uint8Array, not the characters of its base64", () => {
+    // Three bytes encode to four base64 characters, which is a different count.
+    expect(blobs.encode(Blob, { blob: new Uint8Array([1, 2, 3]) })).toEqual({ blob: "AQID" })
+    expect(() => blobs.encode(Blob, { blob: new Uint8Array([1]) })).toThrow(WeftError)
+    expect(() => blobs.encode(Blob, { blob: new Uint8Array([1, 2, 3, 4, 5]) })).toThrow(WeftError)
+  })
+})

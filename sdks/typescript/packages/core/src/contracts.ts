@@ -299,7 +299,8 @@ export class Contracts {
       }
       const before = issues.length
       const converted = this.convert(this.subst(f.type, env), raw, fieldPath, mode, env, issues)
-      if (issues.length === before) this.applyRules(f.rules ?? [], converted, fieldPath, issues)
+      // Rules read the code form: what was decoded, or what the caller gave to encode.
+      if (issues.length === before) this.applyRules(f.rules ?? [], mode === "decode" ? converted : raw, fieldPath, issues)
       setOwn(out, to, converted)
     }
     return out

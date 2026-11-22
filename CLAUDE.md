@@ -46,6 +46,7 @@ Work is handed off through the repository, never through a conversation. Full pr
 - Website: Astro + TypeScript (strict), pnpm only, design tokens for every colour and size (`website/src/styles/tokens.css`, from [11-website.md › Visual direction](docs/11-website.md#visual-direction-the-terminal)), light and dark themes, works at phone width, keyboard accessible, respects reduced motion. Logos come from the `simple-icons` package through `src/components/Icon.astro`.
 - Rust (`compiler/`): one workspace, crates in `compiler/crates/` named as in [architecture](docs/09-architecture.md#repo-layout). `unsafe` is forbidden. Commit `Cargo.lock`. A new crate dependency needs a reason in the commit message, and goes in `[workspace.dependencies]`.
 - TypeScript packages (`sdks/typescript/`): pnpm only, TypeScript strict (6.0.3, pinned; tsup needs the compiler API), tsup for ESM and CJS, Vitest, exact dependency versions. Nothing is published (the maintainer's job).
+- Go (`go/`, module `github.com/weft-sdk/weft/go`): standard library first, `gofmt` and `go vet` clean, tests run with `-race`, a dependency needs a reason in the commit message. Adapters are packages inside the one module (ADR 0022).
 - Other language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [10-tech-stack.md](docs/10-tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
 
 ## Commands
@@ -70,10 +71,11 @@ Everything runs through the root `Makefile` (`make help` lists it). Add each com
 | `make ts-fixtures` | Regenerate the TypeScript tests' generated files (`core/test/fixtures`, `e2e/src/weft.gen.ts`) with the real compiler. A Rust test fails when the e2e file is stale |
 | `make ts-kafka-up` / `ts-kafka-down` / `ts-kafka-test` | Start or stop a Kafka broker in Docker, and run the Kafka adapter and end-to-end tests against it (CI does this in its `kafka` job). If `docker pull` hangs in a script, a stuck credential helper is the usual cause: pull with an empty `DOCKER_CONFIG` |
 | `make conformance` | Build the TypeScript runner and run the conformance cases against every runner in `conformance/runners.yaml` (`cargo run -p weft-conformance -- run --help` has the filters) |
+| `make go-check` / `make go-test` | Format check, vet and test (with the race detector) the Go module in `go/`, or just test it |
 | `make ts-install` | Install the TypeScript packages' dependencies (`sdks/typescript`, a pnpm workspace) |
 | `make ts-check` | Build, type-check and test the TypeScript packages (`ts-build` and `ts-test` run the parts; adapters type-check and test against core's build, so build first) |
 
 ## Repository
 
 - GitHub: `github.com/weft-sdk/weft` (private). Default branch `main`.
-- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `spec/`, `conformance/`, `website/`, `compiler/`, `sdks/typescript/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
+- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `spec/`, `conformance/`, `website/`, `compiler/`, `sdks/typescript/`, `go/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
