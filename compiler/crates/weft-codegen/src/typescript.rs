@@ -144,7 +144,12 @@ impl<'a> Gen<'a> {
             self.options.generator
         );
         let _ = writeln!(out, "// Contracts: {}.", packages.join(", "));
-        out.push_str("/* eslint-disable */\n\n");
+        out.push_str("/* eslint-disable */\n");
+        let facade = self.facade_plan();
+        if let Some(plan) = &facade {
+            plan.imports(&mut out);
+        }
+        out.push('\n');
         out.push_str(
             "/** A uuid. Branded so that an arbitrary string does not type-check as one. */\n",
         );
@@ -169,10 +174,35 @@ impl<'a> Gen<'a> {
         out.push_str(&entries.join(",\n"));
         out.push_str(",\n} as const;\n");
 
+        if let Some(plan) = &facade {
+            self.facade(&mut out, plan);
+        }
+
         if self.errors.is_empty() {
             Ok(out)
         } else {
             Err(self.errors)
+        }
+    }
+
+    /// What the typed `weft` object needs, if the service uses a transport that has a TypeScript package.
+    fn facade_plan(&self) -> Option<FacadePlan> {
+        let mut plan = FacadePlan::default();
+        for t in &self.options.transports {
+            let library = t.library.as_deref();
+            match (t.name.as_str(), library) {
+                ("http", None | Some("express")) => plan.http = true,
+                ("kafka", None | Some("kafkajs")) => plan.kafka = true,
+                (name, lib) => plan.skipped.push(match lib {
+                    Some(l) => format!("{name} ({l})"),
+                    None => name.to_string(),
+                }),
+            }
+        }
+        if plan.http || plan.kafka {
+            Some(plan)
+        } else {
+            None
         }
     }
 
@@ -356,6 +386,149 @@ impl<'a> Gen<'a> {
         }
     }
 
+    /// The typed `weft` object: the maps of events and routes, and the code that wires the adapters.
+    fn facade(&mut self, out: &mut String, plan: &FacadePlan) {
+        out.push_str("\n// ---- The typed `weft` object ----\n");
+        if !plan.skipped.is_empty() {
+            let _ = writeln!(
+                out,
+                "// Not available in the TypeScript package yet, so not in `weft`: {}.",
+                plan.skipped.join(", ")
+            );
+        }
+
+        // Events, across every package. A name must mean one thing.
+        let mut events: Vec<(String, String, String)> = Vec::new(); // name, type, package
+        for ir in self.irs {
+            for e in &ir.events {
+                events.push((e.name.clone(), self.ty(&e.payload, ""), ir.package.clone()));
+            }
+        }
+        for (i, (name, _, pkg)) in events.iter().enumerate() {
+            if let Some((_, _, other)) = events[..i].iter().find(|(n, _, _)| n == name) {
+                self.fail(
+                    format!("the event `{name}` is declared in both `{other}` and `{pkg}`"),
+                    "the typed `weft` object names events by their name alone: rename one",
+                );
+            }
+        }
+        if plan.kafka {
+            out.push_str(
+                "\n/** Every event, by name, with its payload type. */\nexport type Events = {\n",
+            );
+            for (name, ty, _) in &events {
+                let _ = writeln!(out, "  \"{name}\": {ty};");
+            }
+            out.push_str("};\n");
+        }
+
+        if plan.http {
+            let own = self.options.service.as_deref();
+            out.push_str("\n/** The routes this service serves: those of its own package. */\nexport type HttpRoutes = {\n");
+            for ir in self.irs.iter().filter(|i| Some(i.package.as_str()) == own) {
+                self.route_entries(out, ir, "  ");
+            }
+            out.push_str("};\n");
+            out.push_str("\n/** The routes of every package, for calling other services with `weft.http.to(name)`. */\nexport type HttpServices = {\n");
+            for ir in self.irs {
+                let _ = writeln!(out, "  {}: {{", ir.package);
+                self.route_entries(out, ir, "    ");
+                out.push_str("  };\n");
+            }
+            out.push_str("};\n");
+        }
+
+        let int64 = match self.options.int64 {
+            Int64::Number => "number",
+            Int64::Bigint => "bigint",
+        };
+        out.push_str("\n/** Builds the `weft` object from `weft.yaml` (or the config you pass). Import `weft` for the usual one. */\n");
+        out.push_str("export function createWeft(options: { config?: Config } = {}) {\n");
+        let _ = writeln!(
+            out,
+            "  const core = new Weft({{ contracts: new Contracts(contracts, {{ int64: \"{int64}\" }}), config: options.config ?? loadConfigSync() }});"
+        );
+        if plan.http {
+            out.push_str("  const http = new Http(core, { adapter: expressAdapter() });\n");
+        }
+        if plan.kafka {
+            out.push_str("  const kafka = new Messaging(core, { adapter: kafkaJsAdapter(), name: \"kafka\" });\n");
+        }
+        out.push_str("  return {\n");
+        out.push_str("    /** Connects every transport. Register handlers first. */\n    start: () => core.start(),\n");
+        out.push_str("    /** Stops taking new work, finishes what is running, and closes connections. */\n    stop: () => core.stop(),\n");
+        out.push_str("    /** Middleware for every transport. */\n    use: (middleware: Middleware<Context>) => core.use(middleware),\n");
+        out.push_str("    /** The untyped runtime underneath. */\n    core,\n");
+        if plan.http {
+            out.push_str(
+                "    http: http as unknown as TypedHttp<HttpRoutes, HttpServices, Express>,\n",
+            );
+        }
+        if plan.kafka {
+            out.push_str("    kafka: kafka as unknown as TypedMessaging<Events, Kafka>,\n");
+        }
+        out.push_str("  };\n}\n\nlet current: ReturnType<typeof createWeft> | undefined;\n");
+        out.push_str("/** The usual `weft` object. It is built from `weft.yaml` the first time it is used, so importing this file for its types needs no config. */\n");
+        out.push_str("export const weft: ReturnType<typeof createWeft> = new Proxy({} as ReturnType<typeof createWeft>, {\n");
+        out.push_str(
+            "  get: (_target, key) => Reflect.get((current ??= createWeft()), key),\n});\n",
+        );
+    }
+
+    /// One `"METHOD /path"` entry for each route of a package: by its full path, and by its path
+    /// without the base when that is not taken by another route of the same method.
+    fn route_entries(&self, out: &mut String, ir: &Ir, indent: &str) {
+        for r in &ir.routes {
+            let method = format!("{:?}", r.method).to_uppercase();
+            let full = format!("{}{}", r.base.as_deref().unwrap_or(""), r.path);
+            let shape = self.route_shape(ir, r);
+            let _ = writeln!(out, "{indent}\"{method} {full}\": {shape};");
+            if r.base.is_some() {
+                let clash = ir.routes.iter().any(|o| {
+                    o.name != r.name
+                        && o.method == r.method
+                        && format!("{}{}", o.base.as_deref().unwrap_or(""), o.path) == r.path
+                });
+                if !clash {
+                    let _ = writeln!(out, "{indent}\"{method} {}\": {shape};", r.path);
+                }
+            }
+        }
+    }
+
+    fn route_shape(&self, ir: &Ir, r: &weft_ir::RouteDef) -> String {
+        let part = |t: &Option<TypeRef>| {
+            t.as_ref()
+                .map_or("undefined".to_string(), |t| self.ty(t, ""))
+        };
+        let params = if r.path_params.is_empty() {
+            "undefined".to_string()
+        } else {
+            let fields: Vec<String> = r
+                .path_params
+                .iter()
+                .map(|p| {
+                    format!(
+                        "{}{}: {}",
+                        p.name,
+                        if p.optional { "?" } else { "" },
+                        self.ty(&p.ty, "")
+                    )
+                })
+                .collect();
+            format!("{{ {} }}", fields.join("; "))
+        };
+        let _ = ir;
+        format!(
+            "{{ body: {}; params: {params}; query: {}; headers: {}; result: {}; optional: {} }}",
+            part(&r.body),
+            part(&r.query),
+            part(&r.headers),
+            self.ty(&r.result.value, ""),
+            r.result.optional
+        )
+    }
+
     fn is_enum(&self, ty: &TypeRef) -> bool {
         let TypeRef::Named { package, name, .. } = ty else {
             return false;
@@ -365,6 +538,52 @@ impl<'a> Gen<'a> {
             .filter(|i| i.package == *package)
             .flat_map(|i| &i.types)
             .any(|t| t.name == *name && matches!(t.body, TypeBody::Enum { .. }))
+    }
+}
+
+#[derive(Default)]
+struct FacadePlan {
+    http: bool,
+    kafka: bool,
+    /// Configured transports that have no TypeScript package yet.
+    skipped: Vec<String>,
+}
+
+impl FacadePlan {
+    fn imports(&self, out: &mut String) {
+        let mut core = vec!["Contracts"];
+        if self.http {
+            core.push("Http");
+        }
+        if self.kafka {
+            core.push("Messaging");
+        }
+        core.extend([
+            "Weft",
+            "loadConfigSync",
+            "type Config",
+            "type Context",
+            "type Middleware",
+        ]);
+        if self.http {
+            core.push("type TypedHttp");
+        }
+        if self.kafka {
+            core.push("type TypedMessaging");
+        }
+        let _ = writeln!(
+            out,
+            "import {{ {} }} from \"@weft-sdk/core\";",
+            core.join(", ")
+        );
+        if self.http {
+            out.push_str("import { expressAdapter } from \"@weft-sdk/http-express\";\n");
+            out.push_str("import type { Express } from \"express\";\n");
+        }
+        if self.kafka {
+            out.push_str("import { kafkaJsAdapter } from \"@weft-sdk/kafka-kafkajs\";\n");
+            out.push_str("import type { Kafka } from \"kafkajs\";\n");
+        }
     }
 }
 

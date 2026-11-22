@@ -1,0 +1,22 @@
+{
+  "name": "weft-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"nothing to build\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.6",
+    "@weft-sdk/core": "workspace:*",
+    "@weft-sdk/http-express": "workspace:*",
+    "@weft-sdk/kafka-kafkajs": "workspace:*",
+    "express": "5.3.0",
+    "kafkajs": "2.2.4",
+    "typescript": "6.0.3",
+    "vitest": "5.1.1"
+  }
+}

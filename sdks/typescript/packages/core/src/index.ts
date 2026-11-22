@@ -1,6 +1,6 @@
 export { Contracts, named, type ContractsOptions } from "./contracts.js"
 export { DEFAULTS } from "./defaults.js"
-export { loadConfig, parseConfig, serviceUrl, topicName, type Config, type Env } from "./config.js"
+export { findConfigFile, loadConfig, loadConfigSync, parseConfig, serviceUrl, topicName, type Config, type Env } from "./config.js"
 export {
   CATEGORIES,
   ConfigError,
@@ -45,6 +45,17 @@ export type {
   PublishOptions,
   SubscribeOptions,
 } from "./messaging/types.js"
+export type {
+  CallInput,
+  RouteMap,
+  RoutePaths,
+  RouteShape,
+  ServeInput,
+  ServeResult,
+  TypedClient,
+  TypedHttp,
+  TypedMessaging,
+} from "./typed.js"
 export { Weft, type StopResult, type Transport, type WeftOptions, type WeftState } from "./weft.js"
 export {
   SpanKind,

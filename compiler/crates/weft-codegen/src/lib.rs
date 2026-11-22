@@ -18,11 +18,26 @@ pub enum Int64 {
     Bigint,
 }
 
+/// A transport the service uses, from `transports:` in `weft.yaml`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Transport {
+    /// `http`, `kafka`, `gql`, ...
+    pub name: String,
+    /// `express`, `kafkajs`, ... `None` means the default for the transport.
+    pub library: Option<String>,
+}
+
 #[derive(Clone, Debug)]
 pub struct Options {
     pub int64: Int64,
     /// Written into the header of generated files, for example `weft 0.0.0`.
     pub generator: String,
+    /// The service's own name, which is also its contract package. The routes of that package are the
+    /// ones the service serves; the facade types them. `None` means the service serves none.
+    pub service: Option<String>,
+    /// The transports the service uses. When any of them has a TypeScript package, the generated file
+    /// also holds the typed `weft` object that wires them up. Empty means types and contracts only.
+    pub transports: Vec<Transport>,
 }
 
 impl Default for Options {
@@ -30,6 +45,8 @@ impl Default for Options {
         Options {
             int64: Int64::Number,
             generator: concat!("weft ", env!("CARGO_PKG_VERSION")).to_string(),
+            service: None,
+            transports: Vec::new(),
         }
     }
 }

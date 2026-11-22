@@ -113,7 +113,26 @@ export namespace orders {                                      // types only, so
 export const contracts = { orders: { /* the IR of the orders package */ } } as const
 ```
 
-Optional fields accept `null` as well as a missing value, as the contract language says. `int` is `number`, or `bigint` with `codegen.int64: bigint`. Names that TypeScript cannot hold (`Record`, `Date`, keywords) are errors that say which name to change. The typed facade is added by the TypeScript package (phase P2).
+Optional fields accept `null` as well as a missing value, as the contract language says. `int` is `number`, or `bigint` with `codegen.int64: bigint`. Names that TypeScript cannot hold (`Record`, `Date`, keywords) are errors that say which name to change.
+
+**The typed `weft` object.** When `weft.yaml` lists a transport that has a TypeScript package (today `http` on `express` and `kafka` on `kafkajs`), the file also holds `createWeft()` and `weft`, which wire the adapters from `weft.yaml` and are typed from the contracts:
+
+```ts
+import { weft } from "./weft.gen"
+
+weft.kafka.on("order.placed", async (order) => { /* order: orders.Order */ })
+await weft.kafka.publish("order.placed", order)         // the payload is checked at compile time
+weft.http.post("/orders", async ({ body }) => { /* body: orders.CreateOrder; must return orders.Order */ })
+const order = await weft.http.to("orders").post("/orders", { body })
+await weft.start()
+```
+
+- The event names come from every package; two packages declaring the same name is an error at `weft gen`.
+- `weft.http` serves the routes of the service's own package (the package named like `service:` in `weft.yaml`); `to("name")` calls the routes of any package. A route is addressed by its full path (`/v1/orders`) or without its base (`/orders`) when that is unambiguous.
+- A call is only asked for what its route needs: the body, the path parameters, a query with required fields.
+- `weft` is built from `weft.yaml` the first time it is used, so importing the file only for its types needs no config. `createWeft({ config })` builds one from a config you pass.
+- A configured transport with no TypeScript package yet is left out, with a comment saying so.
+- The generic types behind this (`TypedHttp`, `TypedMessaging`) are in `@weft-sdk/core`; the generated code supplies only the maps of events and routes.
 
 ## Quality bar
 

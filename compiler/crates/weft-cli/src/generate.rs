@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Args;
-use weft_codegen::{Int64, Options};
+use weft_codegen::{Int64, Options, Transport};
 
 use crate::exit;
 use crate::project::{self, shown_path};
@@ -88,6 +88,15 @@ pub fn run(args: GenArgs) -> ExitCode {
     };
     let options = Options {
         int64,
+        service: cfg.service.clone(),
+        transports: cfg
+            .transports
+            .iter()
+            .map(|(name, t)| Transport {
+                name: name.clone(),
+                library: t.library.clone(),
+            })
+            .collect(),
         ..Options::default()
     };
 

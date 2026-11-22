@@ -3,9 +3,9 @@ name: compiler
 on:
   push:
     branches: [main]
-    paths: ["compiler/**", "spec/**", ".gitattributes", ".github/workflows/compiler.yml"]
+    paths: ["compiler/**", "spec/**", "sdks/typescript/packages/e2e/src/weft.gen.ts", ".gitattributes", ".github/workflows/compiler.yml"]
   pull_request:
-    paths: ["compiler/**", "spec/**", ".gitattributes", ".github/workflows/compiler.yml"]
+    paths: ["compiler/**", "spec/**", "sdks/typescript/packages/e2e/src/weft.gen.ts", ".gitattributes", ".github/workflows/compiler.yml"]
 
 permissions:
   contents: read

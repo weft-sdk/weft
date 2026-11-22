@@ -71,6 +71,7 @@ ts-check: ## Build, type-check and test the TypeScript packages (adapters type-c
 
 ts-fixtures: ## Regenerate the TypeScript tests' fixture from spec/examples with the real compiler
 	cd sdks/typescript/fixtures && $(CARGO) run -q --manifest-path ../../../compiler/Cargo.toml -p weft-cli -- gen
+	cd sdks/typescript/packages/e2e && $(CARGO) run -q --manifest-path ../../../../compiler/Cargo.toml -p weft-cli -- gen
 
 ts-kafka-up: ## Start a Kafka broker for the adapter tests (needs Docker)
 	docker compose --file sdks/typescript/docker-compose.yaml up -d --wait

@@ -1,0 +1,19 @@
+# The orders service of the Larder example, used to test everything together. `make ts-fixtures`
+# regenerates src/weft.gen.ts from the contract in spec/examples with the real compiler.
+service: orders
+language: typescript
+
+contracts:
+  - ../../../../spec/examples/orders.weft
+
+codegen:
+  out: src/weft.gen.ts
+
+transports:
+  http:
+    library: express
+    port: 3000
+  kafka:
+    library: kafkajs
+    brokers: ${KAFKA_BROKERS}
+    group: orders
