@@ -1,6 +1,6 @@
 # ADR 0021: Generated code embeds the IR
 
-- Status: Proposed (2026-11-21)
+- Status: Accepted (2026-11-23)
 
 **Context.** [04-sdk-design.md](../04-sdk-design.md#generated-code) says `weft gen` writes types, a typed facade, runtime validators and operation metadata. Generating a validator function per type means eleven code generators each reimplement every validation rule, wire-name mapping and encoding detail, and the conformance suite has to prove all of them agree.
 
