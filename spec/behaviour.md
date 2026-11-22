@@ -106,3 +106,29 @@ Core does everything that is the same across libraries; an adapter only translat
 **Shutdown.** Once `stop()` begins, a message that is mid-retry is not acknowledged and not dead-lettered, so the broker delivers it again after a restart.
 
 **Duplicates.** The `dedupe()` middleware skips a message whose idempotency key (else its `id`) was already handled successfully. It remembers keys in memory only.
+
+## Observability
+
+Weft emits OpenTelemetry through the OpenTelemetry **API** only. With no SDK installed nothing is recorded and nothing is slowed; the application installs an SDK and an exporter (the `telemetry.otlp` setting is for the application's own setup and the dashboard).
+
+**Trace context.** W3C Trace Context (`traceparent`, `tracestate`) is written into the message headers on publish and read from them on receive, so one trace runs from the publisher through every consumer. HTTP and other adapters do the same with their own headers.
+
+**Spans.**
+
+| Span | Kind | When |
+| --- | --- | --- |
+| `<destination> publish` | producer | Each publish, parent is the active span |
+| `<destination> process` | consumer | Each attempt to handle a message, parent is the publisher's span. A failed attempt is marked as an error with the exception and `weft.error.category` |
+| `<destination> publish` | producer | A dead-letter send, in the original message's trace |
+
+Attributes: `messaging.system` (the transport, such as `kafka`), `messaging.destination.name`, `messaging.operation.type` (`publish` or `process`), `messaging.message.id`, `messaging.message.body.size`, `weft.event`, and on `process` spans `weft.attempt`.
+
+**Metrics** (meter `@weft-sdk/core`), each with `event` and `transport` attributes:
+
+| Name | Kind | What |
+| --- | --- | --- |
+| `weft.messaging.messages.sent` | counter | `outcome`: `ok` or `error` |
+| `weft.messaging.messages.received` | counter | `outcome`: `ok`, `retry`, `dead_letter`, `dropped` (not retried) or `not_acked` (shutdown) |
+| `weft.messaging.errors` | counter | `category`: one of the eight |
+| `weft.messaging.process.duration` | histogram, ms | One per handler attempt, with `outcome` |
+| `weft.messaging.message.size` | histogram, bytes | `direction`: `send` or `receive` |

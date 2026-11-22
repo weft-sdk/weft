@@ -1,6 +1,7 @@
 import { topicName } from "../config.js"
 import { DEFAULTS } from "../defaults.js"
 import { WeftError, isWeftError } from "../errors.js"
+import { SpanKind, extractTraceContext, injectTraceContext, messagingMetrics, withSpan } from "../telemetry.js"
 import type { Middleware } from "../middleware.js"
 import type { Transport, Weft } from "../weft.js"
 import { backoffMs, sleep as realSleep } from "./backoff.js"
@@ -129,21 +130,40 @@ export class Messaging implements Transport {
 
     const wire = this.weft.contracts.encode(def.payload, payload)
     const key = keyOption ?? keyOf(def.key, payload)
-    const headers: Record<string, string> = { ...extra }
-    if (idempotencyKey !== undefined) headers[IDEMPOTENCY_HEADER] = idempotencyKey
-    const envelope: Envelope = {
-      id: crypto.randomUUID(),
-      type: event,
-      source: this.weft.config.service,
-      time: new Date().toISOString(),
-      datacontenttype: "application/json",
-      ...(key === undefined ? {} : { key }),
-      headers,
-      body: new TextEncoder().encode(JSON.stringify(wire)),
-    }
+    const body = new TextEncoder().encode(JSON.stringify(wire))
+    const id = crypto.randomUUID()
     const destination = topicName(this.weft.config, event)
     const sent = delayMs === undefined ? adapterOptions : { ...adapterOptions, delayMs }
-    await this.send(destination, envelope, sent)
+    const m = messagingMetrics()
+    const attributes = { event, transport: this.name }
+    try {
+      await withSpan(
+        `${destination} publish`,
+        { kind: SpanKind.PRODUCER, attributes: this.attributes("publish", destination, id, body.byteLength, event) },
+        async () => {
+          const headers: Record<string, string> = { ...extra }
+          if (idempotencyKey !== undefined) headers[IDEMPOTENCY_HEADER] = idempotencyKey
+          injectTraceContext(headers)
+          const envelope: Envelope = {
+            id,
+            type: event,
+            source: this.weft.config.service,
+            time: new Date().toISOString(),
+            datacontenttype: "application/json",
+            ...(key === undefined ? {} : { key }),
+            headers,
+            body,
+          }
+          await this.send(destination, envelope, sent)
+        },
+      )
+      m.sent.add(1, { ...attributes, outcome: "ok" })
+      m.size.record(body.byteLength, { ...attributes, direction: "send" })
+    } catch (error) {
+      m.sent.add(1, { ...attributes, outcome: "error" })
+      m.errors.add(1, { ...attributes, category: isWeftError(error) ? error.category : "Internal" })
+      throw error
+    }
   }
 
   // ---- Transport ----
@@ -204,22 +224,44 @@ export class Messaging implements Transport {
 
     for (let attempt = 1; ; attempt++) {
       const ctx = this.context(sub, envelope, attempt)
+      const m = messagingMetrics()
+      const attributes = { event: sub.event, transport: this.name }
+      const started = performance.now()
       try {
-        await this.weft.dispatch(ctx, (c) => sub.handler(payload, c as MessageContext), this.middleware)
+        await withSpan(
+          `${destination} process`,
+          {
+            kind: SpanKind.CONSUMER,
+            parent: extractTraceContext(envelope.headers),
+            attributes: { ...this.attributes("process", destination, envelope.id, envelope.body.byteLength, sub.event), "weft.attempt": attempt },
+          },
+          () => this.weft.dispatch(ctx, (c) => sub.handler(payload, c as MessageContext), this.middleware),
+        )
+        m.duration.record(performance.now() - started, { ...attributes, outcome: "ok" })
+        m.received.add(1, { ...attributes, outcome: "ok" })
+        m.size.record(envelope.body.byteLength, { ...attributes, direction: "receive" })
         return
       } catch (cause) {
         const error = toWeftError(cause)
+        m.duration.record(performance.now() - started, { ...attributes, outcome: "error" })
+        m.errors.add(1, { ...attributes, category: error.category })
         // Shutting down: do not acknowledge, so the broker delivers it again after a restart.
-        if (this.stopping) throw WeftError.unavailable("Shutting down before the message was handled", { cause })
+        if (this.stopping) {
+          m.received.add(1, { ...attributes, outcome: "not_acked" })
+          throw WeftError.unavailable("Shutting down before the message was handled", { cause })
+        }
         const policy = error.messagingPolicy
         if (policy === "none") {
+          m.received.add(1, { ...attributes, outcome: "dropped" })
           this.logger.warn(`${sub.event} handler failed with ${error.category}; not retried`, { id: envelope.id, message: error.message })
           return
         }
         if (policy === "dead-letter" || attempt >= max) {
+          m.received.add(1, { ...attributes, outcome: "dead_letter" })
           await this.deadLetter(sub, destination, envelope, error, attempt)
           return
         }
+        m.received.add(1, { ...attributes, outcome: "retry" })
         await this.sleep(backoffMs(attempt, sub.options.backoff, this.random), this.stopController.signal)
         if (this.stopping) throw WeftError.unavailable("Shutting down before the message was handled", { cause })
       }
@@ -249,7 +291,26 @@ export class Messaging implements Transport {
       },
     }
     this.logger.error(`${sub.event} message sent to ${target} after ${attempts} attempt(s): ${error.message}`, { id: envelope.id })
-    await this.send(target, dead, {})
+    await withSpan(
+      `${target} publish`,
+      {
+        kind: SpanKind.PRODUCER,
+        parent: extractTraceContext(envelope.headers),
+        attributes: this.attributes("publish", target, envelope.id, envelope.body.byteLength, sub.event),
+      },
+      () => this.send(target, dead, {}),
+    )
+  }
+
+  private attributes(operation: "publish" | "process", destination: string, id: string, bytes: number, event: string) {
+    return {
+      "messaging.system": this.name,
+      "messaging.destination.name": destination,
+      "messaging.operation.type": operation,
+      "messaging.message.id": id,
+      "messaging.message.body.size": bytes,
+      "weft.event": event,
+    }
   }
 
   private context(sub: Subscription, envelope: Envelope, attempt: number): MessageContext {
