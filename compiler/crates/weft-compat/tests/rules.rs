@@ -1,4 +1,4 @@
-//! One test per row of "Evolving contracts safely" in docs/contract-language.md, then the cases the table does not
+//! One test per row of "Evolving contracts safely" in docs/02-contract-language.md, then the cases the table does not
 //! list, then the version rules.
 
 use weft_check::{check, Source};

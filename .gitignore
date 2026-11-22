@@ -1,3 +1,6 @@
 .DS_Store
 compiler/target/
 *.snap.new
+
+# Maintainer's personal notes (agents must not read them; see CLAUDE.md)
+notes/

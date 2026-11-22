@@ -1,0 +1,53 @@
+# Everything runs through this file. `make check` is what CI runs.
+
+CARGO := cargo
+MANIFEST := --manifest-path compiler/Cargo.toml
+PNPM := pnpm --dir website
+
+.DEFAULT_GOAL := help
+.PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
+        site-install site-dev site-check site-build
+
+help: ## List the commands
+	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
+
+check: fmt-check lint test build site-check site-build ## What CI runs: compiler checks, then the website's (run site-install first)
+
+fmt: ## Format the compiler's Rust code
+	$(CARGO) fmt $(MANIFEST) --all
+
+fmt-check: ## Check formatting
+	$(CARGO) fmt $(MANIFEST) --all --check
+
+lint: ## Clippy, warnings denied
+	$(CARGO) clippy $(MANIFEST) --all-targets --locked -- -D warnings
+
+test: ## Run the compiler's tests
+	$(CARGO) test $(MANIFEST) --locked
+
+test-tsc: ## Tests, and the code generator's output must type-check (needs: npm i -g typescript)
+	WEFT_REQUIRE_TSC=1 $(CARGO) test $(MANIFEST) --locked -p weft-codegen
+
+build: ## Build the compiler workspace
+	$(CARGO) build $(MANIFEST) --locked
+
+weft: ## Run the CLI from source: make weft ARGS="check ."
+	$(CARGO) run $(MANIFEST) -p weft-cli -- $(ARGS)
+
+schema: ## Regenerate spec/ir.schema.json after changing the IR types
+	UPDATE_SCHEMA=1 $(CARGO) test $(MANIFEST) -p weft-ir --test schema
+
+snapshots: ## Accept changed snapshot tests (read the .snap diffs before committing)
+	INSTA_UPDATE=always $(CARGO) test $(MANIFEST)
+
+site-install: ## Install the website's dependencies (Node 22.23.4 or later, pnpm 11)
+	$(PNPM) install --frozen-lockfile
+
+site-dev: ## Run the website at http://localhost:4321
+	$(PNPM) dev
+
+site-check: ## Type-check the website
+	$(PNPM) check
+
+site-build: ## Build the static site into website/dist/
+	$(PNPM) build

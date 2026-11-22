@@ -1,6 +1,6 @@
 /**
  * Code shown on the landing page, written by hand until the compiler exists (ADR 0016).
- * Examples follow docs/api.md and docs/cli.md. Colour helpers wrap text in token classes.
+ * Examples follow docs/03-api.md and docs/06-cli.md. Colour helpers wrap text in token classes.
  */
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const k = (s: string) => `<span class="tok-k">${esc(s)}</span>`;

@@ -1,6 +1,6 @@
-//! The thirteen transports and, for TypeScript, the libraries Weft can run under each ([languages.md]).
+//! The thirteen transports and, for TypeScript, the libraries Weft can run under each ([05-languages.md]).
 //!
-//! [languages.md]: ../../../../docs/languages.md
+//! [05-languages.md]: ../../../../docs/05-languages.md
 
 use crate::detect::Language;
 

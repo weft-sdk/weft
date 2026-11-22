@@ -61,7 +61,7 @@ Core does everything that is the same across libraries: encoding, CloudEvents en
 | Timeouts | Every outgoing call has a deadline. Deadlines propagate across services |
 | Idempotency | Optional idempotency key on publish and HTTP calls; dedupe middleware on receive |
 | Dead letters | Messages that exhaust retries go to `<destination>.dlq` (configurable) |
-| Errors | The error categories in [api.md § Errors](api.md#errors) |
+| Errors | The error categories in [03-api.md § Errors](03-api.md#errors) |
 | Shutdown | `stop()` stops intake, waits for in-flight handlers (with timeout), commits offsets, closes connections |
 | Config | `weft.yaml` + environment variables (`WEFT_KAFKA_BROKERS`), same keys in every language |
 | Escape hatch | `raw` on every transport |
@@ -117,4 +117,4 @@ Optional fields accept `null` as well as a missing value, as the contract langua
 
 ## Quality bar
 
-A package is released only when it passes the [conformance suite](conformance.md) for every adapter it ships.
+A package is released only when it passes the [conformance suite](07-conformance.md) for every adapter it ships.

@@ -2,7 +2,7 @@
 
 - Status: Accepted (2026-11-20)
 
-**Decision.** The first thing built is the website (landing page and docs, [website.md](../website.md)), before the compiler, language packages or dashboard.
+**Decision.** The first thing built is the website (landing page and docs, [11-website.md](../11-website.md)), before the compiler, language packages or dashboard.
 
 **Consequences.**
 - The visual design must be decided now (it was deferred in [ADR 0010](0010-website-on-astro.md)).

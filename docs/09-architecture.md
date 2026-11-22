@@ -25,11 +25,11 @@
             Weft dashboard (local / self-hosted / cloud)
 ```
 
-1. **Contracts** describe data and operations once ([contract-language.md](contract-language.md)).
+1. **Contracts** describe data and operations once ([02-contract-language.md](02-contract-language.md)).
 2. **The compiler and CLI** check contracts, catch breaking changes, and generate code for each language. Written once, in Rust.
-3. **Language packages** give each language a native `weft.*` API that runs the real libraries underneath ([sdk-design.md](sdk-design.md)).
-4. **The conformance suite** proves every package behaves the same ([conformance.md](conformance.md)).
-5. **The dashboard** shows the map and live traffic ([dashboard.md](dashboard.md)).
+3. **Language packages** give each language a native `weft.*` API that runs the real libraries underneath ([04-sdk-design.md](04-sdk-design.md)).
+4. **The conformance suite** proves every package behaves the same ([07-conformance.md](07-conformance.md)).
+5. **The dashboard** shows the map and live traffic ([08-dashboard.md](08-dashboard.md)).
 
 ## Principles
 
@@ -99,4 +99,4 @@ weft/
 └── docs/                # these design docs
 ```
 
-See [tech-stack.md](tech-stack.md) for the tools in each part.
+See [10-tech-stack.md](10-tech-stack.md) for the tools in each part.

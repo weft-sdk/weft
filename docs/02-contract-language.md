@@ -2,7 +2,7 @@
 
 Version: **0.1**. Syntax decided on 2026-11-20. The formal grammar and lexical rules are in [spec/language.md](../spec/language.md); this page is the guide.
 
-Contracts live in `.weft` files. They describe data and operations once, for every language. The compiler checks them and generates code ([cli.md § weft gen](cli.md#weft-gen)).
+Contracts live in `.weft` files. They describe data and operations once, for every language. The compiler checks them and generates code ([06-cli.md § weft gen](06-cli.md#weft-gen)).
 
 Design goals:
 
@@ -143,7 +143,7 @@ Inline types (`{ id: uuid, reason: string }`) are allowed for small payloads and
 
 Two kinds, both listed in results with `|`:
 
-- **Built-in errors** always exist: `NotFound`, `InvalidInput`, `Unauthorized`, `Forbidden`, `Conflict`, `Unavailable`, `Timeout`, `Internal`. Their mapping to HTTP status, gRPC codes and messaging behaviour is fixed ([api.md § Errors](api.md#errors)).
+- **Built-in errors** always exist: `NotFound`, `InvalidInput`, `Unauthorized`, `Forbidden`, `Conflict`, `Unavailable`, `Timeout`, `Internal`. Their mapping to HTTP status, gRPC codes and messaging behaviour is fixed ([03-api.md § Errors](03-api.md#errors)).
 - **Custom errors** are declared with `error` and carry structured fields:
 
 ```weft

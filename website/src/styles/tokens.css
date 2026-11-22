@@ -1,4 +1,4 @@
-/* Design tokens. Source of truth: docs/website.md, "Visual direction: the terminal".
+/* Design tokens. Source of truth: docs/11-website.md, "Visual direction: the terminal".
    Dark is the default theme. Light applies when the reader's system prefers it,
    unless they chose dark on the page, or when they chose light on the page. */
 :root {
