@@ -5,7 +5,7 @@ mod catalog;
 mod detect;
 mod files;
 
-pub use catalog::{library, transport, transports, Library, Transport, TransportKind};
+pub use catalog::{library, packages, transport, transports, Library, Transport, TransportKind};
 pub use detect::{detect, Detected, Language, PackageManager};
 pub use files::{
     example_contract, sanitize_service_name, validate_service_name, weft_yaml, Choices,

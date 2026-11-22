@@ -146,3 +146,54 @@ fn detection() {
     std::fs::write(d.join("deno.json"), "{}").unwrap();
     assert_eq!(detect(&d).package_manager, Some(PackageManager::Deno));
 }
+
+#[test]
+fn packages_follow_the_chosen_libraries() {
+    use weft_init::{packages, Language, PackageManager};
+    let chosen = |v: &[(&str, &str)]| -> Vec<(String, String)> {
+        v.iter()
+            .map(|(a, b)| (a.to_string(), b.to_string()))
+            .collect()
+    };
+    assert_eq!(
+        packages(Language::TypeScript, &chosen(&[])),
+        ["@weft-sdk/core"]
+    );
+    assert_eq!(
+        packages(
+            Language::TypeScript,
+            &chosen(&[("http", "express"), ("kafka", "kafkajs")])
+        ),
+        [
+            "@weft-sdk/core",
+            "@weft-sdk/http-express",
+            "express",
+            "@weft-sdk/kafka-kafkajs",
+            "kafkajs"
+        ]
+    );
+    // No Weft package for these libraries yet.
+    assert_eq!(
+        packages(
+            Language::TypeScript,
+            &chosen(&[("http", "fastify"), ("gql", "apollo-server"), ("sse", "")])
+        ),
+        ["@weft-sdk/core"]
+    );
+
+    let pkgs = vec!["@weft-sdk/core".to_string(), "express".to_string()];
+    assert_eq!(
+        PackageManager::Pnpm.add_command(&pkgs),
+        (
+            "pnpm".to_string(),
+            vec!["add".into(), "@weft-sdk/core".into(), "express".into()]
+        )
+    );
+    assert_eq!(PackageManager::Npm.add_command(&pkgs).1[0], "install");
+    assert_eq!(PackageManager::Yarn.add_command(&pkgs).1[0], "add");
+    assert_eq!(PackageManager::Bun.add_command(&pkgs).1[0], "add");
+    assert_eq!(
+        PackageManager::Deno.add_command(&pkgs).1,
+        ["add", "npm:@weft-sdk/core", "npm:express"]
+    );
+}

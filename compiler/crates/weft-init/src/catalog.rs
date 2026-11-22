@@ -144,3 +144,21 @@ pub fn library(
         .iter()
         .find(|l| l.id == library_id)
 }
+
+/// The packages to install for the chosen transports and libraries: always the core package, then for
+/// each transport that has a Weft package for its library, that package and the library itself.
+/// `chosen` is `(transport id, library id)`. Transports with no Weft package yet add nothing.
+pub fn packages(language: Language, chosen: &[(String, String)]) -> Vec<String> {
+    let Language::TypeScript = language;
+    let mut out = vec!["@weft-sdk/core".to_string()];
+    for (transport, library) in chosen {
+        let (adapter, library_package) = match (transport.as_str(), library.as_str()) {
+            ("http", "express") => ("@weft-sdk/http-express", "express"),
+            ("kafka", "kafkajs") => ("@weft-sdk/kafka-kafkajs", "kafkajs"),
+            _ => continue,
+        };
+        out.push(adapter.to_string());
+        out.push(library_package.to_string());
+    }
+    out
+}

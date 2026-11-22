@@ -8,8 +8,8 @@ use std::process::ExitCode;
 use clap::Args;
 use inquire::{InquireError, MultiSelect, Select, Text};
 use weft_init::{
-    detect, example_contract, sanitize_service_name, transport, transports, validate_service_name,
-    weft_yaml, Choices, Language, Transport,
+    detect, example_contract, packages, sanitize_service_name, transport, transports,
+    validate_service_name, weft_yaml, Choices, Language, PackageManager, Transport,
 };
 
 use crate::{exit, generate};
@@ -60,6 +60,9 @@ pub struct InitArgs {
     /// Where contracts live.
     #[arg(long, value_name = "PATH")]
     contracts: Option<String>,
+    /// Do not install the Weft packages; print the command to run instead.
+    #[arg(long)]
+    no_install: bool,
     #[command(flatten)]
     transports: TransportFlags,
 }
@@ -75,7 +78,10 @@ pub fn run(args: InitArgs) -> ExitCode {
         Err(e) => return usage(e),
     };
     match init(&args, &cwd) {
-        Ok(()) => generate::run(generate::GenArgs::defaults()),
+        Ok(install) => {
+            install_packages(&install, args.no_install);
+            generate::run(generate::GenArgs::defaults())
+        }
         Err(Failure::Usage(m)) => usage(m),
         Err(Failure::Cancelled) => {
             eprintln!("weft: cancelled");
@@ -106,7 +112,43 @@ impl From<InquireError> for Failure {
     }
 }
 
-fn init(args: &InitArgs, cwd: &Path) -> Result<(), Failure> {
+/// What to install once the files are written.
+struct Install {
+    manager: Option<PackageManager>,
+    packages: Vec<String>,
+    /// Where the project is, so the package manager runs there.
+    dir: std::path::PathBuf,
+}
+
+/// Adds the packages with the project's package manager. It never fails `weft init`: the files are
+/// written, and the command is printed for the person to run when it cannot be done here (no package
+/// manager, `--no-install`, or an install that failed, for example because the packages are not
+/// published yet).
+fn install_packages(install: &Install, skip: bool) {
+    let manager = install.manager.unwrap_or(PackageManager::Npm);
+    let (program, args) = manager.add_command(&install.packages);
+    let command = format!("{program} {}", args.join(" "));
+    let Some(detected) = install.manager.filter(|_| !skip) else {
+        println!("Next: install the packages with `{command}`");
+        return;
+    };
+    let (program, args) = detected.add_command(&install.packages);
+    match std::process::Command::new(&program)
+        .args(&args)
+        .current_dir(&install.dir)
+        .status()
+    {
+        Ok(status) if status.success() => println!("✓ {command}"),
+        Ok(status) => eprintln!(
+            "weft: `{command}` failed ({status}). Run it yourself when you can; the rest of the setup is done"
+        ),
+        Err(e) => eprintln!(
+            "weft: could not run `{program}` ({e}). Run `{command}` yourself; the rest of the setup is done"
+        ),
+    }
+}
+
+fn init(args: &InitArgs, cwd: &Path) -> Result<Install, Failure> {
     let detected = detect(cwd);
     let language = match args.lang.as_deref() {
         Some(name) => Language::parse(name).ok_or_else(|| {
@@ -266,7 +308,11 @@ fn init(args: &InitArgs, cwd: &Path) -> Result<(), Failure> {
         "✓ Wrote {} (example)",
         crate::project::shown_path(&contract_path, cwd)
     );
-    Ok(())
+    Ok(Install {
+        manager: detected.package_manager,
+        packages: packages(language, &choices.transports),
+        dir: cwd.to_path_buf(),
+    })
 }
 
 fn ask_transports(language: Language) -> Result<Vec<(&'static Transport, String)>, Failure> {

@@ -54,7 +54,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: docker compose up -d --wait
-      - run: pnpm --filter @weft-sdk/kafka-kafkajs test
+      - run: pnpm --filter @weft-sdk/kafka-kafkajs --filter weft-e2e test
         env:
           WEFT_TEST_KAFKA: 127.0.0.1:9092
       - if: failure()

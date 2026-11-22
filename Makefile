@@ -79,5 +79,5 @@ ts-kafka-up: ## Start a Kafka broker for the adapter tests (needs Docker)
 ts-kafka-down: ## Stop the test broker
 	docker compose --file sdks/typescript/docker-compose.yaml down
 
-ts-kafka-test: ts-build ## Run the Kafka adapter tests against the broker from ts-kafka-up
-	WEFT_TEST_KAFKA=127.0.0.1:9092 $(TS) --filter @weft-sdk/kafka-kafkajs test
+ts-kafka-test: ts-build ## Run the Kafka adapter and end-to-end tests against the broker from ts-kafka-up
+	WEFT_TEST_KAFKA=127.0.0.1:9092 $(TS) --filter @weft-sdk/kafka-kafkajs --filter weft-e2e test
