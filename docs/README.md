@@ -32,7 +32,7 @@ If you only read three product docs: **concepts**, **contract-language**, **api*
 
 The exact resume point is [Roadmap › Current status](12-roadmap.md#current-status).
 
-- **Phase:** P1 (compiler and CLI) is done. P2 (the TypeScript package) is next and waits on [ADR 0021](decisions/0021-generated-code-embeds-the-ir.md). The website is built and paused until the backend exists.
+- **Phase:** P1 (compiler and CLI) is done. P2 (the TypeScript package) is next, broken into tasks P2.1 to P2.9 ([ADR 0021](decisions/0021-generated-code-embeds-the-ir.md) accepted). The website is built and paused until the backend exists.
 - **Built:** the website (`website/`), and a Rust workspace (`compiler/`) with a parser, checker and compatibility checker, and the `weft init`, `fmt`, `check` and `gen` (TypeScript) commands. CI passes on Linux, macOS and Windows.
 - **Not built:** the language packages, the conformance suite, the dashboard and the docs content.
 - **Production-ready:** no.
