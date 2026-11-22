@@ -75,9 +75,9 @@ weft/
 │   ├── language.md      # contract language spec
 │   ├── ir.schema.json
 │   └── behaviour.md     # shared runtime behaviour (retries, envelopes, errors)
+├── go/                  # the Go module github.com/weft-sdk/weft/go (ADR 0022)
 ├── sdks/
 │   ├── typescript/      # core + adapters (pnpm workspace)
-│   ├── go/
 │   ├── python/
 │   ├── jvm/
 │   ├── dotnet/
