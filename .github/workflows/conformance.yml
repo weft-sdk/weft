@@ -1,0 +1,40 @@
+name: conformance
+
+on:
+  push:
+    branches: [main]
+    paths: ["conformance/**", "compiler/**", "sdks/typescript/**", "go/**", "spec/**", ".github/workflows/conformance.yml"]
+  pull_request:
+    paths: ["conformance/**", "compiler/**", "sdks/typescript/**", "go/**", "spec/**", ".github/workflows/conformance.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  cases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: sdks/typescript/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: sdks/typescript/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: sdks/typescript
+      - run: pnpm build
+        working-directory: sdks/typescript
+      # The harness's own tests, including the one that drives the real TypeScript runner.
+      - run: cargo test --locked -p weft-conformance
+        working-directory: compiler
+        env:
+          WEFT_REQUIRE_RUNNERS: "1"
+      - run: cargo run --locked -p weft-conformance -- run --results ../conformance-results.json
+        working-directory: compiler
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conformance-results
+          path: conformance-results.json

@@ -1,0 +1,178 @@
+description: Every contract type round-trips, and each wire form means one thing in every language.
+cases:
+  # ---- integers ----
+  - { id: encoding.int.zero, type: int, wire: 0, expect: { canonical: 0 } }
+  - { id: encoding.int.max-safe, type: int, wire: 9007199254740991, expect: { canonical: 9007199254740991 } }
+  - { id: encoding.int.min-safe, type: int, wire: -9007199254740991, expect: { canonical: -9007199254740991 } }
+  - { id: encoding.int.beyond-safe-is-a-string, type: int, wire: "9007199254740993", expect: { canonical: "9007199254740993" } }
+  - { id: encoding.int.int64-max, type: int64, wire: "9223372036854775807", expect: { canonical: "9223372036854775807" } }
+  - { id: encoding.int.int64-min, type: int64, wire: "-9223372036854775808", expect: { canonical: "-9223372036854775808" } }
+  - { id: encoding.int.past-int64-max, type: int64, wire: "9223372036854775808", expect: { issues: [""] } }
+  - { id: encoding.int.past-int64-min, type: int, wire: "-9223372036854775809", expect: { issues: [""] } }
+  - { id: encoding.int.small-string-is-accepted-and-becomes-a-number, type: int, wire: "5", expect: { canonical: 5 } }
+  - { id: encoding.int.fraction-is-rejected, type: int, wire: 1.5, expect: { issues: [""] } }
+  - { id: encoding.int.unsafe-number-is-rejected, type: int, wire: 9007199254740992, expect: { issues: [""] } }
+  - { id: encoding.int.text-is-rejected, type: int, wire: "five", expect: { issues: [""] } }
+  - { id: encoding.int.bool-is-rejected, type: int, wire: true, expect: { issues: [""] } }
+  - { id: encoding.int32.max, type: int32, wire: 2147483647, expect: { canonical: 2147483647 } }
+  - { id: encoding.int32.min, type: int32, wire: -2147483648, expect: { canonical: -2147483648 } }
+  - { id: encoding.int32.past-max, type: int32, wire: 2147483648, expect: { issues: [""] } }
+  - { id: encoding.int32.past-min, type: int32, wire: -2147483649, expect: { issues: [""] } }
+
+  # ---- floats and decimals ----
+  - { id: encoding.float.fraction, type: float, wire: 1.5, expect: { canonical: 1.5 } }
+  - { id: encoding.float.whole-number-is-a-number, type: float64, wire: 2, expect: { canonical: 2 } }
+  - { id: encoding.float.negative, type: float32, wire: -0.25, expect: { canonical: -0.25 } }
+  - { id: encoding.float.text-is-rejected, type: float, wire: "1.5", expect: { issues: [""] } }
+  - { id: encoding.decimal.keeps-trailing-zeros, type: decimal, wire: "12.50", expect: { canonical: "12.50" } }
+  - { id: encoding.decimal.negative, type: decimal, wire: "-0.5", expect: { canonical: "-0.5" } }
+  - { id: encoding.decimal.whole, type: decimal, wire: "100", expect: { canonical: "100" } }
+  - { id: encoding.decimal.many-digits-are-kept, type: decimal, wire: "123456789012345678901234567890.123456789", expect: { canonical: "123456789012345678901234567890.123456789" } }
+  - { id: encoding.decimal.exponent-is-rejected, type: decimal, wire: "1e5", expect: { issues: [""] } }
+  - { id: encoding.decimal.number-is-rejected, type: decimal, wire: 12.5, expect: { issues: [""] } }
+  - { id: encoding.decimal.comma-is-rejected, type: decimal, wire: "12,5", expect: { issues: [""] } }
+
+  # ---- strings, booleans, uuids ----
+  - { id: encoding.string.empty, type: string, wire: "", expect: { canonical: "" } }
+  - { id: encoding.string.unicode, type: string, wire: "héllo 😀 日本", expect: { canonical: "héllo 😀 日本" } }
+  - { id: encoding.string.number-is-rejected, type: string, wire: 5, expect: { issues: [""] } }
+  - { id: encoding.string.null-is-rejected, type: string, wire: null, expect: { issues: [""] } }
+  - { id: encoding.bool.true, type: bool, wire: true, expect: { canonical: true } }
+  - { id: encoding.bool.text-is-rejected, type: bool, wire: "true", expect: { issues: [""] } }
+  - { id: encoding.uuid.lowercase, type: uuid, wire: "123e4567-e89b-42d3-a456-426614174000", expect: { canonical: "123e4567-e89b-42d3-a456-426614174000" } }
+  - { id: encoding.uuid.without-hyphens-is-rejected, type: uuid, wire: "123e4567e89b42d3a456426614174000", expect: { issues: [""] } }
+  - { id: encoding.uuid.text-is-rejected, type: uuid, wire: "not-a-uuid", expect: { issues: [""] } }
+
+  # ---- timestamps ----
+  - { id: encoding.timestamp.utc, type: timestamp, wire: "2026-11-23T10:00:00Z", expect: { canonical: "2026-11-23T10:00:00.000Z" } }
+  - { id: encoding.timestamp.positive-offset-becomes-utc, type: timestamp, wire: "2026-11-23T10:00:00+02:00", expect: { canonical: "2026-11-23T08:00:00.000Z" } }
+  - { id: encoding.timestamp.negative-offset-becomes-utc, type: timestamp, wire: "2026-11-23T10:00:00-05:30", expect: { canonical: "2026-11-23T15:30:00.000Z" } }
+  - { id: encoding.timestamp.offset-crosses-midnight, type: timestamp, wire: "2026-01-01T00:30:00+01:00", expect: { canonical: "2025-12-31T23:30:00.000Z" } }
+  - { id: encoding.timestamp.milliseconds-are-kept, type: timestamp, wire: "2026-11-23T10:00:00.123Z", expect: { canonical: "2026-11-23T10:00:00.123Z" } }
+  - { id: encoding.timestamp.more-digits-are-cut-not-rounded, type: timestamp, wire: "2026-11-23T10:00:00.123999Z", expect: { canonical: "2026-11-23T10:00:00.123Z" } }
+  - { id: encoding.timestamp.fewer-digits-are-padded, type: timestamp, wire: "2026-11-23T10:00:00.5Z", expect: { canonical: "2026-11-23T10:00:00.500Z" } }
+  - { id: encoding.timestamp.lower-case-letters, type: timestamp, wire: "2026-11-23t10:00:00z", expect: { canonical: "2026-11-23T10:00:00.000Z" } }
+  - { id: encoding.timestamp.epoch, type: timestamp, wire: "1970-01-01T00:00:00Z", expect: { canonical: "1970-01-01T00:00:00.000Z" } }
+  - { id: encoding.timestamp.last-moment-of-9999, type: timestamp, wire: "9999-12-31T23:59:59.999Z", expect: { canonical: "9999-12-31T23:59:59.999Z" } }
+  - { id: encoding.timestamp.leap-day, type: timestamp, wire: "2024-02-29T12:00:00Z", expect: { canonical: "2024-02-29T12:00:00.000Z" } }
+  - { id: encoding.timestamp.not-a-leap-day, type: timestamp, wire: "2025-02-29T12:00:00Z", expect: { issues: [""] } }
+  - { id: encoding.timestamp.month-13, type: timestamp, wire: "2026-13-01T00:00:00Z", expect: { issues: [""] } }
+  - { id: encoding.timestamp.hour-24, type: timestamp, wire: "2026-11-23T24:00:00Z", expect: { issues: [""] } }
+  - { id: encoding.timestamp.second-60, type: timestamp, wire: "2026-11-23T23:59:60Z", expect: { issues: [""] } }
+  - { id: encoding.timestamp.space-instead-of-t, type: timestamp, wire: "2026-11-23 10:00:00Z", expect: { issues: [""] } }
+  - { id: encoding.timestamp.no-zone, type: timestamp, wire: "2026-11-23T10:00:00", expect: { issues: [""] } }
+  - { id: encoding.timestamp.date-only, type: timestamp, wire: "2026-11-23", expect: { issues: [""] } }
+  - { id: encoding.timestamp.number-is-rejected, type: timestamp, wire: 1700000000, expect: { issues: [""] } }
+
+  # ---- bytes ----
+  - { id: encoding.bytes.empty, type: bytes, wire: "", expect: { canonical: "" } }
+  - { id: encoding.bytes.three-bytes, type: bytes, wire: "AQID", expect: { canonical: "AQID" } }
+  - { id: encoding.bytes.one-padding-char, type: bytes, wire: "AQI=", expect: { canonical: "AQI=" } }
+  - { id: encoding.bytes.two-padding-chars, type: bytes, wire: "AQ==", expect: { canonical: "AQ==" } }
+  - { id: encoding.bytes.plus-and-slash, type: bytes, wire: "+/+/", expect: { canonical: "+/+/" } }
+  - { id: encoding.bytes.missing-padding-is-rejected, type: bytes, wire: "AQI", expect: { issues: [""] } }
+  - { id: encoding.bytes.too-much-padding-is-rejected, type: bytes, wire: "A===", expect: { issues: [""] } }
+  - { id: encoding.bytes.not-base64-is-rejected, type: bytes, wire: "!!!!", expect: { issues: [""] } }
+  - { id: encoding.bytes.url-safe-alphabet-is-rejected, type: bytes, wire: "-_-_", expect: { issues: [""] } }
+
+  # ---- enums ----
+  - { id: encoding.enum.variant, type: conformance.Currency, wire: "EUR", expect: { canonical: "EUR" } }
+  - { id: encoding.enum.unknown-variant, type: conformance.Currency, wire: "JPY", expect: { issues: [""] } }
+  - { id: encoding.enum.case-matters, type: conformance.Currency, wire: "eur", expect: { issues: [""] } }
+  - { id: encoding.enum.number-is-rejected, type: conformance.Currency, wire: 1, expect: { issues: [""] } }
+
+  # ---- lists and maps ----
+  - { id: encoding.list.of-ints, type: "int[]", wire: [1, 2, 3], expect: { canonical: [1, 2, 3] } }
+  - { id: encoding.list.empty, type: "int[]", wire: [], expect: { canonical: [] } }
+  - { id: encoding.list.bad-item-has-its-index, type: "int[]", wire: [1, "x", 3, true], expect: { issues: ["[1]", "[3]"] } }
+  - { id: encoding.list.object-is-rejected, type: "int[]", wire: {}, expect: { issues: [""] } }
+  - { id: encoding.list.of-lists, type: "string[][]", wire: [["a"], []], expect: { canonical: [["a"], []] } }
+  - { id: encoding.map.string-keys, type: "map<string, int>", wire: { a: 1, b: 2 }, expect: { canonical: { a: 1, b: 2 } } }
+  - { id: encoding.map.empty, type: "map<string, int>", wire: {}, expect: { canonical: {} } }
+  - { id: encoding.map.enum-keys, type: "map<conformance.Side, int>", wire: { Left: 1 }, expect: { canonical: { Left: 1 } } }
+  - { id: encoding.map.bad-enum-key, type: "map<conformance.Side, int>", wire: { Up: 1 }, expect: { issues: ["[Up]"] } }
+  - { id: encoding.map.int-keys-are-text, type: "map<int, string>", wire: { "1": "a", "-2": "b" }, expect: { canonical: { "1": "a", "-2": "b" } } }
+  - { id: encoding.map.bad-int-key, type: "map<int, string>", wire: { x: "a" }, expect: { issues: ["[x]"] } }
+  - { id: encoding.map.bad-value-has-its-key, type: "map<string, int>", wire: { a: 1, b: "no" }, expect: { issues: ["[b]"] } }
+  - { id: encoding.map.array-is-rejected, type: "map<string, int>", wire: [], expect: { issues: [""] } }
+
+  # ---- records: optional fields, wire names, unknown fields ----
+  - id: encoding.record.minimal
+    type: conformance.Profile
+    wire: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann" }
+    expect: { canonical: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann" } }
+  - id: encoding.record.optional-null-is-left-out
+    type: conformance.Profile
+    wire: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann", nickname: null, age: null }
+    expect: { canonical: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann" } }
+  - id: encoding.record.optional-values-are-kept
+    type: conformance.Profile
+    wire: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann", nickname: "A", age: 30, tags: ["x", "y"] }
+    expect: { canonical: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann", nickname: "A", age: 30, tags: ["x", "y"] } }
+  - id: encoding.record.unknown-fields-are-dropped
+    type: conformance.Profile
+    wire: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann", extra: 1, nested: { a: 1 } }
+    expect: { canonical: { id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ann" } }
+  - id: encoding.record.code-name-is-not-the-wire-name
+    type: conformance.Profile
+    wire: { id: "123e4567-e89b-42d3-a456-426614174000", displayName: "Ann" }
+    expect: { issues: [display_name] }
+  - id: encoding.record.empty-record
+    type: conformance.Empty
+    wire: {}
+    expect: { canonical: {} }
+  - id: encoding.record.empty-record-drops-fields
+    type: conformance.Empty
+    wire: { x: 1 }
+    expect: { canonical: {} }
+  - { id: encoding.record.array-is-rejected, type: conformance.Empty, wire: [], expect: { issues: [""] } }
+  - { id: encoding.record.null-is-rejected, type: conformance.Empty, wire: null, expect: { issues: [""] } }
+
+  # ---- every primitive in one record ----
+  - id: encoding.primitives.all-together
+    type: conformance.Primitives
+    wire: { s: "héllo", b: false, i: 42, i32: -5, i64: "9007199254740993", f: 1.5, f32: 0.25, f64: -2.5, d: "12.50", u: "123e4567-e89b-42d3-a456-426614174000", t: "2026-11-23T10:00:00+02:00", by: "AQID" }
+    expect: { canonical: { s: "héllo", b: false, i: 42, i32: -5, i64: "9007199254740993", f: 1.5, f32: 0.25, f64: -2.5, d: "12.50", u: "123e4567-e89b-42d3-a456-426614174000", t: "2026-11-23T08:00:00.000Z", by: "AQID" } }
+
+  # ---- nested ----
+  - id: encoding.nested.order
+    type: conformance.Order
+    wire:
+      id: "123e4567-e89b-42d3-a456-426614174000"
+      customer: "Ann"
+      lines: [{ sku: "apple", qty: 2 }, { sku: "pear", qty: 1 }]
+      total: { amount: 450, currency: "EUR" }
+      sides: { Left: 1, Right: 2 }
+      labels: { gift: ["a", "b"], none: [] }
+      placedAt: "2026-11-23T10:00:00+01:00"
+    expect:
+      canonical:
+        id: "123e4567-e89b-42d3-a456-426614174000"
+        customer: "Ann"
+        lines: [{ sku: "apple", qty: 2 }, { sku: "pear", qty: 1 }]
+        total: { amount: 450, currency: "EUR" }
+        sides: { Left: 1, Right: 2 }
+        labels: { gift: ["a", "b"], none: [] }
+        placedAt: "2026-11-23T09:00:00.000Z"
+
+  # ---- generics ----
+  - id: encoding.generic.page-of-money
+    type: conformance.Page<conformance.Money>
+    wire: { items: [{ amount: 1, currency: "EUR" }], next: "n" }
+    expect: { canonical: { items: [{ amount: 1, currency: "EUR" }], next: "n" } }
+  - id: encoding.generic.bad-item
+    type: conformance.Page<conformance.Money>
+    wire: { items: [{ amount: 1, currency: "EUR" }, { amount: 1, currency: "JPY" }] }
+    expect: { issues: ["items[1].currency"] }
+  - id: encoding.generic.pair
+    type: conformance.Pair<int, conformance.Side>
+    wire: { first: 1, second: "Left" }
+    expect: { canonical: { first: 1, second: "Left" } }
+  - id: encoding.generic.pair-bad-argument
+    type: conformance.Pair<int, conformance.Side>
+    wire: { first: 1.5, second: "Up" }
+    expect: { issues: [first, second] }
+  - id: encoding.generic.nested-generics
+    type: conformance.Page<conformance.Page<int>>
+    wire: { items: [{ items: [1, 2] }, { items: [] }] }
+    expect: { canonical: { items: [{ items: [1, 2] }, { items: [] }] } }

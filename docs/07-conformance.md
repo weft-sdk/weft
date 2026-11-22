@@ -21,29 +21,37 @@ Supporting 13 languages and dozens of libraries only works if they all behave th
 
 ```
 conformance/
-├── cases/            # YAML test cases, language-neutral
 ├── contracts/        # .weft files the cases use
-├── harness/          # Rust test runner
-└── docker-compose.yml
+├── cases/            # YAML cases, language-neutral
+├── runners.yaml      # how to start each language's runner
+└── (the harness is the crate compiler/crates/weft-conformance, in the compiler workspace)
 ```
 
-A case:
+The **harness** (`weft-conformance run`, in Rust) compiles the contracts to the [IR](../spec/ir.md), starts each language's **runner**, hands it the IR, sends it every case, and compares the answers. A runner is a small program that wraps its language's package and speaks a JSON-lines protocol on standard input and output ([spec/conformance-protocol.md](../spec/conformance-protocol.md)). Because the harness gives the runner the IR, a runner needs no generated code.
+
+A case (so far, encoding and validation):
 
 ```yaml
-id: messaging.retry.then-succeed
-transports: [kafka, mq, nats, redis, sqs, pubsub, servicebus, pulsar]
-steps:
-  - consumer: { lang: $B, on: order.placed, behaviour: fail-times(2) }
-  - producer: { lang: $A, publish: order.placed, payload: fixtures/order.json }
-expect:
-  - handler-calls: 3
-  - received-payload: fixtures/order.json
-  - dlq: empty
+- id: encoding.timestamp.positive-offset-becomes-utc
+  type: timestamp                 # or conformance.Order, int[], map<string, int>, conformance.Page<int>
+  wire: "2026-11-23T10:00:00+02:00"
+  expect: { canonical: "2026-11-23T08:00:00.000Z" }   # valid, and this is the wire form after a round trip
+- id: validation.minmax.below
+  type: conformance.MinMax
+  wire: { n: 9 }
+  expect: { issues: [n] }          # invalid, with exactly these issue paths
 ```
 
-Each language package ships a small **runner** program that the harness drives over a simple JSON protocol: "subscribe to this", "publish that", "report what you received". `$A` and `$B` expand to every language pair.
+The runner decodes the wire value as the type, then encodes the result again; the case says what must come back. Messages may differ between languages, issue paths may not. Cases that involve two services (retries, dead letters, tracing across a transport) come with the messaging and HTTP work in P3.
 
-Real infrastructure runs in Docker via **Testcontainers**: Redpanda (Kafka), RabbitMQ, NATS, Redis, LocalStack (AWS), Google Pub/Sub emulator, Azurite / Service Bus emulator, Mosquitto (MQTT), Pulsar, and an OpenTelemetry collector for trace assertions.
+```
+make conformance          # builds the TypeScript runner, then runs every case against every runner
+weft-conformance run --runner typescript --filter encoding.int --results results.json
+```
+
+Where the infrastructure is needed (Kafka for the messaging cases), it runs in Docker.
+
+**What exists today.** The harness, the protocol, the TypeScript runner and 171 encoding and validation cases. The harness itself is tested with runners that give wrong answers on purpose. No other language has a runner yet, and the messaging, HTTP, tracing and shutdown cases in the table above are not written.
 
 ## In CI
 

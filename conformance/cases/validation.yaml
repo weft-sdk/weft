@@ -1,0 +1,107 @@
+description: Invalid values are rejected with the same issues, at the same paths, in every language. Messages may differ; paths may not.
+cases:
+  # ---- required fields and wrong types, all reported together ----
+  - id: validation.required.every-missing-field-is-listed
+    type: conformance.Order
+    wire: {}
+    expect: { issues: [id, customer, lines, total, sides, labels, placedAt] }
+  - id: validation.required.null-counts-as-missing
+    type: conformance.Order
+    wire: { id: null, customer: null, lines: null, total: null, sides: null, labels: null, placedAt: null }
+    expect: { issues: [id, customer, lines, total, sides, labels, placedAt] }
+  - id: validation.nested.paths-use-indexes-and-dots
+    type: conformance.Order
+    wire:
+      id: "nope"
+      customer: "Ann"
+      lines: [{ sku: "a", qty: 1 }, { sku: 7, qty: 0 }, { qty: 1 }]
+      total: { amount: 1.5, currency: "JPY" }
+      sides: { Up: 1 }
+      labels: { gift: ["ok", 5] }
+      placedAt: "yesterday"
+    expect:
+      issues: [id, "lines[1].sku", "lines[1].qty", "lines[2].sku", "total.amount", "total.currency", "sides[Up]", "labels[gift][1]", placedAt]
+  - id: validation.wire-names-are-used-in-paths
+    type: conformance.Profile
+    wire: { id: 5, display_name: 5 }
+    expect: { issues: [id, display_name] }
+  - id: validation.type-error-hides-the-rule-error
+    type: conformance.MinMax
+    wire: { n: "x" }
+    expect: { issues: [n] }
+
+  # ---- @min and @max ----
+  - { id: validation.minmax.lower-bound-is-allowed, type: conformance.MinMax, wire: { n: 10 }, expect: { canonical: { n: 10 } } }
+  - { id: validation.minmax.upper-bound-is-allowed, type: conformance.MinMax, wire: { n: 20 }, expect: { canonical: { n: 20 } } }
+  - { id: validation.minmax.below, type: conformance.MinMax, wire: { n: 9 }, expect: { issues: [n] } }
+  - { id: validation.minmax.above, type: conformance.MinMax, wire: { n: 21 }, expect: { issues: [n] } }
+  - { id: validation.minmax.text-number-is-checked-too, type: conformance.MinMax, wire: { n: "15" }, expect: { canonical: { n: 15 } } }
+  - { id: validation.minmax.text-number-out-of-range, type: conformance.MinMax, wire: { n: "99" }, expect: { issues: [n] } }
+  - { id: validation.float-range.bounds, type: conformance.FloatRange, wire: { r: 0.5 }, expect: { canonical: { r: 0.5 } } }
+  - { id: validation.float-range.upper-bound, type: conformance.FloatRange, wire: { r: 1.5 }, expect: { canonical: { r: 1.5 } } }
+  - { id: validation.float-range.below, type: conformance.FloatRange, wire: { r: 0.49 }, expect: { issues: [r] } }
+  - { id: validation.float-range.above, type: conformance.FloatRange, wire: { r: 1.51 }, expect: { issues: [r] } }
+  - { id: validation.decimal-range.inside, type: conformance.DecimalRange, wire: { d: "99.99" }, expect: { canonical: { d: "99.99" } } }
+  - { id: validation.decimal-range.above, type: conformance.DecimalRange, wire: { d: "100.01" }, expect: { issues: [d] } }
+  - { id: validation.decimal-range.below, type: conformance.DecimalRange, wire: { d: "-0.01" }, expect: { issues: [d] } }
+
+  # ---- @length ----
+  - { id: validation.length.string-lower-bound, type: conformance.NameLength, wire: { s: "ab" }, expect: { canonical: { s: "ab" } } }
+  - { id: validation.length.string-upper-bound, type: conformance.NameLength, wire: { s: "abcde" }, expect: { canonical: { s: "abcde" } } }
+  - { id: validation.length.string-too-short, type: conformance.NameLength, wire: { s: "a" }, expect: { issues: [s] } }
+  - { id: validation.length.string-too-long, type: conformance.NameLength, wire: { s: "abcdef" }, expect: { issues: [s] } }
+  - { id: validation.length.counts-characters-not-bytes, type: conformance.NameLength, wire: { s: "日本" }, expect: { canonical: { s: "日本" } } }
+  - { id: validation.length.counts-code-points-not-utf16-units, type: conformance.NameLength, wire: { s: "😀😀" }, expect: { canonical: { s: "😀😀" } } }
+  - { id: validation.length.one-emoji-is-one-character, type: conformance.NameLength, wire: { s: "😀" }, expect: { issues: [s] } }
+  - { id: validation.length.list-inside, type: conformance.ListLength, wire: { items: [1, 2, 3] }, expect: { canonical: { items: [1, 2, 3] } } }
+  - { id: validation.length.list-empty, type: conformance.ListLength, wire: { items: [] }, expect: { issues: [items] } }
+  - { id: validation.length.list-too-long, type: conformance.ListLength, wire: { items: [1, 2, 3, 4] }, expect: { issues: [items] } }
+  - { id: validation.length.bytes-counts-bytes, type: conformance.BlobLength, wire: { blob: "AQI=" }, expect: { canonical: { blob: "AQI=" } } }
+  - { id: validation.length.bytes-too-short, type: conformance.BlobLength, wire: { blob: "AQ==" }, expect: { issues: [blob] } }
+  - { id: validation.length.bytes-too-long, type: conformance.BlobLength, wire: { blob: "AQIDBAU=" }, expect: { issues: [blob] } }
+  - { id: validation.length.map-inside, type: conformance.DictLength, wire: { dict: { a: 1 } }, expect: { canonical: { dict: { a: 1 } } } }
+  - { id: validation.length.map-empty, type: conformance.DictLength, wire: { dict: {} }, expect: { issues: [dict] } }
+  - { id: validation.length.map-too-big, type: conformance.DictLength, wire: { dict: { a: 1, b: 2, c: 3 } }, expect: { issues: [dict] } }
+
+  # ---- @pattern: found anywhere, unless the pattern anchors itself ----
+  - { id: validation.pattern.anchored-match, type: conformance.Anchored, wire: { s: "ABC-123" }, expect: { canonical: { s: "ABC-123" } } }
+  - { id: validation.pattern.anchored-lower-case, type: conformance.Anchored, wire: { s: "abc-123" }, expect: { issues: [s] } }
+  - { id: validation.pattern.anchored-needs-the-whole-value, type: conformance.Anchored, wire: { s: "xABC-1" }, expect: { issues: [s] } }
+  - { id: validation.pattern.anchored-needs-digits, type: conformance.Anchored, wire: { s: "ABC-" }, expect: { issues: [s] } }
+  - { id: validation.pattern.unanchored-is-found-inside, type: conformance.Unanchored, wire: { s: "abc123def" }, expect: { canonical: { s: "abc123def" } } }
+  - { id: validation.pattern.unanchored-not-found, type: conformance.Unanchored, wire: { s: "abcdef" }, expect: { issues: [s] } }
+
+  # ---- @format ----
+  - { id: validation.format.email-ok, type: conformance.EmailOnly, wire: { s: "first.last+tag@sub.example.co" }, expect: { canonical: { s: "first.last+tag@sub.example.co" } } }
+  - { id: validation.format.email-no-dot-in-domain, type: conformance.EmailOnly, wire: { s: "a@b" }, expect: { issues: [s] } }
+  - { id: validation.format.email-space, type: conformance.EmailOnly, wire: { s: "a b@example.com" }, expect: { issues: [s] } }
+  - { id: validation.format.email-empty, type: conformance.EmailOnly, wire: { s: "" }, expect: { issues: [s] } }
+  - { id: validation.format.email-two-ats, type: conformance.EmailOnly, wire: { s: "a@@example.com" }, expect: { issues: [s] } }
+  - { id: validation.format.url-https, type: conformance.UrlOnly, wire: { s: "https://example.com/a?b=c#d" }, expect: { canonical: { s: "https://example.com/a?b=c#d" } } }
+  - { id: validation.format.url-with-port, type: conformance.UrlOnly, wire: { s: "http://localhost:8080" }, expect: { canonical: { s: "http://localhost:8080" } } }
+  - { id: validation.format.url-without-scheme, type: conformance.UrlOnly, wire: { s: "example.com" }, expect: { issues: [s] } }
+  - { id: validation.format.url-ftp-is-not-http, type: conformance.UrlOnly, wire: { s: "ftp://example.com" }, expect: { issues: [s] } }
+  - { id: validation.format.uri-urn, type: conformance.UriOnly, wire: { s: "urn:isbn:0451450523" }, expect: { canonical: { s: "urn:isbn:0451450523" } } }
+  - { id: validation.format.uri-mailto, type: conformance.UriOnly, wire: { s: "mailto:a@b.co" }, expect: { canonical: { s: "mailto:a@b.co" } } }
+  - { id: validation.format.uri-without-scheme, type: conformance.UriOnly, wire: { s: "example.com" }, expect: { issues: [s] } }
+  - { id: validation.format.hostname-ok, type: conformance.HostnameOnly, wire: { s: "a-b.example.org" }, expect: { canonical: { s: "a-b.example.org" } } }
+  - { id: validation.format.hostname-leading-hyphen, type: conformance.HostnameOnly, wire: { s: "-a.com" }, expect: { issues: [s] } }
+  - { id: validation.format.hostname-empty-label, type: conformance.HostnameOnly, wire: { s: "a..com" }, expect: { issues: [s] } }
+  - { id: validation.format.hostname-underscore, type: conformance.HostnameOnly, wire: { s: "a_b.com" }, expect: { issues: [s] } }
+  - { id: validation.format.ipv4-ok, type: conformance.Ipv4Only, wire: { s: "192.168.1.255" }, expect: { canonical: { s: "192.168.1.255" } } }
+  - { id: validation.format.ipv4-too-big, type: conformance.Ipv4Only, wire: { s: "256.1.1.1" }, expect: { issues: [s] } }
+  - { id: validation.format.ipv4-leading-zero, type: conformance.Ipv4Only, wire: { s: "01.2.3.4" }, expect: { issues: [s] } }
+  - { id: validation.format.ipv4-three-parts, type: conformance.Ipv4Only, wire: { s: "1.2.3" }, expect: { issues: [s] } }
+  - { id: validation.format.ipv6-loopback, type: conformance.Ipv6Only, wire: { s: "::1" }, expect: { canonical: { s: "::1" } } }
+  - { id: validation.format.ipv6-compressed, type: conformance.Ipv6Only, wire: { s: "2001:db8::8a2e:370:7334" }, expect: { canonical: { s: "2001:db8::8a2e:370:7334" } } }
+  - { id: validation.format.ipv6-with-ipv4-tail, type: conformance.Ipv6Only, wire: { s: "::ffff:192.0.2.1" }, expect: { canonical: { s: "::ffff:192.0.2.1" } } }
+  - { id: validation.format.ipv6-too-few-groups, type: conformance.Ipv6Only, wire: { s: "1:2:3:4:5:6:7" }, expect: { issues: [s] } }
+  - { id: validation.format.ipv6-two-compressions, type: conformance.Ipv6Only, wire: { s: "1::2::3" }, expect: { issues: [s] } }
+  - { id: validation.format.ipv6-not-hex, type: conformance.Ipv6Only, wire: { s: "g::1" }, expect: { issues: [s] } }
+  - { id: validation.format.date-ok, type: conformance.DateOnly, wire: { s: "2024-02-29" }, expect: { canonical: { s: "2024-02-29" } } }
+  - { id: validation.format.date-not-a-leap-day, type: conformance.DateOnly, wire: { s: "2025-02-29" }, expect: { issues: [s] } }
+  - { id: validation.format.date-month-13, type: conformance.DateOnly, wire: { s: "2026-13-01" }, expect: { issues: [s] } }
+  - { id: validation.format.time-plain, type: conformance.TimeOnly, wire: { s: "23:59:59" }, expect: { canonical: { s: "23:59:59" } } }
+  - { id: validation.format.time-with-fraction-and-zone, type: conformance.TimeOnly, wire: { s: "10:00:00.123+02:00" }, expect: { canonical: { s: "10:00:00.123+02:00" } } }
+  - { id: validation.format.time-hour-24, type: conformance.TimeOnly, wire: { s: "24:00:00" }, expect: { issues: [s] } }
+  - { id: validation.format.time-without-seconds, type: conformance.TimeOnly, wire: { s: "10:00" }, expect: { issues: [s] } }

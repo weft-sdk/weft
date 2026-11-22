@@ -8,3 +8,4 @@ notes/
 # TypeScript packages
 node_modules/
 dist/
+conformance-results.json

@@ -1,0 +1,23 @@
+[package]
+name = "weft-conformance"
+description = "Weft: the conformance harness. Drives each language's runner through the cases in conformance/"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "weft-conformance"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml_ng.workspace = true
+weft-check = { path = "../weft-check" }
+weft-ir = { path = "../weft-ir" }
+
+[lints]
+workspace = true

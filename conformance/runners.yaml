@@ -1,0 +1,4 @@
+# The language runners the harness can drive. `command` runs from the repository root.
+runners:
+  typescript:
+    command: [node, sdks/typescript/packages/conformance-runner/dist/index.js]
