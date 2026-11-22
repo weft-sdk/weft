@@ -80,3 +80,29 @@ Every package reads `weft.yaml` ([the CLI doc](../docs/06-cli.md#config-file-wef
 - New work after `stop()` begins is refused with `Unavailable`.
 - Middleware runs outermost first: the middleware added to Weft, then the transport's own, then the handler. A middleware continues by calling `next()` once; not calling it stops the chain.
 - A deadline only ever gets shorter as it is passed on. A timed-out call fails with `Timeout`; a cancelled one with `Unavailable`.
+
+## Messaging
+
+Core does everything that is the same across libraries; an adapter only translates to and from one library ([SDK design](../docs/04-sdk-design.md#the-adapter-interface)).
+
+**Envelope.** Every message is a CloudEvents 1.0 envelope in binary mode: `id` (a UUID), `type` (the event name), `source` (the service name from `weft.yaml`), `time` (RFC 3339) and the content type travel as headers; the body is the encoded payload, JSON by default. The attribute prefix depends on the transport (`ce_` for Kafka). The ordering key is the event's declared `key:` (its fields joined with `:`) unless the call gives one. Other headers, such as the idempotency key (`weft-idempotency-key`), are copied as they are.
+
+**Topics.** The destination is the `topics:` entry for the event, else the event name.
+
+**Publishing.** The payload is validated and encoded first; nothing is sent if it is invalid. A send that fails with `Unavailable` or `Timeout`, or with an error the library raised, is retried with the backoff below, up to 5 attempts. Other categories fail at once. An option the library cannot honour (`delayMs`, headers, a consumer group) is an `Internal` error that names it, not silently ignored.
+
+**Receiving.** The body is decoded and validated against the event's contract; a message that does not match goes straight to the dead-letter destination. A handler that returns normally acknowledges the message (at-least-once). When it throws, the category decides ([Errors](#errors)):
+
+| Category | What happens |
+| --- | --- |
+| `NotFound`, `Unauthorized`, `Forbidden`, `Conflict` | Acknowledged and logged. Not retried, not dead-lettered |
+| `InvalidInput` | Dead-lettered at once |
+| `Unavailable`, `Timeout`, `Internal`, or any other exception (treated as `Internal`) | Retried in place, in order, until the attempts run out, then dead-lettered |
+
+**Retries.** 5 attempts by default (`attempts`), waiting between them `min(30 s, 200 ms × 2^(n−1))`, with a random amount between half and all of that. The handler is retried before the next message is taken, so order within a partition holds.
+
+**Dead letters.** A failed message is sent, unchanged, to `<destination>.dlq` (or the `deadLetter` option; `false` drops it with a log line), with the headers `weft-original-destination`, `weft-error-category`, `weft-error-message` and `weft-attempts`.
+
+**Shutdown.** Once `stop()` begins, a message that is mid-retry is not acknowledged and not dead-lettered, so the broker delivers it again after a restart.
+
+**Duplicates.** The `dedupe()` middleware skips a message whose idempotency key (else its `id`) was already handled successfully. It remembers keys in memory only.
