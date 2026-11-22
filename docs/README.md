@@ -32,9 +32,9 @@ If you only read three product docs: **concepts**, **contract-language**, **api*
 
 The exact resume point is [Roadmap › Current status](12-roadmap.md#current-status).
 
-- **Phase:** P1 (compiler and CLI) is done. P2 (the TypeScript package) is next, broken into tasks P2.1 to P2.9 ([ADR 0021](decisions/0021-generated-code-embeds-the-ir.md) accepted). The website is built and paused until the backend exists.
-- **Built:** the website (`website/`), and a Rust workspace (`compiler/`) with a parser, checker and compatibility checker, and the `weft init`, `fmt`, `check` and `gen` (TypeScript) commands. CI passes on Linux, macOS and Windows.
-- **Not built:** the language packages, the conformance suite, the dashboard and the docs content.
+- **Phase:** P1 (compiler and CLI) and P2 (the TypeScript package) are done. P3 (the conformance suite and the Go package) is next. The website is built and can resume now that the backend exists for TypeScript.
+- **Built:** the website (`website/`); a Rust workspace (`compiler/`) with the parser, checker, compatibility checker and the `weft init`, `fmt`, `check` and `gen` commands; and the TypeScript package (`sdks/typescript/`): the core, HTTP on Express and Kafka on KafkaJS, tested end to end against a real Kafka broker. CI passes on Linux, macOS and Windows.
+- **Not built:** the conformance suite, every other language package, every other transport, the dashboard and the docs content. Nothing is published to npm.
 - **Production-ready:** no.
 
 ## Rules for these docs

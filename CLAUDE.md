@@ -2,7 +2,7 @@
 
 Weft is **one interface for every way services talk**. Developers call `weft.http`, `weft.gql`, `weft.grpc`, `weft.rpc`, `weft.ws`, `weft.sse`, `weft.kafka`, `weft.mq`, `weft.nats`, `weft.redis`, `weft.cloud`, `weft.mqtt` and `weft.pulsar`, and Weft runs the real library underneath (Express, Apollo, KafkaJS, Socket.io, Spring Kafka, FastAPI, ...). Contracts are written once in language-neutral `.weft` files, and a Rust compiler generates typed code for 13 languages. Overview: [README](README.md). Design: [docs/](docs/README.md).
 
-**Status: design stage.** The website (`website/`) and the compiler and CLI (`compiler/`: `weft init`, `fmt`, `check`, and `gen` for TypeScript) are built. The language packages, conformance suite and dashboard are not. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
+**Status: design stage.** The website (`website/`), the compiler and CLI (`compiler/`: `weft init`, `fmt`, `check`, and `gen` for TypeScript) and the TypeScript package (`sdks/typescript/`: core, HTTP on Express, Kafka on KafkaJS) are built; nothing is published. The other language packages, the other transports, the conformance suite and the dashboard are not. Never describe a planned feature as existing in the docs or the README. The website is the exception: it is written as the launch page ([ADR 0019](docs/decisions/0019-site-written-as-launch-page.md)) and is not deployed publicly until its claims are true.
 
 **Weft is not a code scanner.** An outdated README once described the project (then called Splice) as one. That idea was dropped completely ([ADR 0001](docs/decisions/0001-library-not-scanner.md), [history](docs/15-history.md)). Do not reintroduce it. Do not reopen decisions in [history](docs/15-history.md) or [decisions/](docs/decisions/) unless the maintainer asks.
 
@@ -67,10 +67,12 @@ Everything runs through the root `Makefile` (`make help` lists it). Add each com
 | `make site-dev` | Run the website at `http://localhost:4321` |
 | `make site-check` | Type-check the website (`astro check`, TypeScript strict) |
 | `make site-build` | Build the static site into `website/dist/` |
+| `make ts-fixtures` | Regenerate the TypeScript tests' generated files (`core/test/fixtures`, `e2e/src/weft.gen.ts`) with the real compiler. A Rust test fails when the e2e file is stale |
+| `make ts-kafka-up` / `ts-kafka-down` / `ts-kafka-test` | Start or stop a Kafka broker in Docker, and run the Kafka adapter and end-to-end tests against it (CI does this in its `kafka` job). If `docker pull` hangs in a script, a stuck credential helper is the usual cause: pull with an empty `DOCKER_CONFIG` |
 | `make ts-install` | Install the TypeScript packages' dependencies (`sdks/typescript`, a pnpm workspace) |
 | `make ts-check` | Build, type-check and test the TypeScript packages (`ts-build` and `ts-test` run the parts; adapters type-check and test against core's build, so build first) |
 
 ## Repository
 
 - GitHub: `github.com/weft-sdk/weft` (private). Default branch `main`.
-- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `website/`, `compiler/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
+- Layout today: `README.md`, `CLAUDE.md`, `AGENTS.md`, `Makefile`, `docs/`, `spec/`, `website/`, `compiler/`, `sdks/typescript/`, `.github/workflows/`. Planned layout: [architecture › Repo layout](docs/09-architecture.md#repo-layout).
