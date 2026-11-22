@@ -82,7 +82,7 @@ ts-kafka-down: ## Stop the test broker
 ts-kafka-test: ts-build ## Run the Kafka adapter and end-to-end tests against the broker from ts-kafka-up
 	WEFT_TEST_KAFKA=127.0.0.1:9092 $(TS) --filter @weft-sdk/kafka-kafkajs --filter weft-e2e test
 
-conformance: ts-build ## Run the conformance cases against every language runner (needs Node and Go)
+conformance: ts-build ## Run the conformance cases against every language runner (needs Node and Go; the cross-language Kafka cases run when WEFT_TEST_KAFKA is set)
 	$(CARGO) run -q $(MANIFEST) -p weft-conformance -- run
 
 go-check: ## Format check, vet and test the Go module (with the race detector)
@@ -93,3 +93,6 @@ go-test: ## Test the Go module
 
 go-kafka-test: ## Run the Go Kafka adapter tests against the broker from ts-kafka-up
 	cd go && WEFT_TEST_KAFKA=127.0.0.1:9092 go test -race ./kafka/...
+
+conformance-table: ts-build ## Run everything, Kafka included (make ts-kafka-up first), and write conformance/compatibility.md
+	WEFT_TEST_KAFKA=127.0.0.1:9092 $(CARGO) run -q $(MANIFEST) -p weft-conformance -- run --require-infra --table conformance/compatibility.md

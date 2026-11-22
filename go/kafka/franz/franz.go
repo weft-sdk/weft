@@ -35,7 +35,8 @@ type Options struct {
 	// first, because a consumer cannot join for a topic that does not exist yet. A failure to create,
 	// such as no permission, is ignored: the topic may already be there.
 	SkipCreateTopics bool
-	// ExtraOptions are passed to every franz-go client (TLS, SASL, ...).
+	// ExtraOptions are passed to every franz-go client (TLS, SASL, compression, ...). They come last, so
+	// they override what the adapter sets.
 	ExtraOptions []kgo.Opt
 }
 
@@ -120,7 +121,10 @@ func (a *Adapter) base() ([]kgo.Opt, error) {
 	if len(brokers) == 0 {
 		return nil, weft.NewError(weft.Internal, "There are no Kafka brokers: set brokers under transports.kafka in weft.yaml (or WEFT_KAFKA_BROKERS)")
 	}
-	opts := []kgo.Opt{kgo.SeedBrokers(brokers...), kgo.ClientID(a.clientID())}
+	// Compression is off unless you ask for it with ExtraOptions: franz-go compresses with Snappy by
+	// default, which a consumer on KafkaJS (and others) cannot read without a plugin, so a Go service
+	// would send messages that a TypeScript service cannot receive.
+	opts := []kgo.Opt{kgo.SeedBrokers(brokers...), kgo.ClientID(a.clientID()), kgo.ProducerBatchCompression(kgo.NoCompression())}
 	return append(opts, a.opts.ExtraOptions...), nil
 }
 

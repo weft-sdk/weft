@@ -1,0 +1,157 @@
+description: Two languages talking to each other over a real broker and real sockets. Each case runs for every ordered pair of languages, `$A` being the one that publishes or calls and `$B` the one that consumes or serves. Needs Kafka (WEFT_TEST_KAFKA) for the messaging cases.
+cases:
+  # ---- Kafka: an event sent by one language is received by the other ----
+  - id: cross.kafka.an-event-reaches-the-other-language
+    needs: [kafka]
+    steps:
+      - { name: consumer, on: $B, op: service.start, args: { svc: c, service: payments, kafka: { brokers: $BROKERS, group: "g-$RUN", topics: { order.placed: "placed-$RUN" } }, consumes: [{ event: order.placed }] } }
+      - { name: producer, on: $A, op: service.start, args: { svc: p, service: orders, kafka: { brokers: $BROKERS, group: "pg-$RUN", topics: { order.placed: "placed-$RUN" } } } }
+      - { name: publish, on: $A, op: service.publish, args: { svc: p, event: order.placed, payload: &order { id: "123e4567-e89b-42d3-a456-426614174000", customer: "Ann", lines: [{ sku: "apple", qty: 1 }], total: { amount: 100, currency: "EUR" }, sides: {}, labels: {}, placedAt: "2026-11-23T10:00:00.000Z" }, inSpan: true } }
+      - { name: got, on: $B, op: service.received, args: { svc: c, count: 1 } }
+      - { name: stopA, on: $A, op: service.stop, args: { svc: p } }
+      - { name: stopB, on: $B, op: service.stop, args: { svc: c } }
+    expect:
+      paths:
+        publish.ok: true
+        got.count: 1
+        got.messages.0.payload: *order
+        got.messages.0.key: "123e4567-e89b-42d3-a456-426614174000"
+        got.messages.0.attempt: 1
+        got.messages.0.envelope: { type: order.placed, source: orders, datacontenttype: application/json, hasId: true, hasTime: true }
+        stopA.drained: true
+        stopB.drained: true
+      equal:
+        - [publish.traceId, got.messages.0.traceId]
+
+  - id: cross.kafka.the-key-and-headers-travel
+    needs: [kafka]
+    steps:
+      - { name: consumer, on: $B, op: service.start, args: { svc: c, service: payments, kafka: { brokers: $BROKERS, group: "g-$RUN", topics: { order.placed: "placed-$RUN" } }, consumes: [{ event: order.placed }] } }
+      - { name: producer, on: $A, op: service.start, args: { svc: p, service: orders, kafka: { brokers: $BROKERS, group: "pg-$RUN", topics: { order.placed: "placed-$RUN" } } } }
+      - { name: publish, on: $A, op: service.publish, args: { svc: p, event: order.placed, payload: *order, key: custom, headers: { tenant: t1 } } }
+      - { name: got, on: $B, op: service.received, args: { svc: c, count: 1 } }
+    expect:
+      paths:
+        publish.ok: true
+        got.messages.0.key: custom
+        got.messages.0.headers: { tenant: t1 }
+
+  - id: cross.kafka.a-handler-that-fails-twice-is-retried-by-the-receiving-language
+    needs: [kafka]
+    steps:
+      - { name: consumer, on: $B, op: service.start, args: { svc: c, service: payments, kafka: { brokers: $BROKERS, group: "g-$RUN", topics: { order.placed: "placed-$RUN" } }, consumes: [{ event: order.placed, fail: { times: 2, category: Unavailable } }] } }
+      - { name: producer, on: $A, op: service.start, args: { svc: p, service: orders, kafka: { brokers: $BROKERS, group: "pg-$RUN", topics: { order.placed: "placed-$RUN" } } } }
+      - { name: publish, on: $A, op: service.publish, args: { svc: p, event: order.placed, payload: *order } }
+      - { name: got, on: $B, op: service.received, args: { svc: c, count: 1 } }
+    expect:
+      paths:
+        got.count: 1
+        got.messages.0.attempt: 3
+        got.messages.0.payload: *order
+
+  - id: cross.kafka.a-message-that-keeps-failing-is-dead-lettered-and-the-sending-language-can-read-it
+    needs: [kafka]
+    steps:
+      - { name: consumer, on: $B, op: service.start, args: { svc: c, service: payments, kafka: { brokers: $BROKERS, group: "g-$RUN", topics: { order.placed: "placed-$RUN" } }, consumes: [{ event: order.placed, attempts: 2, fail: { times: always, category: Internal } }] } }
+      - { name: producer, on: $A, op: service.start, args: { svc: p, service: orders, kafka: { brokers: $BROKERS, group: "pg-$RUN", topics: { order.placed: "placed-$RUN" } } } }
+      - { name: reader, on: $A, op: service.start, args: { svc: d, service: auditor, kafka: { brokers: $BROKERS, group: "dg-$RUN", topics: { order.placed: "placed-$RUN.dlq" } }, consumes: [{ event: order.placed }] } }
+      - { name: publish, on: $A, op: service.publish, args: { svc: p, event: order.placed, payload: *order } }
+      - { name: dead, on: $A, op: service.received, args: { svc: d, count: 1, timeoutMs: 60000 } }
+    expect:
+      paths:
+        dead.count: 1
+        dead.messages.0.payload: *order
+        dead.messages.0.headers: { weft-error-category: Internal, weft-attempts: "2", weft-original-destination: "placed-$RUN" }
+
+  # ---- HTTP: a call made by one language is served by the other ----
+  - id: cross.http.a-call-is-served-by-the-other-language
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: createOrder, handler: { returns: *order } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order }, inSpan: true } }
+      - { name: served, on: $B, op: service.served, args: { svc: s } }
+    expect:
+      paths:
+        call.ok: true
+        call.result: *order
+        served.calls: 1
+        served.requests.0.seen.body: *order
+        served.requests.0.hasDeadline: true
+        served.requests.0.hasTraceparent: true
+      equal:
+        - [call.traceId, served.requests.0.traceId]
+
+  - id: cross.http.path-query-and-headers-are-understood-on-both-sides
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: listOrders, handler: { returns: [] } }, { route: getOrder, handler: { returns: *order } }, { route: whoami, handler: { returns: { amount: 1, currency: EUR } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: list, on: $A, op: service.call, args: { svc: c, service: orders, route: listOrders, request: { query: { page: 2, tags: [a, b], flag: true, ratio: 1.5 } } } }
+      - { name: get, on: $A, op: service.call, args: { svc: c, service: orders, route: getOrder, request: { params: { id: "123e4567-e89b-42d3-a456-426614174000" } } } }
+      - { name: who, on: $A, op: service.call, args: { svc: c, service: orders, route: whoami, request: { headers: { x-tenant: t1 } } } }
+      - { name: served, on: $B, op: service.served, args: { svc: s } }
+    expect:
+      paths:
+        list.ok: true
+        list.result: []
+        get.result: *order
+        who.result: { amount: 1, currency: EUR }
+        served.calls: 3
+        served.requests.0.seen.query: { page: 2, tags: [a, b], flag: true, ratio: 1.5 }
+        served.requests.1.seen.params: { id: "123e4567-e89b-42d3-a456-426614174000" }
+        served.requests.2.seen.headers: { x-tenant: t1 }
+
+  - id: cross.http.a-declared-error-comes-back-as-the-same-error
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: createOrder, handler: { throws: { declared: { name: OutOfStock, fields: { sku: apple, available: 0 }, message: No apples } } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order } } }
+    expect:
+      paths:
+        call.ok: false
+        call.error: { declared: { package: conformance, name: OutOfStock, fields: { sku: apple, available: 0 } }, message: No apples }
+
+  - id: cross.http.not-found-is-understood
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: createOrder, handler: { throws: { category: NotFound } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order } } }
+    expect: { paths: { call.ok: false, call.error.category: NotFound } }
+
+  - id: cross.http.conflict-is-understood
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: createOrder, handler: { throws: { category: Conflict } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order } } }
+    expect: { paths: { call.ok: false, call.error.category: Conflict } }
+
+  - id: cross.http.internal-does-not-describe-the-server
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: createOrder, handler: { throws: { category: Internal } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order } } }
+    expect: { paths: { call.ok: false, call.error.category: Internal, call.error.message: "Internal server error" } }
+
+  - id: cross.http.an-optional-result-that-is-missing-is-nothing
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: getOrder, handler: { returns: null } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: getOrder, request: { params: { id: "123e4567-e89b-42d3-a456-426614174000" } } } }
+    expect: { paths: { call.ok: true, call.result: null } }
+
+  - id: cross.http.a-get-is-retried-after-unavailable
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: listOrders, handler: { throws: { category: Unavailable } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: call, on: $A, op: service.call, args: { svc: c, service: orders, route: listOrders, request: {} } }
+      - { name: served, on: $B, op: service.served, args: { svc: s } }
+    expect: { paths: { call.ok: false, call.error.category: Unavailable, served.calls: 3 } }
+
+  - id: cross.http.a-post-is-not-retried-unless-it-has-an-idempotency-key
+    steps:
+      - { name: server, on: $B, op: service.start, args: { svc: s, service: orders, serves: [{ route: createOrder, handler: { throws: { category: Unavailable } } }] } }
+      - { name: client, on: $A, op: service.start, args: { svc: c, service: api, services: { orders: "http://127.0.0.1:${server.httpPort}" } } }
+      - { name: plain, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order } } }
+      - { name: once, on: $B, op: service.served, args: { svc: s } }
+      - { name: keyed, on: $A, op: service.call, args: { svc: c, service: orders, route: createOrder, request: { body: *order }, idempotencyKey: k1 } }
+      - { name: again, on: $B, op: service.served, args: { svc: s } }
+    expect: { paths: { plain.error.category: Unavailable, once.calls: 1, keyed.error.category: Unavailable, again.calls: 4 } }
