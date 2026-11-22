@@ -32,6 +32,16 @@ export type {
   SubscribeOptions,
 } from "./messaging/types.js"
 export { Weft, type StopResult, type Transport, type WeftOptions, type WeftState } from "./weft.js"
-
-/** The version of this package. Replaced by the release process. */
-export const version = "0.0.0"
+export {
+  SpanKind,
+  SpanStatusCode,
+  extractTraceContext,
+  injectTraceContext,
+  messagingMetrics,
+  meter,
+  recordError,
+  tracer,
+  withSpan,
+  type SpanOptions,
+} from "./telemetry.js"
+export { version } from "./version.js"
