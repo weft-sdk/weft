@@ -432,3 +432,38 @@ fn the_typescript_runner_passes_every_case() {
         .contains("unknown op"));
     assert!(p.call(json!({ "op": "hello" })).is_ok());
 }
+
+/// Needs `go`. Without it this skips, unless WEFT_REQUIRE_RUNNERS is set, as in CI.
+#[test]
+fn the_go_runner_passes_every_case() {
+    let root = conformance_dir().join("..");
+    let go_ok = std::process::Command::new("go")
+        .arg("version")
+        .output()
+        .is_ok_and(|o| o.status.success());
+    if !go_ok {
+        assert!(
+            std::env::var("WEFT_REQUIRE_RUNNERS").is_err(),
+            "WEFT_REQUIRE_RUNNERS is set but go is missing"
+        );
+        eprintln!("skipping: go is missing");
+        return;
+    }
+    let (irs, all) = setup();
+    let command: Vec<String> = ["go", "-C", "go", "run", "./cmd/weft-conformance-runner"]
+        .map(String::from)
+        .to_vec();
+    let mut p = Process::start(&command, &root).unwrap();
+    let report = run_runner("go", &mut p, &irs, &all).unwrap();
+    assert_eq!(report.language, "go");
+    assert_eq!(
+        report.failed(),
+        0,
+        "{:?}",
+        report
+            .results
+            .iter()
+            .filter(|r| !r.passed)
+            .collect::<Vec<_>>()
+    );
+}

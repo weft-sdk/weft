@@ -23,6 +23,10 @@ jobs:
           node-version: 24
           cache: pnpm
           cache-dependency-path: sdks/typescript/pnpm-lock.yaml
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.mod
       - run: pnpm install --frozen-lockfile
         working-directory: sdks/typescript
       - run: pnpm build

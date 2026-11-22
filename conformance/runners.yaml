@@ -2,3 +2,5 @@
 runners:
   typescript:
     command: [node, sdks/typescript/packages/conformance-runner/dist/index.js]
+  go:
+    command: [go, -C, go, run, ./cmd/weft-conformance-runner]

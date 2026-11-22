@@ -7,12 +7,12 @@ PNPM := pnpm --dir website
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
         site-install site-dev site-check site-build \
-        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance
+        ts-install ts-check ts-build ts-test ts-fixtures ts-kafka-up ts-kafka-down ts-kafka-test conformance go-check go-test
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
 
-check: fmt-check lint test build site-check site-build ts-check ## What CI runs: compiler, website and TypeScript checks (run site-install and ts-install first)
+check: fmt-check lint test build site-check site-build ts-check go-check ## What CI runs: compiler, website, TypeScript and Go checks (run site-install and ts-install first)
 
 fmt: ## Format the compiler's Rust code
 	$(CARGO) fmt $(MANIFEST) --all
@@ -82,5 +82,11 @@ ts-kafka-down: ## Stop the test broker
 ts-kafka-test: ts-build ## Run the Kafka adapter and end-to-end tests against the broker from ts-kafka-up
 	WEFT_TEST_KAFKA=127.0.0.1:9092 $(TS) --filter @weft-sdk/kafka-kafkajs --filter weft-e2e test
 
-conformance: ts-build ## Run the conformance cases against every language runner (needs Node)
+conformance: ts-build ## Run the conformance cases against every language runner (needs Node and Go)
 	$(CARGO) run -q $(MANIFEST) -p weft-conformance -- run
+
+go-check: ## Format check, vet and test the Go module (with the race detector)
+	cd go && test -z "$$(gofmt -l .)" && go vet ./... && go test -race ./...
+
+go-test: ## Test the Go module
+	cd go && go test ./...

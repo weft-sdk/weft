@@ -51,7 +51,7 @@ weft-conformance run --runner typescript --filter encoding.int --results results
 
 Where the infrastructure is needed (Kafka for the messaging cases), it runs in Docker.
 
-**What exists today.** The harness, the protocol, the TypeScript runner and 171 encoding and validation cases. The harness itself is tested with runners that give wrong answers on purpose. No other language has a runner yet, and the messaging, HTTP, tracing and shutdown cases in the table above are not written.
+**What exists today.** The harness, the protocol, runners for TypeScript and Go, and 171 encoding and validation cases that both pass, which is what "the same in every language" means so far. The harness itself is tested with runners that give wrong answers on purpose. No other language has a runner yet, and the messaging, HTTP, tracing and shutdown cases in the table above are not written.
 
 ## In CI
 
