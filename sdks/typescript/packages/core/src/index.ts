@@ -4,6 +4,8 @@ export { loadConfig, parseConfig, serviceUrl, topicName, type Config, type Env }
 export {
   CATEGORIES,
   ConfigError,
+  DeclaredError,
+  isDeclaredError,
   WeftError,
   isWeftError,
   type CategoryInfo,
@@ -12,6 +14,18 @@ export {
   type MessagingPolicy,
   type WeftErrorOptions,
 } from "./errors.js"
+export { Http, type HttpOptions, type ServiceClient } from "./http/http.js"
+export { PROBLEM_TYPE_PREFIX, fromProblem, toProblem, type Problem, type ProblemResult } from "./http/problem.js"
+export { findRoute, fullPath } from "./http/routes.js"
+export type {
+  CallOptions,
+  HttpAdapter,
+  HttpContext,
+  HttpHandler,
+  HttpInput,
+  HttpRequest,
+  HttpResponse,
+} from "./http/types.js"
 export { checkFormat } from "./formats.js"
 export * from "./ir.js"
 export { compose, remainingMs, type Context, type Middleware, type Next } from "./middleware.js"
@@ -37,6 +51,7 @@ export {
   SpanStatusCode,
   extractTraceContext,
   injectTraceContext,
+  httpMetrics,
   messagingMetrics,
   meter,
   recordError,

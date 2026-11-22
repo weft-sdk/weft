@@ -106,3 +106,29 @@ export class ConfigError extends Error {
     this.problems = problems
   }
 }
+
+/**
+ * An error declared in a contract (`error OutOfStock { ... }`). A handler throws it; the receiving
+ * side gets the same class back, with the same fields.
+ */
+export class DeclaredError extends Error {
+  override readonly name = "DeclaredError"
+  readonly package: string
+  readonly errorName: string
+  readonly fields: Readonly<Record<string, unknown>>
+
+  constructor(pkg: string, errorName: string, fields: Readonly<Record<string, unknown>> = {}, message?: string) {
+    super(message ?? `${pkg}.${errorName}`)
+    this.package = pkg
+    this.errorName = errorName
+    this.fields = fields
+  }
+}
+
+export function isDeclaredError(value: unknown, pkg?: string, errorName?: string): value is DeclaredError {
+  return (
+    value instanceof DeclaredError &&
+    (pkg === undefined || value.package === pkg) &&
+    (errorName === undefined || value.errorName === errorName)
+  )
+}

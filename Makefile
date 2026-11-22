@@ -61,12 +61,12 @@ ts-install: ## Install the TypeScript packages' dependencies (Node 22.23.4 or la
 ts-build: ## Build the TypeScript packages (ESM and CJS)
 	$(TS) build
 
-ts-test: ## Test the TypeScript packages
+ts-test: ## Test the TypeScript packages (run ts-build first)
 	$(TS) test
 
-ts-check: ## Type-check, build and test the TypeScript packages
-	$(TS) typecheck
+ts-check: ## Build, type-check and test the TypeScript packages (adapters type-check against core's build)
 	$(TS) build
+	$(TS) typecheck
 	$(TS) test
 
 ts-fixtures: ## Regenerate the TypeScript tests' fixture from spec/examples with the real compiler

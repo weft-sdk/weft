@@ -111,3 +111,19 @@ export function messagingMetrics(): Instruments {
   }
   return instruments
 }
+
+interface HttpInstruments {
+  readonly serverDuration: Histogram
+  readonly clientDuration: Histogram
+}
+
+let httpInstruments: HttpInstruments | undefined
+
+/** The HTTP metrics (spec/behaviour.md › Observability). Created once, on first use. */
+export function httpMetrics(): HttpInstruments {
+  httpInstruments ??= {
+    serverDuration: meter().createHistogram("weft.http.server.duration", { unit: "ms", description: "Time to answer a request, by method, route and status" }),
+    clientDuration: meter().createHistogram("weft.http.client.duration", { unit: "ms", description: "Time for a call to another service, including retries" }),
+  }
+  return httpInstruments
+}

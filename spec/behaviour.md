@@ -132,3 +132,29 @@ Attributes: `messaging.system` (the transport, such as `kafka`), `messaging.dest
 | `weft.messaging.errors` | counter | `category`: one of the eight |
 | `weft.messaging.process.duration` | histogram, ms | One per handler attempt, with `outcome` |
 | `weft.messaging.message.size` | histogram, bytes | `direction`: `send` or `receive` |
+
+## HTTP
+
+Core serves and calls HTTP; an adapter only owns the socket and the router.
+
+**Routes.** A handler is registered by method and path and must match a route of the contracts, by its full path (`/v1/orders`) or its path without the base (`/orders`) when that is not ambiguous. Anything else is an error at registration, not at the first request.
+
+**Reading a request.** Path parameters, the query string, headers and the JSON body are decoded and validated against the route. Text values are converted to the type the contract names (`true`/`false` for `bool`, numbers for `float` and `int`). Every problem in all four parts is returned at once, with a path starting `params.`, `query.`, `headers.` or `body.`. A missing or unreadable body is `body is required` or `body is not valid JSON`. Header names are matched without regard to case, by the field's `wireName`.
+
+**Writing a response.** The returned value is validated and encoded. An optional result (`-> Order?`) that is missing is a 404. A value that does not match the contract is a server bug: `Internal`, 500, never sent. Handlers may set `ctx.response.status` and `ctx.response.headers`. Success is `application/json`.
+
+**Errors** are [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details (`application/problem+json`):
+
+```json
+{ "type": "urn:weft:error:NotFound", "title": "NotFound", "status": 404, "detail": "No such order" }
+{ "type": "urn:weft:error:InvalidInput", "title": "InvalidInput", "status": 400, "detail": "Invalid input: ...", "issues": [ { "path": "body.qty", "message": "..." } ] }
+{ "type": "urn:weft:error:orders.OutOfStock", "title": "OutOfStock", "status": 422, "detail": "...", "fields": { "sku": "apple", "available": 0 } }
+```
+
+The status of a category is in [Errors](#errors); a declared error has its contract's status (422 unless `@status`). A declared error a route does not list, or any other exception, is `Internal` with the detail "Internal server error": the real message is logged, never sent. The client turns a problem back into the same error: a `WeftError` with its category, or a `DeclaredError` with its fields.
+
+**Calling.** `to("orders")` reads the base URL from `services:`. The request is built from the contract (path parameters, query, headers, body), so a call that breaks it fails with `InvalidInput` before anything is sent. Every call has a timeout (10 s by default) and sends `weft-deadline` (milliseconds since the epoch) and `traceparent`. A call is retried, up to 3 attempts with the backoff above, only when it failed with `Unavailable` or `Timeout` **and** it is safe to repeat: `GET`, `HEAD`, `PUT`, `DELETE`, `OPTIONS`, or any call given an `idempotencyKey` (sent as `Idempotency-Key`). A 404 for an optional result is `undefined`.
+
+**Shutdown.** A request in flight when `stop()` begins finishes and its response is written; connections are closed as they go idle, and the rest after a short grace. A request that arrives after `stop()` began is refused with 503.
+
+**Observability.** A server span `<METHOD> <route>` (parent from `traceparent`) and a client span per attempt, with `http.request.method`, `http.route`, `http.response.status_code`; histograms `weft.http.server.duration` and `weft.http.client.duration` (ms).
