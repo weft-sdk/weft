@@ -87,6 +87,7 @@ export class Messaging implements Transport {
     this.logger = options.logger ?? consoleLogger
     this.sleep = options.sleep ?? realSleep
     this.random = options.random ?? Math.random
+    this.adapter.configure?.(weft.config.transports[this.name] ?? {}, weft.config)
     weft.register(this)
   }
 
@@ -177,6 +178,7 @@ export class Messaging implements Transport {
       )
       await this.adapter.subscribe(destination, (delivery) => this.receive(sub, destination, delivery), adapterOptions)
     }
+    await this.adapter.ready?.()
     this.started = true
   }
 

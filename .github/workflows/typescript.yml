@@ -34,3 +34,28 @@ jobs:
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm test
+
+  kafka:
+    # The Kafka adapter against a real broker. Linux only: the runners for the others have no Docker.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdks/typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: sdks/typescript/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: sdks/typescript/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: docker compose up -d --wait
+      - run: pnpm --filter @weft-sdk/kafka-kafkajs test
+        env:
+          WEFT_TEST_KAFKA: 127.0.0.1:9092
+      - if: failure()
+        run: docker compose logs kafka | tail -50
