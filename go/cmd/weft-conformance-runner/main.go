@@ -77,6 +77,22 @@ func main() {
 				continue
 			}
 			write(response{ID: req.ID, OK: true, Result: decode(contracts, req.Type, wire)})
+		case "messaging":
+			if contracts == nil {
+				write(response{ID: req.ID, Error: "no contracts loaded: send `load` first"})
+				continue
+			}
+			var m messagingRequest
+			if err := json.Unmarshal(line, &m); err != nil {
+				write(response{ID: req.ID, Error: "not a messaging request: " + err.Error()})
+				continue
+			}
+			result, err := messaging(contracts, m)
+			if err != nil {
+				write(response{ID: req.ID, Error: err.Error()})
+				continue
+			}
+			write(response{ID: req.ID, OK: true, Result: result})
 		case "config":
 			config, err := weft.ParseConfig(req.YAML, req.Env)
 			if err != nil {

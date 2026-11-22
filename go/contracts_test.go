@@ -25,6 +25,10 @@ func optional(f weft.FieldDef) weft.FieldDef {
 var contracts = weft.NewContracts(weft.Ir{
 	IrVersion: "0.1",
 	Package:   "t",
+	Events: []weft.EventDef{
+		{Name: "order.placed", Payload: weft.Named("t", "Order"), Key: []string{"id"}},
+		{Name: "order.cancelled", Payload: weft.Named("t", "Money")},
+	},
 	Types: []weft.TypeDef{
 		{Name: "Currency", Kind: "enum", Variants: []weft.VariantDef{{Name: "EUR"}, {Name: "GBP"}}},
 		{Name: "Money", Kind: "record", Fields: []weft.FieldDef{

@@ -3,6 +3,7 @@
  * standard input and output, and uses nothing but `@weft-sdk/core`.
  */
 import { createInterface } from "node:readline"
+import { messaging } from "./messaging.js"
 import { ConfigError, Contracts, isWeftError, parseConfig, version, type Ir, type TypeRef } from "@weft-sdk/core"
 
 const PROTOCOL = "0.1"
@@ -16,7 +17,7 @@ function need(): Contracts {
 
 type Request = { id: number; op: string; [key: string]: unknown }
 
-function handle(request: Request): unknown {
+async function handle(request: Request): Promise<unknown> {
   switch (request.op) {
     case "hello":
       return { language: "typescript", version, protocol: PROTOCOL }
@@ -47,20 +48,26 @@ function handle(request: Request): unknown {
         throw error
       }
     }
+    case "messaging":
+      return messaging(need(), request as unknown as Parameters<typeof messaging>[1])
     default:
       throw new Error(`unknown op ${request.op}`)
   }
 }
 
+// One request at a time, in the order they arrive, because some operations take a moment.
+let chain: Promise<void> = Promise.resolve()
 const lines = createInterface({ input: process.stdin })
 lines.on("line", (line) => {
   if (line.trim() === "") return
-  let id = -1
-  try {
-    const request = JSON.parse(line) as Request
-    id = request.id
-    process.stdout.write(`${JSON.stringify({ id, ok: true, result: handle(request) })}\n`)
-  } catch (error) {
-    process.stdout.write(`${JSON.stringify({ id, ok: false, error: error instanceof Error ? error.message : String(error) })}\n`)
-  }
+  chain = chain.then(async () => {
+    let id = -1
+    try {
+      const request = JSON.parse(line) as Request
+      id = request.id
+      process.stdout.write(`${JSON.stringify({ id, ok: true, result: await handle(request) })}\n`)
+    } catch (error) {
+      process.stdout.write(`${JSON.stringify({ id, ok: false, error: error instanceof Error ? error.message : String(error) })}\n`)
+    }
+  })
 })

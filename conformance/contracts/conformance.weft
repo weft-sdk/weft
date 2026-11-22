@@ -138,6 +138,8 @@ event order.placed: Order {
   key: id
 }
 
+event order.cancelled: { id: uuid, reason: string }
+
 error OutOfStock @status(409) {
   sku: string
   available: int

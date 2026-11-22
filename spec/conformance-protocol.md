@@ -23,6 +23,7 @@ Every request has an `id` (a number) and an `op`. Every response repeats the `id
 | `load` | `ir`: an array of IR documents | `{}`. Replaces the contracts the runner knows. Every later operation uses them |
 | `decode` | `type`: a type reference as in the IR; `wire`: any JSON value | See below |
 | `config` | `yaml`: the text of a weft.yaml; `env`: an object of environment variables | See below |
+| `messaging` | A scenario: see below | What happened, see below |
 
 ### `decode`
 
@@ -48,5 +49,36 @@ The runner reads the file as it would at start-up, with `env` as the environment
 ```
 
 A case compares `config` as a value, and `problems` by count and by text: each expected piece of text must be in a problem, and there must be no other problems. The wording of a problem may differ between languages.
+
+### `messaging`
+
+One scripted scenario on an **in-memory broker**, run inside the runner with its language's package. The jitter of the retry backoff is fixed at one half and the waits are recorded and skipped, so the backoff is exact (150, 300, 600, 1200 ms for the first four failures). The event is subscribed with a handler that fails as scripted, then published to.
+
+| Request field | Meaning |
+| --- | --- |
+| `event` | The event name, such as `order.placed`. The service is called `conformance` |
+| `payload` | The event's payload in wire form. If it does not decode, nothing is published and `publishError` is `InvalidInput` |
+| `rawBody` | Instead of `payload`: text put straight on the broker, bypassing validation, as another service might |
+| `topic` | The real topic name, as if `topics:` in weft.yaml said so |
+| `handler.fail` | `{ times: 2 or "always", category: one of the eight, or "Plain" }`. `Plain` is an ordinary exception, not a Weft error |
+| `subscribe` | `{ attempts, deadLetter }`: `deadLetter` is a name, or `false` to drop |
+| `publish` | `{ key, idempotencyKey, headers, delayMs, times }`: `times` publishes that often, waiting for each to be handled |
+| `dedupe` | Use the dedupe middleware |
+| `stopDuringBackoff` | The waits block until shutdown begins, and the service is stopped as soon as the handler has failed once |
+
+The result:
+
+| Field | Meaning |
+| --- | --- |
+| `publishError` | The category of the error `publish` raised, or `null` |
+| `calls`, `attempts` | How many times the handler ran, and the `attempt` it was given each time |
+| `sleeps` | The waits between attempts, in milliseconds |
+| `received` | The payload as the handler last handled it successfully, in wire form, or `null` |
+| `destinations` | Every destination a message was sent to, in order (dead letters included) |
+| `envelope` | The envelope of the first message sent: `type`, `source`, `datacontenttype`, `key` (or `null`), `hasId`, `hasTime`, `headers` |
+| `dlq` | Each dead letter: `destination`, `category`, `attempts`, `originalDestination` (the `weft-*` headers), and `sameId`: it kept the message's id |
+| `unacked` | Messages the broker never saw acknowledged |
+
+A case lists only the result fields it cares about, and for objects and arrays only the parts it names (arrays must be the same length).
 
 New operations are added with the conformance cases that need them, and listed here.

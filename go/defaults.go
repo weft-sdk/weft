@@ -16,3 +16,5 @@ const (
 	// CallAttempts is the attempts of an HTTP or gRPC call.
 	CallAttempts = 3
 )
+
+var timeNow = time.Now

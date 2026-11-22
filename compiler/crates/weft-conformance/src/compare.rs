@@ -29,6 +29,9 @@ fn normalise(v: &Value) -> Value {
 
 /// `Ok(())` if the runner's result agrees with the case, else what differs, in words.
 pub fn check(case: &Case, result: &Value) -> Result<(), String> {
+    if let Expect::Result(want) = &case.expect {
+        return subset(want, result);
+    }
     let Some(valid) = result.get("valid").and_then(Value::as_bool) else {
         return Err(format!("the answer has no `valid`: {result}"));
     };
@@ -77,6 +80,7 @@ pub fn check(case: &Case, result: &Value) -> Result<(), String> {
             "expected the config {want}, but it was rejected with {:?}",
             problems(result)
         )),
+        Expect::Result(_) => Ok(()),
         Expect::Problems(want) if valid => Err(format!(
             "expected it to be rejected ({} problem(s)), but it was accepted as {}",
             want.len(),
@@ -95,6 +99,42 @@ pub fn check(case: &Case, result: &Value) -> Result<(), String> {
                 ))
             }
         }
+    }
+}
+
+/// `got` holds everything in `want`: objects field by field (extra fields in `got` are ignored, at any
+/// depth), arrays element by element and of the same length, anything else as an equal value.
+pub fn contains(want: &Value, got: &Value) -> bool {
+    match (want, got) {
+        (Value::Object(w), Value::Object(g)) => w
+            .iter()
+            .all(|(k, v)| g.get(k).is_some_and(|x| contains(v, x))),
+        (Value::Array(w), Value::Array(g)) => {
+            w.len() == g.len() && w.iter().zip(g).all(|(a, b)| contains(a, b))
+        }
+        _ => same(want, got),
+    }
+}
+
+/// Every field of `want` is in `got`, as `contains` says.
+fn subset(want: &Value, got: &Value) -> Result<(), String> {
+    let Some(fields) = want.as_object() else {
+        return Err("a `result` expectation must be an object".into());
+    };
+    let mut wrong = Vec::new();
+    for (k, v) in fields {
+        match got.get(k) {
+            Some(g) if contains(v, g) => {}
+            Some(g) => wrong.push(format!("{k}: expected {v}, got {g}")),
+            None => wrong.push(format!(
+                "{k}: expected {v}, but the answer has no such field"
+            )),
+        }
+    }
+    if wrong.is_empty() {
+        Ok(())
+    } else {
+        Err(wrong.join("; "))
     }
 }
 

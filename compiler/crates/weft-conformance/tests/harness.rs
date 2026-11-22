@@ -167,6 +167,7 @@ fn case_key(c: &Case) -> String {
     match &c.kind {
         Kind::Decode { ty, wire } => format!("{ty}|{wire}"),
         Kind::Config { yaml, env } => format!("config|{yaml}|{env}"),
+        Kind::Op { op, args } => format!("{op}|{args}"),
     }
 }
 
@@ -181,18 +182,22 @@ impl Runner for Oracle {
                 self.loaded = true;
                 Ok(json!({}))
             }
-            op @ ("decode" | "config") => {
+            op => {
                 assert!(self.loaded, "{op} before load");
-                let k = if op == "decode" {
-                    format!("{}|{}", request["type"], request["wire"])
-                } else {
-                    format!(
+                let k = match op {
+                    "decode" => format!("{}|{}", request["type"], request["wire"]),
+                    "config" => format!(
                         "config|{}|{}",
                         request["yaml"].as_str().unwrap(),
                         request["env"]
-                    )
+                    ),
+                    other => {
+                        let mut args = request.clone();
+                        args.as_object_mut().unwrap().remove("op");
+                        format!("{other}|{args}")
+                    }
                 };
-                let expect = self.answers.get(&k).ok_or("no such case")?;
+                let expect = self.answers.get(&k).ok_or(format!("no such case: {k}"))?;
                 let honest = match expect {
                     Expect::Canonical(c) => json!({ "valid": true, "canonical": c }),
                     Expect::Issues(paths) => {
@@ -200,10 +205,10 @@ impl Runner for Oracle {
                     }
                     Expect::Config(c) => json!({ "valid": true, "config": c }),
                     Expect::Problems(p) => json!({ "valid": false, "problems": p }),
+                    Expect::Result(r) => r.clone(),
                 };
                 Ok((self.wrong)(&k, honest))
             }
-            other => Err(format!("unknown op {other}")),
         }
     }
 }
@@ -481,4 +486,24 @@ fn the_go_runner_passes_every_case() {
             .filter(|r| !r.passed)
             .collect::<Vec<_>>()
     );
+}
+
+#[test]
+fn a_result_expectation_looks_inside_objects_and_arrays_but_not_at_extra_fields() {
+    use weft_conformance::compare::contains;
+    let got =
+        json!({ "a": 1, "env": { "k": "v", "x": 2 }, "list": [{ "p": 1, "q": 2 }, { "p": 3 }] });
+    assert!(contains(&json!({ "env": { "k": "v" } }), &got));
+    assert!(contains(&json!({ "list": [{ "p": 1 }, { "p": 3 }] }), &got));
+    assert!(
+        !contains(&json!({ "list": [{ "p": 1 }] }), &got),
+        "arrays have to be the same length"
+    );
+    assert!(!contains(&json!({ "env": { "k": "other" } }), &got));
+    assert!(!contains(&json!({ "env": { "missing": 1 } }), &got));
+    assert!(
+        contains(&json!({ "a": 1.0 }), &got),
+        "numbers compare by value"
+    );
+    assert!(!contains(&json!({ "a": null }), &got));
 }
