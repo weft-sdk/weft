@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -15,11 +16,13 @@ import (
 const protocol = "0.1"
 
 type request struct {
-	ID   json.Number     `json:"id"`
-	Op   string          `json:"op"`
-	IR   []weft.Ir       `json:"ir"`
-	Type weft.TypeRef    `json:"type"`
-	Wire json.RawMessage `json:"wire"`
+	ID   json.Number       `json:"id"`
+	Op   string            `json:"op"`
+	IR   []weft.Ir         `json:"ir"`
+	Type weft.TypeRef      `json:"type"`
+	Wire json.RawMessage   `json:"wire"`
+	YAML string            `json:"yaml"`
+	Env  map[string]string `json:"env"`
 }
 
 type response struct {
@@ -74,6 +77,18 @@ func main() {
 				continue
 			}
 			write(response{ID: req.ID, OK: true, Result: decode(contracts, req.Type, wire)})
+		case "config":
+			config, err := weft.ParseConfig(req.YAML, req.Env)
+			if err != nil {
+				var ce *weft.ConfigError
+				if errors.As(err, &ce) {
+					write(response{ID: req.ID, OK: true, Result: map[string]any{"valid": false, "problems": ce.Problems}})
+				} else {
+					write(response{ID: req.ID, Error: err.Error()})
+				}
+				continue
+			}
+			write(response{ID: req.ID, OK: true, Result: map[string]any{"valid": true, "config": config}})
 		default:
 			write(response{ID: req.ID, Error: fmt.Sprintf("unknown op %s", req.Op)})
 		}

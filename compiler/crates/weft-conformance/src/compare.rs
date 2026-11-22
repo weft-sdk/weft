@@ -27,12 +27,13 @@ fn normalise(v: &Value) -> Value {
     }
 }
 
-/// `Ok(())` if the `decode` result agrees with the case, else what differs, in words.
+/// `Ok(())` if the runner's result agrees with the case, else what differs, in words.
 pub fn check(case: &Case, result: &Value) -> Result<(), String> {
-    let valid = result.get("valid").and_then(Value::as_bool);
-    match (&case.expect, valid) {
-        (_, None) => Err(format!("the answer has no `valid`: {result}")),
-        (Expect::Canonical(want), Some(true)) => {
+    let Some(valid) = result.get("valid").and_then(Value::as_bool) else {
+        return Err(format!("the answer has no `valid`: {result}"));
+    };
+    match &case.expect {
+        Expect::Canonical(want) if valid => {
             let got = result.get("canonical").unwrap_or(&Value::Null);
             if same(want, got) {
                 Ok(())
@@ -40,16 +41,16 @@ pub fn check(case: &Case, result: &Value) -> Result<(), String> {
                 Err(format!("expected canonical {want}, got {got}"))
             }
         }
-        (Expect::Canonical(want), Some(false)) => Err(format!(
+        Expect::Canonical(want) => Err(format!(
             "expected it to be valid (canonical {want}), but it was rejected with {}",
             issue_paths(result).join(", ")
         )),
-        (Expect::Issues(want), Some(true)) => Err(format!(
+        Expect::Issues(want) if valid => Err(format!(
             "expected it to be rejected with {}, but it was accepted as {}",
             want.join(", "),
             result.get("canonical").unwrap_or(&Value::Null)
         )),
-        (Expect::Issues(want), Some(false)) => {
+        Expect::Issues(want) => {
             let mut want = want.clone();
             let mut got = issue_paths(result);
             want.sort();
@@ -64,7 +65,49 @@ pub fn check(case: &Case, result: &Value) -> Result<(), String> {
                 ))
             }
         }
+        Expect::Config(want) if valid => {
+            let got = result.get("config").unwrap_or(&Value::Null);
+            if same(want, got) {
+                Ok(())
+            } else {
+                Err(format!("expected config {want}, got {got}"))
+            }
+        }
+        Expect::Config(want) => Err(format!(
+            "expected the config {want}, but it was rejected with {:?}",
+            problems(result)
+        )),
+        Expect::Problems(want) if valid => Err(format!(
+            "expected it to be rejected ({} problem(s)), but it was accepted as {}",
+            want.len(),
+            result.get("config").unwrap_or(&Value::Null)
+        )),
+        Expect::Problems(want) => {
+            let got = problems(result);
+            let each_found = want
+                .iter()
+                .all(|needle| got.iter().any(|p| p.contains(needle.as_str())));
+            if got.len() == want.len() && each_found {
+                Ok(())
+            } else {
+                Err(format!(
+                    "expected problems containing {want:?}, got {got:?}"
+                ))
+            }
+        }
     }
+}
+
+fn problems(result: &Value) -> Vec<String> {
+    result
+        .get("problems")
+        .and_then(Value::as_array)
+        .map(|a| {
+            a.iter()
+                .filter_map(|p| p.as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn issue_paths(result: &Value) -> Vec<String> {

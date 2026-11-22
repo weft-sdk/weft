@@ -1,0 +1,152 @@
+description: weft.yaml is read the same way in every language ($VAR, WEFT_* overrides, and every problem reported at once).
+cases:
+  - id: config.minimal
+    yaml: "service: orders"
+    expect: { config: { service: orders, transports: {}, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.the-documented-file
+    yaml: |
+      service: orders
+      language: typescript
+      contracts:
+        - ./contracts
+      codegen:
+        out: src/weft.gen.ts
+      transports:
+        http:
+          library: express
+          port: 3000
+        kafka:
+          library: kafkajs
+          brokers: ${KAFKA_BROKERS}
+          group: orders
+      topics:
+        order.placed: prod.orders.placed.v1
+      services:
+        payments: ${PAYMENTS_URL}
+        api: http://api-gateway:4000
+      telemetry:
+        otlp: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    env: { KAFKA_BROKERS: "k1:9092,k2:9092", PAYMENTS_URL: "http://payments", OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel:4318" }
+    expect:
+      config:
+        service: orders
+        transports:
+          http: { library: express, port: 3000 }
+          kafka: { library: kafkajs, brokers: "k1:9092,k2:9092", group: orders }
+        topics: { order.placed: prod.orders.placed.v1 }
+        services: { payments: "http://payments", api: "http://api-gateway:4000" }
+        telemetry: { otlp: "http://otel:4318" }
+
+  - id: config.interpolation-inside-a-longer-value
+    yaml: |
+      service: a
+      services:
+        db: postgres://${DB_USER}:${DB_PASS}@db:5432
+    env: { DB_USER: ann, DB_PASS: secret }
+    expect: { config: { service: a, transports: {}, topics: {}, services: { db: "postgres://ann:secret@db:5432" }, telemetry: {} } }
+
+  - id: config.every-missing-variable-is-reported-at-once
+    yaml: |
+      service: a
+      transports:
+        kafka:
+          brokers: ${KAFKA_BROKERS}
+      services:
+        payments: ${PAYMENTS_URL}
+      telemetry:
+        otlp: ${OTLP}
+    expect: { problems: [KAFKA_BROKERS, PAYMENTS_URL, OTLP] }
+
+  - id: config.an-empty-variable-is-set
+    yaml: "service: a\nservices:\n  x: ${EMPTY}"
+    env: { EMPTY: "" }
+    expect: { config: { service: a, transports: {}, topics: {}, services: { x: "" }, telemetry: {} } }
+
+  # ---- overrides ----
+  - id: config.override-a-transport-setting
+    yaml: "service: a\ntransports:\n  kafka:\n    brokers: file:9092\n    group: g"
+    env: { WEFT_KAFKA_BROKERS: "env:9092" }
+    expect: { config: { service: a, transports: { kafka: { brokers: "env:9092", group: g } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-keeps-the-type-of-a-number
+    yaml: "service: a\ntransports:\n  http:\n    port: 3000"
+    env: { WEFT_HTTP_PORT: "8080" }
+    expect: { config: { service: a, transports: { http: { port: 8080 } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-keeps-the-type-of-a-boolean
+    yaml: "service: a\ntransports:\n  kafka:\n    tls: false"
+    env: { WEFT_KAFKA_TLS: "true" }
+    expect: { config: { service: a, transports: { kafka: { tls: true } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-with-text-where-a-number-was-expected-stays-text
+    yaml: "service: a\ntransports:\n  http:\n    port: 3000"
+    env: { WEFT_HTTP_PORT: "soon" }
+    expect: { config: { service: a, transports: { http: { port: soon } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-matches-a-key-ignoring-case-and-underscores
+    yaml: "service: a\ntransports:\n  kafka:\n    clientId: x"
+    env: { WEFT_KAFKA_CLIENT_ID: "y" }
+    expect: { config: { service: a, transports: { kafka: { clientId: y } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-can-add-a-key
+    yaml: "service: a\ntransports:\n  kafka:\n    group: g"
+    env: { WEFT_KAFKA_SESSION_TIMEOUT: "30" }
+    expect: { config: { service: a, transports: { kafka: { group: g, session_timeout: "30" } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.the-longest-transport-name-wins
+    yaml: "service: a\ntransports:\n  kafka:\n    brokers: a\n  kafka_eu:\n    brokers: b"
+    env: { WEFT_KAFKA_EU_BROKERS: "eu:9092" }
+    expect: { config: { service: a, transports: { kafka: { brokers: a }, kafka_eu: { brokers: "eu:9092" } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-of-a-transport-that-is-not-in-the-file-is-ignored
+    yaml: "service: a\ntransports:\n  http:\n    port: 1"
+    env: { WEFT_MQ_HOST: "x", WEFT_LOG_LEVEL: debug }
+    expect: { config: { service: a, transports: { http: { port: 1 } }, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.override-the-service-other-services-and-telemetry
+    yaml: "service: a\nservices:\n  payments: http://p\ntelemetry:\n  otlp: http://t"
+    env: { WEFT_SERVICE: billing, WEFT_SERVICES_PAYMENTS: "http://p2", WEFT_SERVICES_NEW: "http://n", WEFT_TELEMETRY_OTLP: "http://t2" }
+    expect: { config: { service: billing, transports: {}, topics: {}, services: { payments: "http://p2", new: "http://n" }, telemetry: { otlp: "http://t2" } } }
+
+  - id: config.override-supplies-the-service-when-the-file-has-none
+    yaml: "transports: {}"
+    env: { WEFT_SERVICE: orders }
+    expect: { config: { service: orders, transports: {}, topics: {}, services: {}, telemetry: {} } }
+
+  - id: config.a-null-transport-is-empty
+    yaml: "service: a\ntransports:\n  http:\n"
+    expect: { config: { service: a, transports: { http: {} }, topics: {}, services: {}, telemetry: {} } }
+
+  # ---- problems ----
+  - id: config.service-is-required
+    yaml: "transports: {}"
+    expect: { problems: ["service is required"] }
+
+  - id: config.empty-file
+    yaml: ""
+    expect: { problems: ["service is required"] }
+
+  - id: config.sections-must-be-maps
+    yaml: "service: a\ntransports: [1]\ntopics: 3"
+    expect: { problems: ["transports must be a map", "topics must be a map"] }
+
+  - id: config.a-transport-must-be-a-map
+    yaml: "service: a\ntransports:\n  http: 5"
+    expect: { problems: ["transports.http must be a map"] }
+
+  - id: config.services-and-topics-must-be-text
+    yaml: "service: a\nservices:\n  x: 1\ntopics:\n  e: [1]"
+    expect: { problems: ["services.x must be a string", "topics.e must be a string"] }
+
+  - id: config.service-must-be-text
+    yaml: "service: [a]"
+    expect: { problems: ["service must be a string", "service is required"] }
+
+  - id: config.not-yaml
+    yaml: "service: [\n"
+    expect: { problems: ["not valid YAML"] }
+
+  - id: config.a-list-at-the-top
+    yaml: "- a\n- b"
+    expect: { problems: ["must be a map at the top level"] }
