@@ -1,0 +1,10 @@
+# Generates the test fixture the TypeScript packages read: the example contracts in spec/examples,
+# through the real compiler. Regenerate with `make ts-fixtures`.
+service: fixtures
+language: typescript
+
+contracts:
+  - ../../../spec/examples
+
+codegen:
+  out: ../packages/core/test/fixtures/examples.gen.ts

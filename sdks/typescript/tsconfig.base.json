@@ -12,6 +12,7 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "types": ["node"],
     "declaration": true,
     "noEmit": true
   }

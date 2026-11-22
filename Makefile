@@ -7,7 +7,7 @@ PNPM := pnpm --dir website
 .DEFAULT_GOAL := help
 .PHONY: help check fmt fmt-check lint test test-tsc build weft schema snapshots \
         site-install site-dev site-check site-build \
-        ts-install ts-check ts-build ts-test
+        ts-install ts-check ts-build ts-test ts-fixtures
 
 help: ## List the commands
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -68,3 +68,6 @@ ts-check: ## Type-check, build and test the TypeScript packages
 	$(TS) typecheck
 	$(TS) build
 	$(TS) test
+
+ts-fixtures: ## Regenerate the TypeScript tests' fixture from spec/examples with the real compiler
+	cd sdks/typescript/fixtures && $(CARGO) run -q --manifest-path ../../../compiler/Cargo.toml -p weft-cli -- gen
