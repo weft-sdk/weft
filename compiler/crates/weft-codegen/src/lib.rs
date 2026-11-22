@@ -1,11 +1,13 @@
 //! Code generators. One module per language; each turns checked [`weft_ir::Ir`] into source text.
 //!
-//! Only TypeScript exists so far (task P1.6).
+//! TypeScript (task P1.6) and Go (P3.7).
 
+mod go;
 mod typescript;
 
 use std::fmt;
 
+pub use go::go;
 pub use typescript::typescript;
 
 /// How TypeScript represents the contract type `int` (64-bit). From `codegen.int64` in `weft.yaml`.
@@ -38,6 +40,8 @@ pub struct Options {
     /// The transports the service uses. When any of them has a TypeScript package, the generated file
     /// also holds the typed `weft` object that wires them up. Empty means types and contracts only.
     pub transports: Vec<Transport>,
+    /// The Go package name of the generated file (`codegen.package`). Default `weftgen`.
+    pub package: Option<String>,
 }
 
 impl Default for Options {
@@ -47,6 +51,7 @@ impl Default for Options {
             generator: concat!("weft ", env!("CARGO_PKG_VERSION")).to_string(),
             service: None,
             transports: Vec::new(),
+            package: None,
         }
     }
 }

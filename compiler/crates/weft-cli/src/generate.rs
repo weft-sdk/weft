@@ -39,6 +39,26 @@ impl GenArgs {
 }
 
 const DEFAULT_OUT: &str = "src/weft.gen.ts";
+const DEFAULT_GO_OUT: &str = "weft.gen.go";
+
+/// The Go package of the generated file: the name of the folder it goes in, as a Go identifier.
+fn go_package_name(project: &std::path::Path, out: Option<&str>) -> String {
+    let folder = out
+        .and_then(|o| std::path::Path::new(o).parent())
+        .and_then(|p| p.file_name())
+        .or_else(|| project.file_name())
+        .map(|n| n.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
+    let cleaned: String = folder
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '_')
+        .collect();
+    if cleaned.is_empty() || cleaned.chars().next().is_some_and(|c| c.is_ascii_digit()) {
+        "weftgen".to_string()
+    } else {
+        cleaned
+    }
+}
 
 fn usage(message: impl std::fmt::Display) -> ExitCode {
     eprintln!("weft: {message}");
@@ -65,16 +85,17 @@ pub fn run(args: GenArgs) -> ExitCode {
         Some(l) => l.to_lowercase(),
         None => return usage("no language: set `language:` in weft.yaml or pass `--lang`"),
     };
-    match lang.as_str() {
-        "typescript" | "ts" => {}
-        "javascript" | "js" | "go" | "python" | "java" | "kotlin" | "scala" | "csharp"
-        | "fsharp" | "rust" | "ruby" | "php" | "elixir" | "swift" | "dart" => {
+    let is_go = match lang.as_str() {
+        "typescript" | "ts" => false,
+        "go" | "golang" => true,
+        "javascript" | "js" | "python" | "java" | "kotlin" | "scala" | "csharp" | "fsharp"
+        | "rust" | "ruby" | "php" | "elixir" | "swift" | "dart" => {
             return usage(format!(
-                "`weft gen` does not generate {lang} yet. TypeScript is the first language"
+                "`weft gen` does not generate {lang} yet. TypeScript and Go are built"
             ));
         }
         other => return usage(format!("unknown language `{other}`")),
-    }
+    };
 
     // Options
     let int64 = match cfg.codegen.int64.as_deref() {
@@ -97,6 +118,11 @@ pub fn run(args: GenArgs) -> ExitCode {
                 library: t.library.clone(),
             })
             .collect(),
+        package: cfg
+            .codegen
+            .package
+            .clone()
+            .or_else(|| is_go.then(|| go_package_name(dir, cfg.codegen.out.as_deref()))),
         ..Options::default()
     };
 
@@ -116,7 +142,12 @@ pub fn run(args: GenArgs) -> ExitCode {
             return exit::code(exit::CONTRACT);
         }
     };
-    let generated = match weft_codegen::typescript(&irs, &options) {
+    let result = if is_go {
+        weft_codegen::go(&irs, &options)
+    } else {
+        weft_codegen::typescript(&irs, &options)
+    };
+    let generated = match result {
         Ok(text) => text,
         Err(errors) => {
             for e in errors {
@@ -130,7 +161,7 @@ pub fn run(args: GenArgs) -> ExitCode {
     let out = match (&args.out, &cfg.codegen.out) {
         (Some(p), _) => cwd.join(p),
         (None, Some(p)) => dir.join(p),
-        (None, None) => dir.join(DEFAULT_OUT),
+        (None, None) => dir.join(if is_go { DEFAULT_GO_OUT } else { DEFAULT_OUT }),
     };
     let shown = shown_path(&out, &cwd);
     let existing = fs::read_to_string(&out).ok();

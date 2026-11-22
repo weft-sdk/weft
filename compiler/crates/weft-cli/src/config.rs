@@ -45,6 +45,8 @@ pub struct TransportConfig {
 pub struct CodegenConfig {
     pub out: Option<String>,
     pub int64: Option<String>,
+    /// The Go package name of the generated file.
+    pub package: Option<String>,
 }
 
 /// A config file and the folder that relative paths in it are relative to.
