@@ -80,7 +80,12 @@ pub fn run(args: InitArgs) -> ExitCode {
     match init(&args, &cwd) {
         Ok(install) => {
             install_packages(&install, args.no_install);
-            generate::run(generate::GenArgs::defaults())
+            let generated = generate::run(generate::GenArgs::defaults());
+            // The generated Go file imports the adapters, and their dependencies are only fetched now.
+            if install.manager == Some(PackageManager::Go) && !args.no_install {
+                tidy_go_modules(&install.dir);
+            }
+            generated
         }
         Err(Failure::Usage(m)) => usage(m),
         Err(Failure::Cancelled) => {
@@ -148,6 +153,24 @@ fn install_packages(install: &Install, skip: bool) {
         Err(e) => eprintln!(
             "weft: could not run `{program}` ({e}). Run `{command}` yourself; the rest of the setup is done"
         ),
+    }
+}
+
+/// `go mod tidy`, so the imports of the generated file have their modules. Like the install, it never fails
+/// `weft init`.
+fn tidy_go_modules(dir: &Path) {
+    match std::process::Command::new("go")
+        .args(["mod", "tidy"])
+        .current_dir(dir)
+        .status()
+    {
+        Ok(status) if status.success() => println!("✓ go mod tidy"),
+        Ok(status) => {
+            eprintln!("weft: `go mod tidy` failed ({status}). Run it yourself before building")
+        }
+        Err(e) => {
+            eprintln!("weft: could not run `go` ({e}). Run `go mod tidy` yourself before building")
+        }
     }
 }
 

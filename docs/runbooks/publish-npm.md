@@ -50,5 +50,5 @@ Change the version in each `package.json` (and `version` in `packages/core/src/v
 
 ## Not covered here
 
-- The **Go module** is released by pushing a tag: `go/v0.1.0` (the module is in the `go/` folder, so its tags carry that prefix). Do this once the repository is public, because the Go proxy fetches it from GitHub.
+- The **Go module** is released by pushing a tag: `git tag go/v0.1.1 && git push origin go/v0.1.1` (the module is in the `go/` folder, so its tags carry that prefix). `go/v0.1.0` was pushed on 2026-11-23, and `weft init` in a clean Go module builds against it. Never move or reuse a tag: the Go proxy caches it.
 - The **`weft` binary** (cargo-dist, Homebrew, `npx @weft-sdk/cli`) is a separate piece of work.
