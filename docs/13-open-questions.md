@@ -5,4 +5,3 @@ Decisions waiting on the maintainer. Do not build around an open question a task
 | # | Question | Blocks | Notes |
 | --- | --- | --- | --- |
 | Q3 | Domain | Maven group `dev.weft`, Go vanity import path, website hosting URL | weft.dev looked unregistered on 2026-11-20. Maintainer deferred buying it |
-| Q4 | Cloud auth provider: WorkOS or Clerk | Weft Cloud only | Not blocking anything before Weft Cloud |

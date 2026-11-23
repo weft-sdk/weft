@@ -74,7 +74,7 @@ Rust for everything shared. Native code for each language package. One conforman
 | Graph rendering | React Flow; Sigma.js / WebGL for large maps |
 | Charts | to decide with UI design |
 | Embedding UI in binary | rust-embed |
-| Cloud auth | WorkOS or Clerk (SSO, SAML) — to decide |
+| Dashboard login | An auth library (Auth.js or Better Auth) with GitHub as the first provider; none for the local dashboard. Company SSO later ([ADR 0023](decisions/0023-dashboard-login.md)) |
 | Deploy | Docker image, Helm chart |
 
 ## Website
