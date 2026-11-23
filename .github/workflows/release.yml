@@ -21,7 +21,8 @@ jobs:
         include:
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, archive: tar.gz }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, archive: tar.gz }
-          - { target: x86_64-apple-darwin, os: macos-13, archive: tar.gz }
+          # Built on Apple silicon: macos-13, the last Intel runner, is retired. It cannot run its own result, so no smoke test.
+          - { target: x86_64-apple-darwin, os: macos-latest, archive: tar.gz, smoke: false }
           - { target: aarch64-apple-darwin, os: macos-latest, archive: tar.gz }
           - { target: x86_64-pc-windows-msvc, os: windows-latest, archive: zip }
     runs-on: ${{ matrix.os }}
@@ -61,6 +62,7 @@ jobs:
           $hash = (Get-FileHash "$name.zip" -Algorithm SHA256).Hash.ToLower()
           "$hash  $name.zip" | Out-File -Encoding ascii "$name.zip.sha256"
       - name: Smoke test (runs the binary that was built)
+        if: matrix.smoke != false
         shell: bash
         run: |
           if [ "${{ matrix.archive }}" = "zip" ]; then
