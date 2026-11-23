@@ -19,9 +19,9 @@ pub struct GenArgs {
     #[arg(long)]
     out: Option<PathBuf>,
     /// Write nothing. Exit with 1 if the generated file is missing or out of date (for CI).
-    #[arg(long)]
+    #[arg(long, conflicts_with = "watch")]
     check: bool,
-    /// Regenerate whenever a contract changes. Not available yet.
+    /// Keep running, and regenerate whenever `weft.yaml` or a contract changes. Stop with Ctrl-C.
     #[arg(long)]
     watch: bool,
 }
@@ -66,9 +66,71 @@ fn usage(message: impl std::fmt::Display) -> ExitCode {
 }
 
 pub fn run(args: GenArgs) -> ExitCode {
-    if args.watch {
-        return usage("`weft gen --watch` is not available yet");
+    if !args.watch {
+        return generate(&args);
     }
+    // The first run decides whether there is anything to watch: no weft.yaml, or a bad option, ends it.
+    let first = generate(&args);
+    if first == exit::code(exit::USAGE) {
+        return first;
+    }
+    let Ok(cwd) = std::env::current_dir() else {
+        return first;
+    };
+    println!("Watching for changes. Press Ctrl-C to stop.");
+    let mut seen = fingerprint(&cwd);
+    loop {
+        std::thread::sleep(POLL);
+        let now = fingerprint(&cwd);
+        if now == seen {
+            continue;
+        }
+        // An editor may still be writing: wait until the files stop changing, then generate once.
+        let mut settled = now;
+        loop {
+            std::thread::sleep(SETTLE);
+            let again = fingerprint(&cwd);
+            if again == settled {
+                break;
+            }
+            settled = again;
+        }
+        seen = settled;
+        println!("\nChange detected.");
+        // A broken contract is reported and watching goes on: the next save may fix it.
+        generate(&args);
+    }
+}
+
+/// How often the files are looked at, and how long they must stay unchanged before generating.
+const POLL: std::time::Duration = std::time::Duration::from_millis(300);
+const SETTLE: std::time::Duration = std::time::Duration::from_millis(100);
+
+/// What `--watch` looks at: `weft.yaml` and every contract file, each with its modified time and size.
+/// A file that appears, goes away or is edited changes the result.
+fn fingerprint(cwd: &std::path::Path) -> Vec<(PathBuf, Option<std::time::SystemTime>, u64)> {
+    let mut files = Vec::new();
+    if let Ok(loaded) = crate::config::load(cwd) {
+        files.push(loaded.dir.join("weft.yaml"));
+    }
+    if let Ok(project) = project::load(cwd) {
+        files.extend(crate::files::find_weft_files(&project.roots).unwrap_or_default());
+    }
+    files
+        .into_iter()
+        .map(|f| {
+            let meta = fs::metadata(&f).ok();
+            (
+                f,
+                meta.as_ref().and_then(|m| m.modified().ok()),
+                meta.map_or(0, |m| m.len()),
+            )
+        })
+        .collect()
+}
+
+/// One run of `weft gen`.
+fn generate(args: &GenArgs) -> ExitCode {
     let cwd = match std::env::current_dir() {
         Ok(d) => d,
         Err(e) => return usage(e),

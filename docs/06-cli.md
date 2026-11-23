@@ -69,7 +69,7 @@ Reads the contracts named in `weft.yaml`, checks them, and writes the typed code
 - **Languages.** TypeScript and Go. `weft gen --lang go` writes `weft.gen.go` (default; `codegen.out` changes it), in the package named by `codegen.package` or, if that is not set, by the folder it is written to.
 - **The typed `weft` object.** For the transports in `weft.yaml` that have a package for the language (TypeScript: `http` on `express`, `kafka` on `kafkajs`; Go: `http` on `nethttp`, `kafka` on `franz`), the file also wires them up and types them from the contracts, using `service:` to know which package's routes this service serves. [SDK design](04-sdk-design.md#typescript) has the details.
 - `--check` writes nothing and exits with 1 if the file is missing or out of date (for CI).
-- `--watch` regenerates on save.
+- `--watch` runs once, then keeps running and regenerates whenever `weft.yaml` or a contract file changes (saved, added or removed). It waits until the files stop changing, so a half-written save does not trigger a run. A broken contract is reported and the watcher keeps going; the next good save regenerates. It looks at file times a few times a second rather than using the system's file events, so it behaves the same everywhere. Stop it with Ctrl-C. Not combined with `--check`; with no `weft.yaml` it exits with 2.
 
 For TypeScript the file holds the types of every package (one `namespace` per package, so `orders.Order`), a per-package map from event name to payload type, and the checked contracts as a constant for the runtime to read ([ADR 0021](decisions/0021-generated-code-embeds-the-ir.md)).
 
