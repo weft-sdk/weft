@@ -6,6 +6,7 @@ use std::path::Path;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Language {
     TypeScript,
+    Go,
 }
 
 impl Language {
@@ -13,6 +14,7 @@ impl Language {
     pub fn id(self) -> &'static str {
         match self {
             Language::TypeScript => "typescript",
+            Language::Go => "go",
         }
     }
 
@@ -20,6 +22,7 @@ impl Language {
     pub fn parse(name: &str) -> Option<Language> {
         match name.to_lowercase().as_str() {
             "typescript" | "ts" => Some(Language::TypeScript),
+            "go" | "golang" => Some(Language::Go),
             _ => None,
         }
     }
@@ -29,6 +32,7 @@ impl fmt::Display for Language {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Language::TypeScript => f.write_str("TypeScript"),
+            Language::Go => f.write_str("Go"),
         }
     }
 }
@@ -40,6 +44,8 @@ pub enum PackageManager {
     Yarn,
     Bun,
     Deno,
+    /// Go modules: `go get`.
+    Go,
 }
 
 impl fmt::Display for PackageManager {
@@ -50,6 +56,7 @@ impl fmt::Display for PackageManager {
             PackageManager::Yarn => "yarn",
             PackageManager::Bun => "bun",
             PackageManager::Deno => "deno",
+            PackageManager::Go => "go",
         })
     }
 }
@@ -59,6 +66,7 @@ impl PackageManager {
     pub fn add_command(self, packages: &[String]) -> (String, Vec<String>) {
         let mut args: Vec<String> = match self {
             PackageManager::Npm => vec!["install".into()],
+            PackageManager::Go => vec!["get".into()],
             PackageManager::Deno => vec!["add".into()],
             _ => vec!["add".into()],
         };
@@ -83,11 +91,21 @@ pub struct Detected {
 /// Look at the files in `dir`. An empty folder detects nothing.
 pub fn detect(dir: &Path) -> Detected {
     let has = |name: &str| dir.join(name).exists();
-    let language =
-        (has("package.json") || has("tsconfig.json") || has("deno.json") || has("deno.jsonc"))
-            .then_some(Language::TypeScript);
+    let typescript =
+        has("package.json") || has("tsconfig.json") || has("deno.json") || has("deno.jsonc");
+    // A folder with both is treated as TypeScript: a Go module with a package.json for tooling is rarer than
+    // the reverse. `--lang go` overrides.
+    let language = if typescript {
+        Some(Language::TypeScript)
+    } else if has("go.mod") {
+        Some(Language::Go)
+    } else {
+        None
+    };
     // Lock files are the clearest sign of which tool the project uses.
-    let package_manager = if has("pnpm-lock.yaml") {
+    let package_manager = if language == Some(Language::Go) {
+        Some(PackageManager::Go)
+    } else if has("pnpm-lock.yaml") {
         Some(PackageManager::Pnpm)
     } else if has("yarn.lock") {
         Some(PackageManager::Yarn)
