@@ -90,3 +90,7 @@ If two finished branches both changed Current status, the second to merge rebase
 - Anything that costs money.
 
 Runbook for one of these: [publishing to npm](runbooks/publish-npm.md).
+
+## CI minutes
+
+The repository is private, so GitHub gives 2,000 free Actions minutes a month, and macOS minutes count ten times and Windows minutes twice. So every change runs on Linux and Windows (Windows has caught real bugs), macOS runs weekly and by hand (Actions › the workflow › Run workflow), and a newer push cancels an older unfinished run. Set a $0 budget for Actions in the organisation's billing settings so that running out blocks runs rather than charging. If the repository becomes public, Actions are free and this can go back to all three systems.

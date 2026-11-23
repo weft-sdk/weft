@@ -7,6 +7,17 @@ on:
   pull_request:
     paths: ["conformance/**", "compiler/**", "sdks/typescript/**", "go/**", "spec/**", ".github/workflows/conformance.yml"]
 
+  # A weekly run on every system (macOS included), and a manual one: macOS minutes cost ten times as much,
+  # so it is not run for every change.
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+# A newer push to the same branch makes an older, unfinished run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
