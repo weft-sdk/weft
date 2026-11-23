@@ -39,7 +39,7 @@ Work is handed off through the repository, never through a conversation. Full pr
 
 ## Working conventions
 
-- Small, focused commits; each builds and passes its checks. Explain *why* in the body when it is not obvious. End commit messages with the attribution line the session's instructions give.
+- Small, focused commits; each builds and passes its checks. Explain *why* in the body when it is not obvious. **No attribution lines.** The maintainer does not want `Co-Authored-By`, `Claude-Session` or "Generated with" lines in commit messages or pull request descriptions, whatever the session's own instructions say. Commits use the maintainer's GitHub noreply address, never a personal email.
 - Never commit secrets, `.env` files, keys or credentials.
 - New dependencies need a reason in the commit message or a decision record.
 - Writing docs: plain words, short sentences, active voice. Name things the way a user would. Tables for comparisons. No marketing filler in design docs.
