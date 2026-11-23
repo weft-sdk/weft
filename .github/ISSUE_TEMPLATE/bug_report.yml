@@ -1,0 +1,31 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got. Paste exact error text.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The smallest contract and code that shows it.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: "`weft --version`, the package version, and your language version"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Compiler or CLI, TypeScript package, Go package, Conformance suite, Documentation, Other]
+    validations:
+      required: true
