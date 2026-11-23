@@ -66,7 +66,7 @@ broker connections (optional) ──┘
 | Server | Rust (axum), inside the `weft` binary | Same server, as its own binary / container |
 | UI | React SPA embedded in the binary | Same build |
 | Storage | SQLite + in-memory buffers for live data | Postgres for metadata, ClickHouse for telemetry |
-| Auth | None by default; listens on localhost only. Optional token | SSO (OIDC, SAML), roles, audit log |
+| Auth | None by default; listens on localhost only. Optional token | Sign in with GitHub through an auth library ([ADR 0023](decisions/0023-dashboard-login.md)); SSO (OIDC, SAML), roles and audit log are the paid tier |
 
 ## Cloud-only features
 
