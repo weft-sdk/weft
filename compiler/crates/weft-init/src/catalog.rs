@@ -1,4 +1,4 @@
-//! The thirteen transports and, for TypeScript, the libraries Weft can run under each ([05-languages.md]).
+//! The thirteen transports and, for each language, the libraries Weft can run under each ([05-languages.md]).
 //!
 //! [05-languages.md]: ../../../../docs/05-languages.md
 
@@ -123,10 +123,74 @@ const TYPESCRIPT: &[Transport] = &[
     ),
 ];
 
+const GO: &[Transport] = &[
+    t(
+        "http",
+        "HTTP",
+        Request,
+        &[
+            lib("nethttp", "net/http"),
+            lib("chi", "chi"),
+            lib("gin", "gin"),
+            lib("echo", "echo"),
+            lib("fiber", "fiber"),
+        ],
+    ),
+    t("gql", "GraphQL", Request, &[lib("gqlgen", "gqlgen")]),
+    t(
+        "grpc",
+        "gRPC",
+        Request,
+        &[lib("grpc-go", "grpc-go"), lib("connect-go", "connect-go")],
+    ),
+    t("rpc", "Typed RPC", Request, &[]),
+    t(
+        "ws",
+        "WebSockets",
+        Realtime,
+        &[
+            lib("gorilla", "gorilla/websocket"),
+            lib("coder", "coder/websocket"),
+        ],
+    ),
+    t("sse", "Server-sent events", Realtime, &[]),
+    t(
+        "kafka",
+        "Kafka",
+        Messaging,
+        &[
+            lib("franz", "franz-go"),
+            lib("sarama", "sarama"),
+            lib("kafka-go", "kafka-go"),
+        ],
+    ),
+    t("mq", "RabbitMQ", Messaging, &[lib("amqp091", "amqp091-go")]),
+    t("nats", "NATS", Messaging, &[lib("nats", "nats.go")]),
+    t("redis", "Redis", Messaging, &[lib("go-redis", "go-redis")]),
+    t(
+        "cloud",
+        "Cloud queues",
+        Messaging,
+        &[
+            lib("aws-sdk", "AWS SDK"),
+            lib("google-cloud", "Google Cloud"),
+            lib("azure-sdk", "Azure SDK"),
+        ],
+    ),
+    t("mqtt", "MQTT", Messaging, &[lib("paho", "paho")]),
+    t(
+        "pulsar",
+        "Pulsar",
+        Messaging,
+        &[lib("pulsar-client", "pulsar-client-go")],
+    ),
+];
+
 /// The transports available for a language, in the order they are offered.
 pub fn transports(language: Language) -> &'static [Transport] {
     match language {
         Language::TypeScript => TYPESCRIPT,
+        Language::Go => GO,
     }
 }
 
@@ -149,7 +213,12 @@ pub fn library(
 /// each transport that has a Weft package for its library, that package and the library itself.
 /// `chosen` is `(transport id, library id)`. Transports with no Weft package yet add nothing.
 pub fn packages(language: Language, chosen: &[(String, String)]) -> Vec<String> {
-    let Language::TypeScript = language;
+    if language == Language::Go {
+        // One module holds the core and every adapter ([ADR 0022]); the libraries come with it.
+        //
+        // [ADR 0022]: ../../../../docs/decisions/0022-go-package-lives-in-go.md
+        return vec!["github.com/weft-sdk/weft/go@latest".to_string()];
+    }
     let mut out = vec!["@weft-sdk/core".to_string()];
     for (transport, library) in chosen {
         let (adapter, library_package) = match (transport.as_str(), library.as_str()) {

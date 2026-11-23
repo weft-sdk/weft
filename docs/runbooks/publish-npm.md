@@ -28,7 +28,11 @@ pnpm --filter @weft-sdk/http-express publish --access public
 pnpm --filter @weft-sdk/kafka-kafkajs publish --access public
 ```
 
+Do it from a clean checkout of `main`: pnpm refuses to publish from another branch ("publish-branch") or with uncommitted changes (`ERR_PNPM_GIT_UNCLEAN`). Do not turn those checks off.
+
 `pnpm publish` runs the build first (`prepublishOnly`), replaces `workspace:^` in the adapters' peer dependencies with `^0.1.0`, and asks for your one-time password. `--access public` is needed the first time, because scoped packages default to private.
+
+**New packages are reviewed first.** For a package that has never been published, npm shows a placeholder version (`0.0.0-stage`, "Temporary Holding Version") while it reviews the real one. The terminal still says `✅ Published`. It took from a few minutes to under half an hour for the first three. Publish `core` first and wait until `npm view @weft-sdk/core version` prints `0.1.0` before relying on it; do not publish again while you wait.
 
 ## Check it worked
 

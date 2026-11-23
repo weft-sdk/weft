@@ -114,7 +114,10 @@ impl From<InquireError> for Failure {
 
 /// What to install once the files are written.
 struct Install {
+    /// The package manager the project already uses, if it is one for this language.
     manager: Option<PackageManager>,
+    /// The one to name in the "install it yourself" message when there is none.
+    fallback: PackageManager,
     packages: Vec<String>,
     /// Where the project is, so the package manager runs there.
     dir: std::path::PathBuf,
@@ -125,7 +128,7 @@ struct Install {
 /// manager, `--no-install`, or an install that failed, for example because the packages are not
 /// published yet).
 fn install_packages(install: &Install, skip: bool) {
-    let manager = install.manager.unwrap_or(PackageManager::Npm);
+    let manager = install.manager.unwrap_or(install.fallback);
     let (program, args) = manager.add_command(&install.packages);
     let command = format!("{program} {}", args.join(" "));
     let Some(detected) = install.manager.filter(|_| !skip) else {
@@ -152,7 +155,7 @@ fn init(args: &InitArgs, cwd: &Path) -> Result<Install, Failure> {
     let detected = detect(cwd);
     let language = match args.lang.as_deref() {
         Some(name) => Language::parse(name).ok_or_else(|| {
-            format!("`weft init` does not set up {name} yet. TypeScript is the first language")
+            format!("`weft init` does not set up {name} yet. TypeScript and Go are built")
         })?,
         None => detected.language.unwrap_or(Language::TypeScript),
     };
@@ -263,7 +266,11 @@ fn init(args: &InitArgs, cwd: &Path) -> Result<Install, Failure> {
         language,
         service,
         contracts,
-        out: "src/weft.gen.ts".to_string(),
+        out: match language {
+            Language::TypeScript => "src/weft.gen.ts",
+            Language::Go => "weft.gen.go",
+        }
+        .to_string(),
         transports: picked,
     };
 
@@ -273,7 +280,11 @@ fn init(args: &InitArgs, cwd: &Path) -> Result<Install, Failure> {
         .map_err(|e| {
             format!("the example contract does not check (this is a bug in weft init): {e:?}")
         })?;
-    if let Err(errors) = weft_codegen::typescript(&irs, &weft_codegen::Options::default()) {
+    let checked = match language {
+        Language::TypeScript => weft_codegen::typescript(&irs, &weft_codegen::Options::default()),
+        Language::Go => weft_codegen::go(&irs, &weft_codegen::Options::default()),
+    };
+    if let Err(errors) = checked {
         let m: Vec<String> = errors.iter().map(ToString::to_string).collect();
         return Err(Failure::Usage(format!(
             "the service name `{}` cannot be used: {}",
@@ -308,8 +319,18 @@ fn init(args: &InitArgs, cwd: &Path) -> Result<Install, Failure> {
         "✓ Wrote {} (example)",
         crate::project::shown_path(&contract_path, cwd)
     );
+    // A package manager only counts when it is for the language being set up: `--lang go` in a folder with a
+    // package.json must not run npm.
+    let for_go = language == Language::Go;
     Ok(Install {
-        manager: detected.package_manager,
+        manager: detected
+            .package_manager
+            .filter(|pm| (*pm == PackageManager::Go) == for_go),
+        fallback: if for_go {
+            PackageManager::Go
+        } else {
+            PackageManager::Npm
+        },
         packages: packages(language, &choices.transports),
         dir: cwd.to_path_buf(),
     })

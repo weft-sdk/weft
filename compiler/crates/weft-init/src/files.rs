@@ -11,7 +11,7 @@ pub struct Choices {
     pub service: String,
     /// Where contracts live, as written in `weft.yaml`: `./contracts`.
     pub contracts: String,
-    /// Where generated code goes: `src/weft.gen.ts`.
+    /// Where generated code goes: `src/weft.gen.ts` for TypeScript, `weft.gen.go` for Go.
     pub out: String,
     /// Each chosen transport and its library (empty for transports that have none).
     pub transports: Vec<(String, String)>,

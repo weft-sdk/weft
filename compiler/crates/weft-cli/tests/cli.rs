@@ -729,7 +729,7 @@ fn init_rejects_bad_input_and_writes_nothing() {
             "is not a HTTP library. Choose one of: express, fastify, hono, nestjs",
         ),
         (&["--sse", "x"], "has no library to choose"),
-        (&["--lang", "go"], "does not set up go yet"),
+        (&["--lang", "cobol"], "does not set up cobol yet"),
         (&["--contracts", "x.weft"], "is a folder"),
     ];
     for (i, (flags, needle)) in cases.iter().enumerate() {
@@ -1104,4 +1104,86 @@ fn gen_watch_without_a_project_exits_with_a_usage_error_and_check_cannot_be_comb
     assert_eq!(code(&o), 2, "{}", text(&o));
     let o = weft(&["gen", "--watch", "--check"], &dir);
     assert_eq!(code(&o), 2, "{}", text(&o));
+}
+
+// ---- weft init for Go ----
+
+#[test]
+fn init_detects_a_go_module_and_sets_up_go() {
+    let dir = empty("init_go");
+    fs::write(
+        dir.join("go.mod"),
+        "module example.com/init_go\n\ngo 1.26\n",
+    )
+    .unwrap();
+    let o = weft(
+        &["init", "--yes", "--http", "--kafka", "--no-install"],
+        &dir,
+    );
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let t = text(&o);
+    assert!(t.contains("Detected: Go (go)"), "{t}");
+    assert!(t.contains("Wrote weft.gen.go"), "{t}");
+    assert!(
+        t.contains("Next: install the packages with `go get github.com/weft-sdk/weft/go@latest`"),
+        "{t}"
+    );
+    let yaml = fs::read_to_string(dir.join("weft.yaml")).unwrap();
+    assert!(
+        yaml.contains("language: go")
+            && yaml.contains("out: weft.gen.go")
+            && yaml.contains("library: nethttp")
+            && yaml.contains("library: franz"),
+        "{yaml}"
+    );
+    let gen = fs::read_to_string(dir.join("weft.gen.go")).unwrap();
+    assert!(
+        gen.contains("package init_go") || gen.contains("package initgo"),
+        "{gen}"
+    );
+    assert_eq!(code(&weft(&["gen", "--check"], &dir)), 0);
+}
+
+#[test]
+fn init_lang_go_works_in_an_empty_folder_and_offers_go_libraries() {
+    let dir = empty("init_go_flag");
+    let o = weft(&["init", "--yes", "--lang", "go", "--http", "chi"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    // No go.mod here, so nothing is installed, and the hint is for Go and not npm.
+    assert!(
+        text(&o).contains("`go get github.com/weft-sdk/weft/go@latest`"),
+        "{}",
+        text(&o)
+    );
+    assert!(fs::read_to_string(dir.join("weft.yaml"))
+        .unwrap()
+        .contains("library: chi"));
+    // A TypeScript library is not a Go library, and nothing is written.
+    let dir = empty("init_go_bad_lib");
+    let o = weft(
+        &["init", "--yes", "--lang", "go", "--http", "express"],
+        &dir,
+    );
+    assert_eq!(code(&o), 2, "{}", text(&o));
+    assert!(text(&o).contains("not a HTTP library"), "{}", text(&o));
+    assert!(!dir.join("weft.yaml").exists());
+}
+
+#[test]
+fn init_prefers_typescript_when_a_folder_has_both() {
+    let dir = empty("init_go_and_ts");
+    fs::write(dir.join("go.mod"), "module x\n").unwrap();
+    fs::write(dir.join("package.json"), "{}").unwrap();
+    let o = weft(&["init", "--yes", "--no-install"], &dir);
+    assert!(text(&o).contains("Detected: TypeScript"), "{}", text(&o));
+    // `--lang go` in that folder names `go get`, not npm.
+    let dir = empty("init_go_in_ts_folder");
+    fs::write(dir.join("package.json"), "{}").unwrap();
+    let o = weft(&["init", "--yes", "--lang", "go"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    assert!(
+        text(&o).contains("`go get github.com/weft-sdk/weft/go@latest`"),
+        "{}",
+        text(&o)
+    );
 }
