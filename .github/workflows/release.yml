@@ -36,6 +36,10 @@ jobs:
         with:
           workspaces: compiler
           key: ${{ matrix.target }}
+      # The toolchain is pinned by compiler/rust-toolchain.toml, so the target is added for that one.
+      - name: Add the target
+        working-directory: compiler
+        run: rustup target add ${{ matrix.target }}
       - name: Build
         working-directory: compiler
         run: cargo build --release --locked -p weft-cli --target ${{ matrix.target }}
