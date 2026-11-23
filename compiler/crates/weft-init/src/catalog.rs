@@ -228,6 +228,10 @@ pub fn packages(language: Language, chosen: &[(String, String)]) -> Vec<String> 
         };
         out.push(adapter.to_string());
         out.push(library_package.to_string());
+        // Express ships no types, and the generated file imports them.
+        if library_package == "express" {
+            out.push("@types/express".to_string());
+        }
     }
     out
 }

@@ -34,7 +34,7 @@ Detected: TypeScript (pnpm)
 ? WebSocket library?         › Socket.io      (ws)
 ? Where do contracts live?   › ./contracts    (git repo, Weft Cloud)
 
-✓ pnpm add @weft-sdk/core @weft-sdk/http-express @weft-sdk/gql-apollo @weft-sdk/kafka-kafkajs @weft-sdk/ws-socketio
+✓ pnpm add @weft-sdk/core @weft-sdk/http-express @types/express @weft-sdk/gql-apollo @weft-sdk/kafka-kafkajs @weft-sdk/ws-socketio
 ✓ Wrote weft.yaml
 ✓ Wrote contracts/orders.weft (example)
 ✓ Wrote src/weft.gen.ts

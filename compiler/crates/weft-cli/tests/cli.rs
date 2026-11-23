@@ -800,7 +800,7 @@ fn init_without_a_package_manager_prints_the_install_command() {
     assert_eq!(code(&o), 0, "{}", text(&o));
     assert!(
         text(&o).contains(
-            "Next: install the packages with `npm install @weft-sdk/core @weft-sdk/http-express express @weft-sdk/kafka-kafkajs kafkajs`"
+            "Next: install the packages with `npm install @weft-sdk/core @weft-sdk/http-express express @types/express @weft-sdk/kafka-kafkajs kafkajs`"
         ),
         "{}",
         text(&o)
@@ -882,7 +882,7 @@ fn init_installs_with_the_detected_package_manager() {
     let log = fs::read_to_string(dir.join("pnpm.log")).unwrap();
     assert!(
         log.trim_end()
-            .ends_with("add @weft-sdk/core @weft-sdk/http-express express"),
+            .ends_with("add @weft-sdk/core @weft-sdk/http-express express @types/express"),
         "{log}"
     );
     assert!(
