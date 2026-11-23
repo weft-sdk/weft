@@ -294,9 +294,7 @@ fn gen_for_a_language_that_is_not_built_yet_says_so() {
 }
 
 #[test]
-fn gen_watch_and_git_sources_say_they_are_not_available() {
-    let dir = project("gen_not_yet", YAML);
-    assert_eq!(code(&weft(&["gen", "--watch"], &dir)), 2);
+fn gen_git_sources_say_they_are_not_available() {
     let dir = project("gen_git", "language: typescript\ncontracts:\n  - git: github.com/larder/contracts\n    packages:\n      payments: ^1.0\n");
     let o = weft(&["gen"], &dir);
     assert_eq!(code(&o), 2);
@@ -1037,4 +1035,73 @@ fn check_json_keeps_errors_off_stdout() {
         "stdout should be empty: {}",
         String::from_utf8_lossy(&o.stdout)
     );
+}
+
+// ---- weft gen --watch ----
+
+/// Wait up to 20 seconds for `ready` to hold.
+fn wait_until(what: &str, mut ready: impl FnMut() -> bool) {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+    while !ready() {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "timed out waiting for {what}"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+}
+
+#[test]
+fn gen_watch_regenerates_when_a_contract_changes_and_survives_a_broken_save() {
+    let dir = project("gen_watch", YAML);
+    let out = dir.join("src/weft.gen.ts");
+    /// Stops the watcher even when an assertion fails.
+    struct Watcher(std::process::Child);
+    impl Drop for Watcher {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+    let mut child = Watcher(
+        Command::new(env!("CARGO_BIN_EXE_weft"))
+            .args(["gen", "--watch"])
+            .current_dir(&dir)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    let read = |p: &Path| fs::read_to_string(p).unwrap_or_default();
+
+    // The first run writes the file.
+    wait_until("the first generation", || read(&out).contains("namespace"));
+
+    // An edit is picked up.
+    let edited = ORDERS.replace("type Order {", "type Order {\n  watched_field: string");
+    assert_ne!(edited, ORDERS, "the test contract has no `type Order {{`");
+    write_contract(&dir, &edited);
+    wait_until("the edit", || read(&out).contains("watched_field"));
+
+    // A broken contract changes nothing and does not stop the watcher...
+    write_contract(&dir, "package orders\ntype Broken { x: nope }\n");
+    std::thread::sleep(std::time::Duration::from_millis(1500));
+    assert!(
+        read(&out).contains("watched_field"),
+        "a broken contract must not touch the output"
+    );
+
+    // ...and the next good save is still picked up.
+    write_contract(&dir, &edited.replace("watched_field", "fixed_field"));
+    wait_until("the fix", || read(&out).contains("fixed_field"));
+    assert!(child.0.try_wait().unwrap().is_none(), "the watcher stopped");
+}
+
+#[test]
+fn gen_watch_without_a_project_exits_with_a_usage_error_and_check_cannot_be_combined() {
+    let dir = scratch("gen_watch_none");
+    let o = weft(&["gen", "--watch"], &dir);
+    assert_eq!(code(&o), 2, "{}", text(&o));
+    let o = weft(&["gen", "--watch", "--check"], &dir);
+    assert_eq!(code(&o), 2, "{}", text(&o));
 }
