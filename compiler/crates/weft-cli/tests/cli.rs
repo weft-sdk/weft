@@ -1187,3 +1187,37 @@ fn init_prefers_typescript_when_a_folder_has_both() {
         text(&o)
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn init_for_go_runs_go_get_then_go_mod_tidy_after_generating() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = empty("init_go_tidy");
+    fs::write(dir.join("go.mod"), "module example.com/init_go_tidy\n").unwrap();
+    let bin = dir.join("fake-bin");
+    fs::create_dir_all(&bin).unwrap();
+    let script = bin.join("go");
+    // Records each call, and whether the generated file existed when it ran.
+    fs::write(
+        &script,
+        format!(
+            "#!/bin/sh\necho \"$@ | gen=$(test -f weft.gen.go && echo yes || echo no)\" >> \"{}/go.log\"\n",
+            dir.display()
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    let o = weft_with_path(&["init", "--yes", "--http", "--kafka"], &dir, &bin);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let log = fs::read_to_string(dir.join("go.log")).unwrap();
+    let lines: Vec<&str> = log.lines().collect();
+    assert_eq!(
+        lines,
+        [
+            "get github.com/weft-sdk/weft/go@latest | gen=no",
+            "mod tidy | gen=yes"
+        ],
+        "{log}"
+    );
+    assert!(text(&o).contains("✓ go mod tidy"), "{}", text(&o));
+}
