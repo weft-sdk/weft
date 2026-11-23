@@ -341,6 +341,19 @@ The CLI is documented in [docs/06-cli.md](docs/06-cli.md), including the `weft.y
 
 <br>
 
+## Related repositories
+
+| Repository | What it is |
+| --- | --- |
+| [**examples**](https://github.com/weft-sdk/examples) | Runnable projects: a TypeScript service and a Go service that share one contract over HTTP and Kafka |
+| [**action**](https://github.com/weft-sdk/action) | A GitHub Action that runs `weft check`, `weft gen --check` and `weft fmt --check` on pull requests |
+| [**vscode-weft**](https://github.com/weft-sdk/vscode-weft) | VS Code extension for `.weft` files |
+| [**tree-sitter-weft**](https://github.com/weft-sdk/tree-sitter-weft) | The tree-sitter grammar, for Neovim, Helix and Zed |
+| [**homebrew-tap**](https://github.com/weft-sdk/homebrew-tap) | `brew install weft-sdk/tap/weft` |
+| [**brand**](https://github.com/weft-sdk/brand) | The logo, colours and social preview |
+
+<br>
+
 ## Documentation
 
 | | |
