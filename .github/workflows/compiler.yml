@@ -7,6 +7,17 @@ on:
   pull_request:
     paths: ["compiler/**", "spec/**", "sdks/typescript/packages/e2e/src/weft.gen.ts", "go/e2e/weft.gen.go", ".gitattributes", ".github/workflows/compiler.yml"]
 
+  # A weekly run on every system (macOS included), and a manual one: macOS minutes cost ten times as much,
+  # so it is not run for every change.
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+# A newer push to the same branch makes an older, unfinished run pointless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -15,7 +26,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Linux and Windows for every change; macOS only for the weekly and manual runs.
+        os: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && fromJSON('["ubuntu-latest","macos-latest","windows-latest"]') || fromJSON('["ubuntu-latest","windows-latest"]') }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
