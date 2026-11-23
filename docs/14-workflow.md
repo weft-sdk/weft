@@ -88,3 +88,5 @@ If two finished branches both changed Current status, the second to merge rebase
 - Merge to `main`. Push and open pull requests, unless approved for the task.
 - Buy domains, create accounts and organisations, reserve or publish packages, deploy to production.
 - Anything that costs money.
+
+Runbook for one of these: [publishing to npm](runbooks/publish-npm.md).

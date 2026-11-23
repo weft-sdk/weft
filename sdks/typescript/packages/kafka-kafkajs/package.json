@@ -1,9 +1,22 @@
 {
   "name": "@weft-sdk/kafka-kafkajs",
-  "version": "0.0.0",
-  "description": "Weft for TypeScript: the Kafka adapter on KafkaJS",
-  "license": "UNLICENSED",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Weft for TypeScript: the Kafka adapter on KafkaJS.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weft-sdk/weft.git",
+    "directory": "sdks/typescript/packages/kafka-kafkajs"
+  },
+  "homepage": "https://github.com/weft-sdk/weft#readme",
+  "bugs": {
+    "url": "https://github.com/weft-sdk/weft/issues"
+  },
+  "keywords": [
+    "weft",
+    "kafka",
+    "kafkajs"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,23 +34,33 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
-    "@weft-sdk/core": "workspace:*",
+    "@weft-sdk/core": "workspace:^",
     "kafkajs": "^2.2.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
-    "@weft-sdk/core": "workspace:*",
+    "@weft-sdk/core": "workspace:^",
     "kafkajs": "2.2.4",
     "tsup": "9.0.0",
     "typescript": "6.0.3",
     "vitest": "5.1.1"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,9 +1,25 @@
 {
   "name": "@weft-sdk/core",
-  "version": "0.0.0",
-  "description": "Weft for TypeScript: the weft.* object, validation, lifecycle and middleware",
-  "license": "UNLICENSED",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Weft for TypeScript: the weft.* runtime. Validation and encoding from your contracts, lifecycle, middleware, messaging with retries and dead letters, HTTP calls, OpenTelemetry.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weft-sdk/weft.git",
+    "directory": "sdks/typescript/packages/core"
+  },
+  "homepage": "https://github.com/weft-sdk/weft#readme",
+  "bugs": {
+    "url": "https://github.com/weft-sdk/weft/issues"
+  },
+  "keywords": [
+    "weft",
+    "contracts",
+    "kafka",
+    "http",
+    "opentelemetry",
+    "codegen"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,12 +37,15 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "@opentelemetry/context-async-hooks": "2.12.0",
@@ -41,5 +60,12 @@
   "dependencies": {
     "@opentelemetry/api": "1.9.1",
     "yaml": "2.9.1"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

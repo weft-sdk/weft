@@ -45,7 +45,7 @@ Work is handed off through the repository, never through a conversation. Full pr
 - Writing docs: plain words, short sentences, active voice. Name things the way a user would. Tables for comparisons. No marketing filler in design docs.
 - Website: Astro + TypeScript (strict), pnpm only, design tokens for every colour and size (`website/src/styles/tokens.css`, from [11-website.md › Visual direction](docs/11-website.md#visual-direction-the-terminal)), light and dark themes, works at phone width, keyboard accessible, respects reduced motion. Logos come from the `simple-icons` package through `src/components/Icon.astro`.
 - Rust (`compiler/`): one workspace, crates in `compiler/crates/` named as in [architecture](docs/09-architecture.md#repo-layout). `unsafe` is forbidden. Commit `Cargo.lock`. A new crate dependency needs a reason in the commit message, and goes in `[workspace.dependencies]`.
-- TypeScript packages (`sdks/typescript/`): pnpm only, TypeScript strict (6.0.3, pinned; tsup needs the compiler API), tsup for ESM and CJS, Vitest, exact dependency versions. Nothing is published (the maintainer's job).
+- TypeScript packages (`sdks/typescript/`): pnpm only, TypeScript strict (6.0.3, pinned; tsup needs the compiler API), tsup for ESM and CJS, Vitest, exact dependency versions. Nothing is published yet (the maintainer's job); the three `@weft-sdk/*` packages are ready.
 - Go (`go/`, module `github.com/weft-sdk/weft/go`): standard library first, `gofmt` and `go vet` clean, tests run with `-race`, a dependency needs a reason in the commit message. Adapters are packages inside the one module (ADR 0022).
 - Other language packages and the dashboard: conventions are added here when their first code lands. The stack is fixed in [10-tech-stack.md](docs/10-tech-stack.md) and [decisions/](docs/decisions/); changing it needs a new record.
 
@@ -75,6 +75,7 @@ Everything runs through the root `Makefile` (`make help` lists it). Add each com
 | `make go-kafka-test` | Run the Go Kafka adapter and end-to-end tests against the broker from `make ts-kafka-up` |
 | `make go-fixtures` | Regenerate `go/e2e/weft.gen.go` with the real compiler. A Rust test fails when it is stale |
 | `make go-check` / `make go-test` | Format check, vet and test (with the race detector) the Go module in `go/`, or just test it |
+| `make ts-publish-dry-run` | Build and show what each publishable TypeScript package would put on npm. Publishes nothing; publishing is the maintainer's ([runbook](docs/runbooks/publish-npm.md)) |
 | `make ts-install` | Install the TypeScript packages' dependencies (`sdks/typescript`, a pnpm workspace) |
 | `make ts-check` | Build, type-check and test the TypeScript packages (`ts-build` and `ts-test` run the parts; adapters type-check and test against core's build, so build first) |
 

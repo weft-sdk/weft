@@ -1,8 +1,10 @@
+import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { version } from "../src/index.js"
 
 describe("@weft-sdk/core", () => {
-  it("exports its version", () => {
-    expect(version).toBe("0.0.0")
+  it("exports the version that package.json has", () => {
+    const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string }
+    expect(version).toBe(pkg.version)
   })
 })
