@@ -2383,6 +2383,7 @@ dependencies = [
  "inquire",
  "miette",
  "serde",
+ "serde_json",
  "serde_yaml_ng",
  "weft-check",
  "weft-codegen",

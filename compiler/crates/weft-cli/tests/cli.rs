@@ -950,3 +950,91 @@ fn gen_check_works_for_go_too() {
     assert_eq!(code(&weft(&["gen"], &dir)), 0);
     assert_eq!(code(&weft(&["gen", "--check"], &dir)), 0);
 }
+
+// ---- weft check --json ----
+
+fn stdout_json(o: &Output) -> serde_json::Value {
+    let out = String::from_utf8_lossy(&o.stdout);
+    serde_json::from_str(&out).unwrap_or_else(|e| panic!("stdout is not just JSON ({e}):\n{out}"))
+}
+
+#[test]
+fn check_json_with_no_changes() {
+    let dir = tagged_project("check_json_same", V1);
+    let o = weft(&["check", "--json"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let v = stdout_json(&o);
+    assert_eq!(v["passes"], true);
+    assert_eq!(v["baseline"], "git v1");
+    assert_eq!(v["packages"][0]["package"], "orders");
+    assert_eq!(v["packages"][0]["changes"], serde_json::json!([]));
+    assert_eq!(v["packages"][0]["required"], "none");
+}
+
+#[test]
+fn check_json_lists_every_change_with_its_hint_and_fails_like_the_text_does() {
+    let dir = tagged_project("check_json_breaking", V1);
+    write_contract(&dir, &V1.replace(" note: string", ""));
+    let o = weft(&["check", "--json"], &dir);
+    assert_eq!(code(&o), 1, "{}", text(&o));
+    let v = stdout_json(&o);
+    assert_eq!(v["passes"], false);
+    let p = &v["packages"][0];
+    assert_eq!(p["passes"], false);
+    assert_eq!(p["oldVersion"], "1.0.0");
+    assert_eq!(p["newVersion"], "1.0.0");
+    assert_eq!(p["required"], "major");
+    assert_eq!(
+        p["counts"],
+        serde_json::json!({ "breaking": 1, "risky": 0, "safe": 0 })
+    );
+    let change = &p["changes"][0];
+    assert_eq!(change["severity"], "breaking");
+    assert_eq!(change["location"], "Order.note");
+    assert!(change["message"]
+        .as_str()
+        .unwrap()
+        .contains("removed field `note`"));
+    assert!(change["hint"].as_str().unwrap().contains("@deprecated"));
+}
+
+#[test]
+fn check_json_passes_when_the_version_covers_the_change_and_orders_changes_by_severity() {
+    let dir = tagged_project("check_json_major", V1);
+    write_contract(
+        &dir,
+        &V1.replace(" note: string", " extra?: int")
+            .replace("1.0.0", "2.0.0"),
+    );
+    let o = weft(&["check", "--json"], &dir);
+    assert_eq!(code(&o), 0, "{}", text(&o));
+    let v = stdout_json(&o);
+    assert_eq!(v["passes"], true);
+    let severities: Vec<&str> = v["packages"][0]["changes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c["severity"].as_str().unwrap())
+        .collect();
+    let mut sorted = severities.clone();
+    sorted.sort_by_key(|s| match *s {
+        "breaking" => 0,
+        "risky" => 1,
+        _ => 2,
+    });
+    assert_eq!(severities, sorted, "breaking first, then risky, then safe");
+    assert!(severities.contains(&"breaking"));
+    assert_eq!(v["packages"][0]["actual"], "major");
+}
+
+#[test]
+fn check_json_keeps_errors_off_stdout() {
+    let dir = tagged_project("check_json_error", V1);
+    let o = weft(&["check", "--json", "--baseline", "no-such-ref"], &dir);
+    assert_eq!(code(&o), 2);
+    assert!(
+        o.stdout.is_empty(),
+        "stdout should be empty: {}",
+        String::from_utf8_lossy(&o.stdout)
+    );
+}

@@ -16,6 +16,9 @@ pub struct CheckArgs {
     /// Compare against the contracts in this folder instead of git.
     #[arg(long, value_name = "PATH")]
     baseline_dir: Option<PathBuf>,
+    /// Write the result as JSON on standard output, and nothing else there. The exit codes are the same.
+    #[arg(long)]
+    json: bool,
 }
 
 fn usage(message: impl std::fmt::Display) -> ExitCode {
@@ -73,6 +76,15 @@ pub fn run(args: CheckArgs) -> ExitCode {
     };
 
     let reports = weft_compat::compare(&old_irs, &new_irs);
+    if args.json {
+        let failed = reports.iter().any(|r| !r.passes());
+        println!("{}", report_json(&older.label, &reports));
+        return if failed {
+            exit::code(exit::STALE)
+        } else {
+            exit::code(exit::OK)
+        };
+    }
     println!("Comparing with {}", older.label);
     let mut failed = false;
     for r in &reports {
@@ -91,6 +103,47 @@ pub fn run(args: CheckArgs) -> ExitCode {
     } else {
         exit::code(exit::OK)
     }
+}
+
+/// The result as JSON: every package compared, and every change with its severity, where, what and what to do.
+fn report_json(baseline: &str, reports: &[PackageReport]) -> String {
+    use serde_json::{json, Value};
+    let packages: Vec<Value> = reports
+        .iter()
+        .map(|r| {
+            let changes: Vec<Value> = [Severity::Breaking, Severity::Risky, Severity::Safe]
+                .into_iter()
+                .flat_map(|sev| r.changes.iter().filter(move |c| c.severity == sev))
+                .map(|c| {
+                    let mut v = json!({ "severity": c.severity.word(), "location": c.location, "message": c.message });
+                    if let Some(h) = &c.hint {
+                        v["hint"] = json!(h);
+                    }
+                    v
+                })
+                .collect();
+            json!({
+                "package": r.package,
+                "oldVersion": r.old_version,
+                "newVersion": r.new_version,
+                "required": r.required.id(),
+                "actual": r.actual.map(Bump::id),
+                "passes": r.passes(),
+                "counts": {
+                    "breaking": r.count(Severity::Breaking),
+                    "risky": r.count(Severity::Risky),
+                    "safe": r.count(Severity::Safe),
+                },
+                "changes": changes,
+            })
+        })
+        .collect();
+    let doc = json!({
+        "baseline": baseline,
+        "passes": reports.iter().all(PackageReport::passes),
+        "packages": packages,
+    });
+    serde_json::to_string_pretty(&doc).expect("the report serialises")
 }
 
 fn print_report(r: &PackageReport) {

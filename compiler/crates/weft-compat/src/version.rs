@@ -10,6 +10,17 @@ pub enum Bump {
 }
 
 impl Bump {
+    /// A name for machines: `none`, `patch`, `minor` or `major`.
+    pub fn id(self) -> &'static str {
+        match self {
+            Bump::None => "none",
+            Bump::Patch => "patch",
+            Bump::Minor => "minor",
+            Bump::Major => "major",
+        }
+    }
+
+    /// A phrase for people: `a major`, as in "needs a major version bump".
     pub fn word(self) -> &'static str {
         match self {
             Bump::None => "no",

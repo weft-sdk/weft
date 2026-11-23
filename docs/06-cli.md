@@ -76,7 +76,7 @@ For TypeScript the file holds the types of every package (one `namespace` per pa
 ### `weft check`
 
 ```
-weft check [--baseline REF | --baseline-dir PATH]
+weft check [--baseline REF | --baseline-dir PATH] [--json]
 ```
 
 Compares the current contracts with a baseline and lists every change as **safe**, **risky** or **breaking** ([the rules](02-contract-language.md#evolving-contracts-safely)). Each breaking change comes with what to do instead (usually: deprecate first, remove in the next major version).
@@ -94,6 +94,30 @@ orders (version 1.0.0)
 
 - **Baseline.** `--baseline` takes a git ref (a tag, branch or commit). The default is the latest tag. The baseline's contract files are read with `git show`, so the working tree is never touched. `--baseline-dir` compares with a folder of older contracts instead. A contracts folder that did not exist at the baseline counts as all new.
 - **Exit codes.** 0 when no breaking change is left uncovered by the version, 1 when one is, 3 if the current or the baseline contracts have errors, 2 for usage errors (no tag, unknown ref).
+- **`--json`.** Writes the result as JSON on standard output, and nothing else there (errors stay on standard error). The exit codes are the same. Every package that was compared is listed, with its changes breaking first:
+
+```json
+{
+  "baseline": "git v1",
+  "passes": false,
+  "packages": [
+    {
+      "package": "orders",
+      "oldVersion": "1.0.0",
+      "newVersion": "1.0.0",
+      "required": "major",
+      "actual": null,
+      "passes": false,
+      "counts": { "breaking": 1, "risky": 0, "safe": 0 },
+      "changes": [
+        { "severity": "breaking", "location": "Order.note", "message": "removed field `note` from `Order`", "hint": "mark it `@deprecated` first, and remove it in the next major version" }
+      ]
+    }
+  ]
+}
+```
+
+  `required` is the smallest bump the changes call for (`none`, `patch`, `minor` or `major`), `actual` the bump the versions show (or `null`), and `hint` is only there for breaking changes.
 - Comparing with a published version (`weft pull`, the dashboard) is added with those commands.
 
 ### `weft fmt`
