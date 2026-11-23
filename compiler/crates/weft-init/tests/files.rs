@@ -168,6 +168,7 @@ fn packages_follow_the_chosen_libraries() {
             "@weft-sdk/core",
             "@weft-sdk/http-express",
             "express",
+            "@types/express",
             "@weft-sdk/kafka-kafkajs",
             "kafkajs"
         ]
